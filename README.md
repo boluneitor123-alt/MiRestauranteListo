@@ -44,6 +44,9 @@ npm run build      # build de producción
 
 ## Variables de entorno
 
-`DATABASE_URL`, `STRIPE_SECRET_KEY` / `MP_ACCESS_TOKEN`, `STRIPE_WEBHOOK_SECRET`,
-`RESEND_API_KEY`, `APP_URL`, `LICENSE_SIGNING_SECRET`, `META_PIXEL_ID`,
-`META_CAPI_TOKEN`.
+`DATABASE_URL`, `APP_URL`, `ADMIN_TOKEN`, `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `META_PIXEL_ID`, `META_CAPI_TOKEN`.
+
+Ninguna llave vive en el código: todas se leen de variables de entorno. El
+archivo `.env` está en `.gitignore` y nunca se sube; `.env.example` sólo lleva
+los nombres, con los valores vacíos. Ver [`DESPLIEGUE.md`](DESPLIEGUE.md).

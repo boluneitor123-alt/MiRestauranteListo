@@ -66,19 +66,21 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | `DATABASE_URL` | Tu base de Neon. | Sí |
 | `APP_URL` | URL pública del sitio (`https://…`). Stripe regresa aquí. | Sí |
 | `ADMIN_TOKEN` | Contraseña para entrar a `/admin`. Invéntala larga. | Sí |
-| `LICENSE_SIGNING_SECRET` | Secreto interno del servidor. Invéntalo largo. | Sí |
 | `STRIPE_SECRET_KEY` | Llave secreta de Stripe (`sk_live_…`). | Sí, para cobrar |
 | `STRIPE_WEBHOOK_SECRET` | Firma del webhook (`whsec_…`). | Sí, para cobrar |
-| `NEXT_PUBLIC_STRIPE_PUBLIC_KEY` | Llave pública (`pk_live_…`). | No hoy |
 | `RESEND_API_KEY` | Correos de compra y de acceso. Sin ella, no se manda correo pero todo lo demás funciona. | No |
 | `META_PIXEL_ID` | Medición de la landing. | No |
 | `META_CAPI_TOKEN` | API de Conversiones de Meta. | No |
 
-`ADMIN_TOKEN` y `LICENSE_SIGNING_SECRET` los inventas tú. Para generarlos:
+`ADMIN_TOKEN` lo inventas tú. Para generarlo:
 
 ```bash
 openssl rand -base64 32
 ```
+
+La llave **pública** de Stripe (`pk_live_…`) no se necesita: el cobro se abre
+desde el servidor con Stripe Checkout, así que ningún dato de tarjeta pasa por
+este sitio.
 
 ---
 
