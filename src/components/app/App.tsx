@@ -1,0 +1,595 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Calculator, Home, ListChecks, MoreHorizontal, Plus, TrendingUp } from 'lucide-react';
+import { ROUTE_MODULES } from '@/content/route';
+import { ONBOARDING_QUESTIONS, TOUR_STEPS } from '@/content/onboarding';
+import { diagnose, type Target } from '@/domain/diagnosis';
+import { DEFAULT_FOOD_COST_TARGET } from '@/domain/costing';
+import { taskKey } from '@/domain/progress';
+import type { Dish, Subrecipe } from '@/domain/types';
+import { detectPlatform, type PlatformInfo } from '@/lib/device';
+import { useStore } from '@/state/store';
+import { RADIUS, Sheet, text } from '@/components/ui';
+import { Welcome } from './screens/Welcome';
+import { Auth } from './screens/Auth';
+import { Onboarding } from './screens/Onboarding';
+import { Diagnostic } from './screens/Diagnostic';
+import { Blocked, OfflineGate, Paywall } from './screens/Gates';
+import { Tour } from './screens/Tour';
+import { Inicio } from './tabs/Inicio';
+import { Ruta } from './tabs/Ruta';
+import { Costeador, type CostView } from './tabs/Costeador';
+import { Numeros, type NumbersView } from './tabs/Numeros';
+import { Mas, type SubScreen } from './tabs/Mas';
+import { DishEditor } from './costeador/DishEditor';
+import { SubrecipeEditor } from './costeador/SubrecipeEditor';
+
+type Screen = 'welcome' | 'auth' | 'onboarding' | 'result' | 'app' | 'dish' | 'subedit' | 'paywall';
+export type Tab = 'inicio' | 'ruta' | 'costeador' | 'numeros' | 'mas';
+
+const TABS: Array<{ id: Tab; label: string; Icon: typeof Home }> = [
+  { id: 'inicio', label: 'Inicio', Icon: Home },
+  { id: 'ruta', label: 'Mi Ruta', Icon: ListChecks },
+  { id: 'costeador', label: 'Costeador', Icon: Calculator },
+  { id: 'numeros', label: 'Números', Icon: TrendingUp },
+  { id: 'mas', label: 'Más', Icon: MoreHorizontal },
+];
+
+const FAB_ACTIONS = [
+  { id: 'platillo', label: 'Nuevo platillo', hint: 'Costea un platillo desde cero' },
+  { id: 'gasto', label: 'Nuevo gasto de apertura', hint: 'Un concepto más en tu presupuesto' },
+  { id: 'tarea', label: 'Nueva tarea pendiente', hint: 'Agrégala a un módulo de tu ruta' },
+  { id: 'proveedor', label: 'Nuevo proveedor', hint: 'Quién te surte y en qué condiciones' },
+  { id: 'nota', label: 'Nueva nota', hint: 'Lo que no quieres olvidar' },
+] as const;
+
+export function App() {
+  const { state, patch, update, replace, entitlement, can, online, refreshEntitlement, claim, activate, toast, flash } =
+    useStore();
+
+  const [screen, setScreen] = useState<Screen>('welcome');
+  const [tab, setTab] = useState<Tab>('inicio');
+  const [obStep, setObStep] = useState(0);
+  const [moduleId, setModuleId] = useState(ROUTE_MODULES[0].id);
+  const [openTaskKey, setOpenTaskKey] = useState<string | null>(null);
+  const [costView, setCostView] = useState<CostView>('platillos');
+  const [numbersView, setNumbersView] = useState<NumbersView>('home');
+  const [subScreen, setSubScreen] = useState<SubScreen | null>(null);
+  const [dishId, setDishId] = useState<string | null>(null);
+  const [subrecipeId, setSubrecipeId] = useState<string | null>(null);
+  const [fabOpen, setFabOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  const [platform, setPlatform] = useState<PlatformInfo>(() => detectPlatform());
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const update = () => setPlatform(detectPlatform());
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+
+  // El tema y el acento se aplican al contenedor raíz de la app.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--accent', state.settings.accent);
+    root.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
+  }, [state.settings.accent, state.settings.dark]);
+
+  // Al volver del checkout, la app reclama la licencia sola: cada 2.5 s hasta ~100 s.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!new URLSearchParams(window.location.search).has('pago')) return;
+    let tries = 0;
+    const id = setInterval(async () => {
+      tries += 1;
+      const ok = await claim();
+      if (ok || tries >= 40) {
+        clearInterval(id);
+        if (ok) flash('Pago confirmado · acceso de por vida');
+      }
+    }, 2500);
+    return () => clearInterval(id);
+  }, [claim, flash]);
+
+  const diagnosis = useMemo(
+    () => diagnose({ state, modules: ROUTE_MODULES, showFigures: can.showsInvestmentFigures }),
+    [state, can.showsInvestmentFigures],
+  );
+
+  const blocked = entitlement?.level === 'bloqueado';
+  const trialLabel = entitlement && !entitlement.licensed ? entitlement.trial.label : null;
+
+  const scrollTop = () => scrollRef.current?.scrollTo({ top: 0 });
+
+  const go = (target: Target) => {
+    setScreen('app');
+    setTab(target.tab);
+    setFabOpen(false);
+    setSubScreen(null);
+    setFormOpen(false);
+    if (target.module) setModuleId(target.module);
+    if (target.tab === 'numeros') setNumbersView((target.view as NumbersView) ?? 'home');
+    if (target.tab === 'costeador') setCostView((target.view as CostView) ?? 'platillos');
+    if (target.tab === 'mas' && target.view) setSubScreen(target.view as SubScreen);
+    scrollTop();
+  };
+
+  const newDish = (): string => {
+    const id = `d${Date.now()}`;
+    const dish: Dish = {
+      id,
+      name: 'Platillo nuevo',
+      price: 0,
+      ingredients: [],
+      portions: 1,
+      extrasPct: 3,
+      priceIncludesTax: true,
+      deliveryCommission: 28,
+      section: 'Fuertes',
+      popularity: 'media',
+    };
+    update((s) => ({ ...s, dishes: [...s.dishes, dish] }));
+    return id;
+  };
+
+  const openDish = (id?: string) => {
+    if (!id && can.dishLimit !== null && state.dishes.length >= can.dishLimit) {
+      setScreen('paywall');
+      return;
+    }
+    setDishId(id ?? newDish());
+    setScreen('dish');
+    setFabOpen(false);
+    scrollTop();
+  };
+
+  const openSubrecipe = (id?: string) => {
+    let target = id;
+    if (!target) {
+      target = `sr${Date.now()}`;
+      const sub: Subrecipe = { id: target, name: 'Sub-receta nueva', yieldQty: 1000, unit: 'ml', ingredients: [] };
+      update((s) => ({ ...s, subrecipes: [...s.subrecipes, sub] }));
+    }
+    setSubrecipeId(target);
+    setScreen('subedit');
+    setFabOpen(false);
+    scrollTop();
+  };
+
+  const runFabAction = (id: (typeof FAB_ACTIONS)[number]['id']) => {
+    setFabOpen(false);
+    setFormOpen(true);
+    switch (id) {
+      case 'platillo':
+        openDish();
+        break;
+      case 'gasto':
+        go({ tab: 'numeros', view: 'presupuesto' });
+        break;
+      case 'tarea':
+        go({ tab: 'ruta' });
+        break;
+      case 'proveedor':
+        go({ tab: 'mas', view: 'proveedores' });
+        break;
+      case 'nota':
+        go({ tab: 'mas', view: 'notas' });
+        break;
+    }
+  };
+
+  const dish = state.dishes.find((d) => d.id === dishId);
+  const subrecipe = state.subrecipes.find((s) => s.id === subrecipeId);
+
+  const body = (() => {
+    if (screen === 'welcome') {
+      return <Welcome onStart={() => setScreen('auth')} onSignIn={() => setScreen('auth')} />;
+    }
+
+    if (screen === 'auth') {
+      return (
+        <Auth
+          defaultName={state.profile.name}
+          onBack={() => setScreen('welcome')}
+          onSubmit={({ name, email }) => {
+            patch({ profile: { ...state.profile, name, email } });
+            setObStep(0);
+            setScreen('onboarding');
+          }}
+        />
+      );
+    }
+
+    if (screen === 'onboarding') {
+      return (
+        <Onboarding
+          step={obStep}
+          answers={state.answers}
+          onAnswer={(id, option) =>
+            update((s) => ({
+              ...s,
+              answers: { ...s.answers, [id]: option },
+              project: id === 'giro' ? { ...s.project, giro: option } : s.project,
+            }))
+          }
+          onBack={() => (obStep === 0 ? setScreen('auth') : setObStep((n) => n - 1))}
+          onNext={() => {
+            if (obStep === ONBOARDING_QUESTIONS.length - 1) setScreen('result');
+            else setObStep((n) => n + 1);
+          }}
+        />
+      );
+    }
+
+    if (screen === 'result') {
+      return (
+        <Diagnostic
+          diagnosis={diagnosis}
+          giro={state.project.giro}
+          hasTemplate={state.project.giro !== 'Otro'}
+          onEnter={() => {
+            setScreen('app');
+            setTab('inicio');
+            if (!state.settings.tourDone) setTourStep(0);
+          }}
+          onLoadTemplate={() => {
+            setScreen('app');
+            setTab('mas');
+            setSubScreen('plantilla');
+          }}
+        />
+      );
+    }
+
+    if (screen === 'paywall') {
+      return (
+        <Paywall
+          entitlement={entitlement}
+          onClose={() => setScreen('app')}
+          onClaim={claim}
+          onCheckout={() => {
+            // El checkout real vive fuera de la app; al volver, `?pago=1` dispara
+            // la activación automática.
+            window.location.href = `/checkout?volver=${encodeURIComponent('/app?pago=1')}`;
+          }}
+        />
+      );
+    }
+
+    if (screen === 'dish' && dish) {
+      return (
+        <DishEditor
+          dish={dish}
+          state={state}
+          onBack={() => {
+            setScreen('app');
+            setTab('costeador');
+          }}
+          onChange={(fn) => update((s) => ({ ...s, dishes: s.dishes.map((d) => (d.id === dish.id ? fn(d) : d)) }))}
+          onDuplicate={() => {
+            const copy: Dish = { ...structuredClone(dish), id: `d${Date.now()}`, name: `${dish.name} (copia)` };
+            update((s) => ({ ...s, dishes: [...s.dishes, copy] }));
+            setDishId(copy.id);
+            flash('Platillo duplicado');
+          }}
+          onDelete={() => {
+            update((s) => ({ ...s, dishes: s.dishes.filter((d) => d.id !== dish.id) }));
+            setScreen('app');
+            setTab('costeador');
+            flash('Platillo eliminado');
+          }}
+          onPrint={() => window.open(`/print/ficha-tecnica?platillo=${dish.id}`, '_blank', 'noopener')}
+          onFlash={flash}
+        />
+      );
+    }
+
+    if (screen === 'subedit' && subrecipe) {
+      return (
+        <SubrecipeEditor
+          subrecipe={subrecipe}
+          subrecipes={state.subrecipes}
+          onBack={() => {
+            setScreen('app');
+            setTab('costeador');
+            setCostView('subrecetas');
+          }}
+          onChange={(fn) =>
+            update((s) => ({ ...s, subrecipes: s.subrecipes.map((x) => (x.id === subrecipe.id ? fn(x) : x)) }))
+          }
+          onDelete={() => {
+            update((s) => ({ ...s, subrecipes: s.subrecipes.filter((x) => x.id !== subrecipe.id) }));
+            setScreen('app');
+            setTab('costeador');
+            setCostView('subrecetas');
+            flash('Sub-receta eliminada');
+          }}
+          onFlash={flash}
+        />
+      );
+    }
+
+    if (blocked && tab !== 'mas') {
+      return (
+        <Blocked
+          onOpenPaywall={() => setScreen('paywall')}
+          onGoMore={() => setTab('mas')}
+          onBackup={() => {
+            setTab('mas');
+            setSubScreen('respaldo');
+          }}
+        />
+      );
+    }
+
+    switch (tab) {
+      case 'inicio':
+        return (
+          <Inicio
+            state={state}
+            diagnosis={diagnosis}
+            can={can}
+            trialLabel={trialLabel}
+            onGo={go}
+            onOpenProfile={() => {
+              setTab('mas');
+              setSubScreen('perfil');
+            }}
+            onOpenAlerts={() => {
+              setTab('mas');
+              setSubScreen('alertas');
+            }}
+            onOpenPaywall={() => setScreen('paywall')}
+            onNewDish={openDish}
+          />
+        );
+
+      case 'ruta':
+        return (
+          <Ruta
+            state={state}
+            level={entitlement?.level ?? 'bloqueado'}
+            moduleId={moduleId}
+            openTaskKey={openTaskKey}
+            formOpen={formOpen}
+            onSelectModule={(id) => {
+              setModuleId(id);
+              setOpenTaskKey(null);
+            }}
+            onToggleTask={(key) =>
+              update((s) => ({ ...s, done: { ...s.done, [key]: !s.done[key] } }))
+            }
+            onSkipModule={(id, reason) => {
+              update((s) => ({ ...s, skipped: { ...s.skipped, [id]: reason } }));
+              flash('Módulo omitido');
+            }}
+            onRestoreModule={(id) =>
+              update((s) => {
+                const skipped = { ...s.skipped };
+                delete skipped[id];
+                return { ...s, skipped };
+              })
+            }
+            onAddTask={(module, title, hint) =>
+              update((s) => ({
+                ...s,
+                extraTasks: [...s.extraTasks, { id: `${Date.now()}`, moduleId: module, title, hint }],
+              }))
+            }
+            onDeleteTask={(id) =>
+              update((s) => ({ ...s, extraTasks: s.extraTasks.filter((x) => x.id !== id) }))
+            }
+            onOpenTask={setOpenTaskKey}
+            onOpenPaywall={() => setScreen('paywall')}
+            onOpenOverview={() => {
+              setTab('mas');
+              setSubScreen('mapa');
+            }}
+          />
+        );
+
+      case 'costeador':
+        return (
+          <Costeador
+            state={state}
+            view={costView}
+            level={entitlement?.level ?? 'bloqueado'}
+            can={can}
+            onChangeView={setCostView}
+            onOpenDish={openDish}
+            onNewDish={() => openDish()}
+            onOpenSubrecipe={openSubrecipe}
+            onNewSubrecipe={() => openSubrecipe()}
+            onOpenPaywall={() => setScreen('paywall')}
+          />
+        );
+
+      case 'numeros':
+        return (
+          <Numeros
+            state={state}
+            view={numbersView}
+            can={can}
+            formOpen={formOpen}
+            onChangeView={setNumbersView}
+            onPatch={patch}
+            onOpenPaywall={() => setScreen('paywall')}
+            onPrint={() => window.open('/print/resumen-financiero', '_blank', 'noopener')}
+            onFlash={flash}
+          />
+        );
+
+      case 'mas':
+        return (
+          <Mas
+            state={state}
+            sub={subScreen}
+            entitlement={entitlement}
+            can={can}
+            platform={platform}
+            diagnosis={diagnosis}
+            formOpen={formOpen}
+            onOpenSub={setSubScreen}
+            onPatch={patch}
+            onReplace={replace}
+            onGo={go}
+            onOpenPaywall={() => setScreen('paywall')}
+            onFlash={flash}
+            onRestartDiagnosis={() => {
+              setObStep(0);
+              setScreen('onboarding');
+            }}
+            onStartTour={() => {
+              setScreen('app');
+              setSubScreen(null);
+              setTourStep(0);
+            }}
+            onActivate={activate}
+          />
+        );
+    }
+  })();
+
+  return (
+    <div className="mrl-shell">
+      <div className="mrl-scroll" ref={scrollRef}>
+        {body}
+      </div>
+
+      {screen === 'app' ? (
+        <>
+          <button
+            type="button"
+            className="mrl-fab"
+            aria-label="Agregar algo nuevo"
+            onClick={() => setFabOpen(true)}
+          >
+            <Plus size={26} strokeWidth={2.8} />
+          </button>
+
+          <nav className="mrl-nav" aria-label="Navegación principal">
+            {TABS.map(({ id, label, Icon }) => {
+              const active = tab === id;
+              const disabled = blocked && id !== 'mas';
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setTab(id);
+                    setSubScreen(null);
+                    setNumbersView('home');
+                    setFormOpen(false);
+                    scrollTop();
+                  }}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    display: 'grid',
+                    justifyItems: 'center',
+                    gap: 4,
+                    padding: '6px 0',
+                    cursor: 'pointer',
+                    opacity: disabled ? 0.4 : 1,
+                    color: active ? 'var(--color-accent)' : text(50),
+                    fontFamily: 'var(--font-body)',
+                  }}
+                >
+                  <Icon size={21} strokeWidth={2.6} />
+                  <span style={{ fontSize: 10.5, fontWeight: 700 }}>{label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      ) : null}
+
+      {fabOpen ? (
+        <Sheet title="Agregar algo nuevo" onClose={() => setFabOpen(false)}>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {FAB_ACTIONS.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => runFabAction(action.id)}
+                style={{
+                  textAlign: 'left',
+                  border: '1.5px solid var(--color-divider)',
+                  borderRadius: RADIUS.inner,
+                  background: 'transparent',
+                  color: 'var(--color-text)',
+                  padding: 14,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                <div style={{ fontSize: 14.5, fontWeight: 700 }}>{action.label}</div>
+                <div style={{ fontSize: 12, color: text(60), marginTop: 2 }}>{action.hint}</div>
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      ) : null}
+
+      {tourStep !== null ? (
+        <Tour
+          step={tourStep}
+          onNext={() => {
+            const next = tourStep + 1;
+            if (next >= TOUR_STEPS.length) {
+              setTourStep(null);
+              patch({ settings: { ...state.settings, tourDone: true } });
+              return;
+            }
+            setTourStep(next);
+            const step = TOUR_STEPS[next];
+            setTab(step.tab as Tab);
+            if (step.view) setCostView(step.view as CostView);
+            scrollTop();
+          }}
+          onSkip={() => {
+            setTourStep(null);
+            patch({ settings: { ...state.settings, tourDone: true } });
+          }}
+        />
+      ) : null}
+
+      {toast ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: 112,
+            zIndex: 70,
+            padding: '12px 18px',
+            borderRadius: RADIUS.pill,
+            background: 'var(--color-neutral-900)',
+            color: 'var(--color-neutral-100)',
+            fontSize: 13.5,
+            fontWeight: 600,
+            boxShadow: 'var(--shadow-lg)',
+            animation: 'mrlToast .2s ease both',
+            maxWidth: '88%',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {toast}
+        </div>
+      ) : null}
+
+      {!online ? <OfflineGate onRetry={refreshEntitlement} /> : null}
+    </div>
+  );
+}
+
+/** Claves de tareas de seed: se exportan para las pruebas del flujo. */
+export { taskKey, DEFAULT_FOOD_COST_TARGET };

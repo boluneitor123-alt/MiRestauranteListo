@@ -18,3 +18,4 @@ export * from './license';
 export * from './access';
 export * from './format';
 export * from './projectState';
+export * from './diagnosis';
