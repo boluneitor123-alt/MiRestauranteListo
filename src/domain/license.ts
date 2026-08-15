@@ -33,6 +33,10 @@ export interface License {
   /** Origen de la venta (checkout, manual, referido…). */
   source?: string;
   amount?: number;
+  /** Referencia del proveedor de pago: evita emitir dos veces por un webhook repetido. */
+  paymentRef?: string;
+  /** Monto devuelto al marcar reembolso. */
+  refundedAmount?: number;
   createdAt: number;
   activatedAt?: number;
   revokedAt?: number;

@@ -1,0 +1,358 @@
+// Modelo de datos de MiRestauranteListo (README del handoff § 13, paso 2).
+//
+// Un usuario → un proyecto. Todo lo que el emprendedor captura cuelga del
+// proyecto; las licencias y la telemetría de prueba viven aparte porque las
+// administra el dueño desde su panel.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project  Project?
+  devices  Device[]
+  licenses License[]
+
+  @@map("users")
+}
+
+/// Equipo desde el que el usuario abre la app. Alimenta el límite de 3 equipos
+/// por licencia y la etiqueta "Equipo detectado" de Ajustes.
+model Device {
+  id         String   @id @default(cuid())
+  deviceId   String   @unique
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  platform   String?
+  kind       String?
+  browser    String?
+  installed  Boolean  @default(false)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  trial   Trial?
+  claims  LicenseDevice[]
+
+  @@map("devices")
+}
+
+model Project {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String  @default("Mi negocio")
+  giro        String  @default("Otro")
+  budgetCap   Int     @default(250000)
+  targetDate  String?
+  headcount   String?
+  /// Respuestas del onboarding: { giro, etapa, nombre, localq, ... }.
+  answers     Json    @default("{}")
+  /// Ajustes de la app: accent, dark, currency, tourDone, alertas…
+  settings    Json    @default("{}")
+  /// Parámetros del punto de equilibrio.
+  ticket      Int     @default(120)
+  margin      Int     @default(68)
+  ownerGoal   Int     @default(25000)
+  hours       Int     @default(8)
+  closedOneDay Boolean @default(false)
+  fcTarget    Int     @default(30)
+  layout      String  @default("p2")
+
+  trialStartedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  completedTasks CompletedTask[]
+  skippedModules SkippedModule[]
+  extraTasks     ExtraTask[]
+  dishes         Dish[]
+  subrecipes     Subrecipe[]
+  budgetItems    BudgetItem[]
+  fixedItems     FixedItem[]
+  notes          Note[]
+  suppliers      Supplier[]
+
+  @@map("projects")
+}
+
+/// Tarea de Mi Ruta marcada como completada. La clave es la del dominio
+/// (`concepto0`, `x<id>` para tareas propias).
+model CompletedTask {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskKey   String
+  doneAt    DateTime @default(now())
+
+  @@unique([projectId, taskKey])
+  @@map("completed_tasks")
+}
+
+/// Módulo omitido con su motivo: sus tareas salen del cálculo de avance.
+model SkippedModule {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moduleId  String
+  reason    String
+  skippedAt DateTime @default(now())
+
+  @@unique([projectId, moduleId])
+  @@map("skipped_modules")
+}
+
+/// Tarea que el usuario agregó a un módulo.
+model ExtraTask {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moduleId  String
+  title     String
+  hint      String?
+  position  Int     @default(0)
+
+  @@map("extra_tasks")
+}
+
+model Dish {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name             String
+  price            Float   @default(0)
+  portions         Int     @default(1)
+  extrasPct        Float   @default(3)
+  packaging        Float   @default(0)
+  labor            Float   @default(0)
+  priceIncludesTax Boolean @default(true)
+  deliveryCommission Float @default(28)
+  section          String  @default("Fuertes")
+  popularity       String  @default("media")
+  position         Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ingredients Ingredient[]
+
+  @@map("dishes")
+}
+
+model Subrecipe {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name     String
+  yieldQty Float  @default(1)
+  unit     String @default("ml")
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ingredients Ingredient[] @relation("SubrecipeIngredients")
+  usedAs      Ingredient[] @relation("IngredientSubrecipe")
+
+  @@map("subrecipes")
+}
+
+/// Ingrediente de un platillo o de una sub-receta. Exactamente uno de
+/// `dishId` / `subrecipeId` está presente.
+model Ingredient {
+  id          String     @id @default(cuid())
+  dishId      String?
+  dish        Dish?      @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  subrecipeId String?
+  subrecipe   Subrecipe? @relation("SubrecipeIngredients", fields: [subrecipeId], references: [id], onDelete: Cascade)
+
+  name     String
+  qty      Float  @default(0)
+  unit     String @default("g")
+  buyPrice Float?
+  buyQty   Float?
+  buyUnit  String?
+  /// Precio unitario capturado directo, cuando no hay datos de compra.
+  unitPrice Float?
+  /// Merma en %, topada a 90 por el dominio.
+  waste     Float  @default(0)
+  position  Int    @default(0)
+
+  /// Cuando el ingrediente ES una sub-receta, apunta a su receta base.
+  sourceSubrecipeId String?
+  sourceSubrecipe   Subrecipe? @relation("IngredientSubrecipe", fields: [sourceSubrecipeId], references: [id], onDelete: SetNull)
+
+  @@map("ingredients")
+}
+
+/// Concepto del presupuesto de apertura, con su desglose opcional.
+model BudgetItem {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  key      String
+  label    String
+  amount   Float   @default(0)
+  custom   Boolean @default(false)
+  position Int     @default(0)
+
+  subconcepts Subconcept[]
+
+  @@unique([projectId, key])
+  @@map("budget_items")
+}
+
+model Subconcept {
+  id           String     @id @default(cuid())
+  budgetItemId String
+  budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  label        String
+  amount       Float      @default(0)
+  position     Int        @default(0)
+
+  @@map("subconcepts")
+}
+
+/// Gasto fijo mensual.
+model FixedItem {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  key      String
+  label    String
+  amount   Float   @default(0)
+  custom   Boolean @default(false)
+  position Int     @default(0)
+
+  @@unique([projectId, key])
+  @@map("fixed_items")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@map("notes")
+}
+
+model Supplier {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  item      String
+  contact   String
+  terms     String
+  delivery  String
+
+  @@map("suppliers")
+}
+
+/// ─────────────────────────  Licencias y cobro  ─────────────────────────────
+
+enum LicenseStatus {
+  nueva
+  activada
+  revocada
+  reembolsada
+}
+
+model License {
+  code   String        @id
+  status LicenseStatus @default(nueva)
+
+  email  String
+  name   String?
+  source String  @default("checkout")
+  amount Float   @default(0)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// Referencia del proveedor de pago, para no emitir dos veces por un webhook repetido.
+  paymentRef String? @unique
+
+  createdAt   DateTime  @default(now())
+  activatedAt DateTime?
+  revokedAt   DateTime?
+  refundedAt  DateTime?
+  refundedAmount Float  @default(0)
+
+  devices LicenseDevice[]
+
+  @@index([email])
+  @@index([status])
+  @@map("licenses")
+}
+
+/// Equipo que reclamó una licencia. El límite configurable vive en AdminSetting.
+model LicenseDevice {
+  id          String   @id @default(cuid())
+  licenseCode String
+  license     License  @relation(fields: [licenseCode], references: [code], onDelete: Cascade)
+  deviceId    String
+  device      Device?  @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+  activatedAt DateTime @default(now())
+
+  @@unique([licenseCode, deviceId])
+  @@map("license_devices")
+}
+
+/// Telemetría de demos: alimenta el KPI de "demos concluidas sin pagar".
+model Trial {
+  id        String   @id @default(cuid())
+  deviceId  String   @unique
+  device    Device   @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+  startedAt DateTime @default(now())
+  expiredAt DateTime?
+  converted Boolean  @default(false)
+
+  @@map("trials")
+}
+
+/// Ajustes del panel del dueño (una sola fila).
+model AdminSetting {
+  id                  String  @id @default("default")
+  price               Float   @default(2450)
+  trialDays           Int     @default(7)
+  maxDevices          Int     @default(3)
+  referralDiscountPct Int     @default(20)
+  warrantyDays        Int     @default(14)
+  autoActivation      Boolean @default(true)
+  updatedAt           DateTime @updatedAt
+
+  @@map("admin_settings")
+}
+
+/// Bitácora del panel: pago recibido, licencia emitida/activada/revocada…
+model AdminEvent {
+  id        String   @id @default(cuid())
+  kind      String
+  message   String
+  code      String?
+  meta      Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_events")
+}
