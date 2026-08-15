@@ -1,0 +1,135 @@
+/**
+ * Documentos imprimibles (README § 9). Nada menor a 12pt en papel; se exportan
+ * a PDF por impresión del navegador o del generador del servidor.
+ */
+
+.doc {
+  --ink: #14110f;
+  --line: rgb(20 17 15 / 0.18);
+  --soft: #f4f1ec;
+  --red: #d63a26;
+  --green: #1f8a5a;
+
+  background: #fff;
+  color: var(--ink);
+  font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12pt;
+  line-height: 1.45;
+  max-width: 190mm;
+  margin: 0 auto;
+  padding: 14mm;
+}
+
+.doc h1 {
+  font-size: 20pt;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.doc h2 {
+  font-size: 13pt;
+  margin: 9mm 0 3mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--line);
+}
+
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+
+.doc th,
+.doc td {
+  text-align: left;
+  padding: 2.4mm 2mm;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.doc th {
+  font-size: 9.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6f6963;
+}
+
+.doc .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc .kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4mm;
+  margin-top: 6mm;
+}
+
+.doc .kpi {
+  border: 1px solid var(--line);
+  border-radius: 3mm;
+  padding: 4mm;
+}
+
+.doc .kpi span {
+  display: block;
+  font-size: 9.5pt;
+  color: #6f6963;
+}
+
+.doc .kpi strong {
+  display: block;
+  font-size: 15pt;
+  margin-top: 1mm;
+}
+
+.doc .note {
+  background: var(--soft);
+  border-radius: 3mm;
+  padding: 4mm;
+  font-size: 11pt;
+}
+
+.doc .sign {
+  margin-top: 12mm;
+  font-size: 10.5pt;
+  color: #6f6963;
+}
+
+.doc footer {
+  margin-top: 8mm;
+  padding-top: 3mm;
+  border-top: 1px solid var(--line);
+  font-size: 9.5pt;
+  color: #6f6963;
+  display: flex;
+  justify-content: space-between;
+}
+
+.doc .page {
+  page-break-after: always;
+}
+
+.doc .page:last-child {
+  page-break-after: auto;
+}
+
+.print-actions {
+  max-width: 190mm;
+  margin: 6mm auto 0;
+  padding: 0 14mm;
+}
+
+@media print {
+  .print-actions {
+    display: none;
+  }
+  .doc {
+    padding: 0;
+  }
+  @page {
+    size: letter;
+    margin: 14mm;
+  }
+}
