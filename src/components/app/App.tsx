@@ -12,7 +12,7 @@ import { detectPlatform, type PlatformInfo } from '@/lib/device';
 import { useStore } from '@/state/store';
 import { RADIUS, Sheet, text } from '@/components/ui';
 import { Welcome } from './screens/Welcome';
-import { Auth } from './screens/Auth';
+import { Auth, type AuthMode } from './screens/Auth';
 import { Onboarding } from './screens/Onboarding';
 import { Diagnostic } from './screens/Diagnostic';
 import { Blocked, OfflineGate, Paywall } from './screens/Gates';
@@ -45,10 +45,29 @@ const FAB_ACTIONS = [
 ] as const;
 
 export function App() {
-  const { state, patch, update, replace, entitlement, can, online, refreshEntitlement, claim, activate, toast, flash } =
-    useStore();
+  const {
+    state,
+    patch,
+    update,
+    replace,
+    entitlement,
+    can,
+    online,
+    refreshEntitlement,
+    claim,
+    activate,
+    toast,
+    flash,
+    deviceId,
+    user,
+    authReady,
+    register,
+    login,
+    logout,
+  } = useStore();
 
   const [screen, setScreen] = useState<Screen>('welcome');
+  const [authMode, setAuthMode] = useState<AuthMode>('registro');
   const [tab, setTab] = useState<Tab>('inicio');
   const [obStep, setObStep] = useState(0);
   const [moduleId, setModuleId] = useState(ROUTE_MODULES[0].id);
@@ -97,6 +116,12 @@ export function App() {
     }, 2500);
     return () => clearInterval(id);
   }, [claim, flash]);
+
+  // Con sesión abierta no se vuelve a pedir la bienvenida: la app arranca en el
+  // tablero, con el proyecto que ya está en el servidor.
+  useEffect(() => {
+    if (authReady && user && screen === 'welcome') setScreen('app');
+  }, [authReady, user, screen]);
 
   const diagnosis = useMemo(
     () => diagnose({ state, modules: ROUTE_MODULES, showFigures: can.showsInvestmentFigures }),
@@ -190,16 +215,34 @@ export function App() {
 
   const body = (() => {
     if (screen === 'welcome') {
-      return <Welcome onStart={() => setScreen('auth')} onSignIn={() => setScreen('auth')} />;
+      return (
+        <Welcome
+          onStart={() => {
+            setAuthMode('registro');
+            setScreen('auth');
+          }}
+          onSignIn={() => {
+            setAuthMode('entrar');
+            setScreen('auth');
+          }}
+        />
+      );
     }
 
     if (screen === 'auth') {
       return (
         <Auth
-          defaultName={state.profile.name}
+          mode={authMode}
+          onChangeMode={setAuthMode}
           onBack={() => setScreen('welcome')}
-          onSubmit={({ name, email }) => {
-            patch({ profile: { ...state.profile, name, email } });
+          onRegister={register}
+          onLogin={login}
+          onDone={({ hasProject }) => {
+            if (hasProject) {
+              setScreen('app');
+              setTab('inicio');
+              return;
+            }
             setObStep(0);
             setScreen('onboarding');
           }}
@@ -254,10 +297,21 @@ export function App() {
           entitlement={entitlement}
           onClose={() => setScreen('app')}
           onClaim={claim}
-          onCheckout={() => {
-            // El checkout real vive fuera de la app; al volver, `?pago=1` dispara
-            // la activación automática.
-            window.location.href = `/checkout?volver=${encodeURIComponent('/app?pago=1')}`;
+          onCheckout={async () => {
+            // El cobro lo abre el servidor con el precio del panel; al volver,
+            // `?pago=1` dispara la activación automática.
+            try {
+              const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId, returnPath: '/app?pago=1' }),
+              });
+              const data = (await response.json()) as { ok: boolean; url?: string; message?: string };
+              if (data.ok && data.url) window.location.href = data.url;
+              else flash(data.message ?? 'No pudimos abrir el pago. Intenta de nuevo.');
+            } catch {
+              flash('Necesitas conexión para abrir el pago.');
+            }
           }}
         />
       );
@@ -452,6 +506,12 @@ export function App() {
               setTourStep(0);
             }}
             onActivate={activate}
+            onLogout={async () => {
+              await logout();
+              setScreen('welcome');
+              setSubScreen(null);
+              setTab('inicio');
+            }}
           />
         );
     }

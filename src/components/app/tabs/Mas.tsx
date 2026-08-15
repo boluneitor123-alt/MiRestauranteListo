@@ -126,6 +126,7 @@ export function Mas({
   onRestartDiagnosis,
   onStartTour,
   onActivate,
+  onLogout,
 }: {
   state: ProjectState;
   sub: SubScreen | null;
@@ -143,6 +144,7 @@ export function Mas({
   onRestartDiagnosis: () => void;
   onStartTour: () => void;
   onActivate: (code: string) => Promise<{ ok: boolean; message?: string }>;
+  onLogout: () => void;
 }) {
   if (sub) {
     return (
@@ -251,6 +253,10 @@ export function Mas({
           </Card>
         </div>
       ))}
+
+      <Button variant="secondary" height={46} onClick={onLogout}>
+        Cerrar sesión
+      </Button>
     </div>
   );
 }

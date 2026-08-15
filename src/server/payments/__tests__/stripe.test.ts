@@ -1,0 +1,68 @@
+import { describe, expect, it } from 'vitest';
+import type Stripe from 'stripe';
+import { interpretEvent, INSTALLMENT_PLANS, CURRENCY } from '../stripe';
+
+const event = (type: string, object: unknown): Stripe.Event =>
+  ({ type, data: { object } }) as unknown as Stripe.Event;
+
+describe('interpretación de eventos de Stripe', () => {
+  it('traduce un checkout pagado', () => {
+    const result = interpretEvent(
+      event('checkout.session.completed', {
+        id: 'cs_1',
+        payment_status: 'paid',
+        amount_total: 245000,
+        payment_intent: 'pi_123',
+        customer_details: { email: 'Ana@Correo.com', name: 'Ana Rodríguez' },
+        metadata: { deviceId: 'eq-1', userId: 'u1' },
+      }),
+    );
+
+    expect(result).toEqual({
+      kind: 'pago',
+      email: 'Ana@Correo.com',
+      name: 'Ana Rodríguez',
+      // El monto vuelve a pesos: Stripe lo manda en centavos.
+      amount: 2450,
+      paymentRef: 'pi_123',
+      deviceId: 'eq-1',
+      userId: 'u1',
+    });
+  });
+
+  it('ignora un checkout que quedó sin pagar', () => {
+    const result = interpretEvent(
+      event('checkout.session.completed', { id: 'cs_2', payment_status: 'unpaid', amount_total: 245000 }),
+    );
+    expect(result.kind).toBe('ignorar');
+  });
+
+  it('cae al id de la sesión cuando no hay PaymentIntent', () => {
+    const result = interpretEvent(
+      event('checkout.session.completed', {
+        id: 'cs_3',
+        payment_status: 'paid',
+        amount_total: 245000,
+        customer_email: 'ana@correo.com',
+      }),
+    );
+    expect(result.paymentRef).toBe('cs_3');
+  });
+
+  it('traduce un reembolso con su referencia de cobro', () => {
+    const result = interpretEvent(
+      event('charge.refunded', { id: 'ch_1', amount_refunded: 245000, payment_intent: 'pi_123' }),
+    );
+    expect(result).toEqual({ kind: 'reembolso', amount: 2450, paymentRef: 'pi_123' });
+  });
+
+  it('ignora los eventos que no son pago ni reembolso', () => {
+    expect(interpretEvent(event('customer.created', {})).kind).toBe('ignorar');
+    expect(interpretEvent(event('payment_intent.created', {})).kind).toBe('ignorar');
+  });
+
+  it('cobra en pesos y ofrece 3 meses sin intereses', () => {
+    expect(CURRENCY).toBe('mxn');
+    expect(INSTALLMENT_PLANS).toEqual([3]);
+  });
+});

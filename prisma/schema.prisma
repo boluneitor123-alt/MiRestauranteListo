@@ -24,8 +24,25 @@ model User {
   project  Project?
   devices  Device[]
   licenses License[]
+  sessions Session[]
 
   @@map("users")
+}
+
+/// Sesión iniciada. El token vive en una cookie httpOnly y se puede revocar
+/// borrando la fila: cerrar sesión invalida de verdad, no sólo en el navegador.
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  /// Equipo desde el que se inició sesión, para ligarlo a su licencia.
+  deviceId  String?
+
+  @@index([userId])
+  @@map("sessions")
 }
 
 /// Equipo desde el que el usuario abre la app. Alimenta el límite de 3 equipos
@@ -291,6 +308,8 @@ model License {
 
   /// Referencia del proveedor de pago, para no emitir dos veces por un webhook repetido.
   paymentRef String? @unique
+  /// Equipo que originó el pago: permite activar solo, sin que el usuario teclee nada.
+  originDeviceId String?
 
   createdAt   DateTime  @default(now())
   activatedAt DateTime?

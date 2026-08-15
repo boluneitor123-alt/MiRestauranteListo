@@ -1,0 +1,121 @@
+/**
+ * Registro, inicio de sesión y sesiones (paso 2 de la continuación del plan).
+ *
+ * La sesión vive en una fila de base de datos y viaja en una cookie httpOnly:
+ * cerrar sesión la invalida de verdad, no sólo en ese navegador.
+ */
+
+import {
+  hashPassword,
+  isValidEmail,
+  MIN_PASSWORD_LENGTH,
+  newSessionToken,
+  normalizeEmail,
+  verifyPassword,
+} from './passwords';
+import type { AuthStore, AuthUser } from './store';
+
+export const SESSION_COOKIE = 'mrl_session';
+export const SESSION_DAYS = 30;
+const DAY_MS = 86_400_000;
+
+export type AuthError =
+  | 'correo-invalido'
+  | 'contrasena-corta'
+  | 'nombre-requerido'
+  | 'correo-ocupado'
+  | 'credenciales-invalidas';
+
+export const AUTH_MESSAGES: Record<AuthError, string> = {
+  'correo-invalido': 'Ese correo no se ve bien. Revísalo y vuelve a intentar.',
+  'contrasena-corta': `Tu contraseña necesita al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+  'nombre-requerido': 'Escribe tu nombre para saber cómo llamarte.',
+  'correo-ocupado': 'Ya hay una cuenta con ese correo. Inicia sesión o recupera tu acceso.',
+  // Mismo mensaje para correo inexistente y contraseña equivocada: no se
+  // confirma si un correo está registrado.
+  'credenciales-invalidas': 'Correo o contraseña incorrectos.',
+};
+
+export interface PublicUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
+export type AuthResult =
+  | { ok: true; user: PublicUser; token: string; expiresAt: number }
+  | { ok: false; error: AuthError; message: string };
+
+const publicUser = (user: AuthUser): PublicUser => ({ id: user.id, email: user.email, name: user.name });
+
+export class AuthService {
+  constructor(
+    private store: AuthStore,
+    private now: () => number = () => Date.now(),
+  ) {}
+
+  async register(input: { name: string; email: string; password: string; deviceId?: string }): Promise<AuthResult> {
+    const email = normalizeEmail(input.email);
+    const name = (input.name || '').trim();
+
+    if (!name) return this.fail('nombre-requerido');
+    if (!isValidEmail(email)) return this.fail('correo-invalido');
+    if ((input.password || '').length < MIN_PASSWORD_LENGTH) return this.fail('contrasena-corta');
+    if (await this.store.findUserByEmail(email)) return this.fail('correo-ocupado');
+
+    const user = await this.store.createUser({
+      email,
+      name,
+      passwordHash: await hashPassword(input.password),
+    });
+    return this.startSession(user, input.deviceId);
+  }
+
+  async login(input: { email: string; password: string; deviceId?: string }): Promise<AuthResult> {
+    const email = normalizeEmail(input.email);
+    const user = await this.store.findUserByEmail(email);
+
+    // Se verifica siempre contra un hash, exista o no el usuario, para que el
+    // tiempo de respuesta no revele qué correos están registrados.
+    const stored = user?.passwordHash ?? '';
+    const valid = await verifyPassword(input.password || '', stored);
+    if (!user || !valid) return this.fail('credenciales-invalidas');
+
+    return this.startSession(user, input.deviceId);
+  }
+
+  async logout(token: string): Promise<void> {
+    if (token) await this.store.deleteSession(token);
+  }
+
+  /** Usuario de una sesión vigente. Una sesión vencida no vale y se limpia. */
+  async userFromToken(token: string | undefined): Promise<PublicUser | undefined> {
+    if (!token) return undefined;
+    const session = await this.store.findSession(token);
+    if (!session) return undefined;
+    if (session.expiresAt <= this.now()) {
+      await this.store.deleteSession(token);
+      return undefined;
+    }
+    const user = await this.store.findUserById(session.userId);
+    return user ? publicUser(user) : undefined;
+  }
+
+  async sessionFromToken(token: string | undefined) {
+    if (!token) return undefined;
+    const session = await this.store.findSession(token);
+    if (!session || session.expiresAt <= this.now()) return undefined;
+    return session;
+  }
+
+  private async startSession(user: AuthUser, deviceId?: string): Promise<AuthResult> {
+    const token = newSessionToken();
+    const expiresAt = this.now() + SESSION_DAYS * DAY_MS;
+    await this.store.createSession({ token, userId: user.id, expiresAt, deviceId });
+    return { ok: true, user: publicUser(user), token, expiresAt };
+  }
+
+  private fail(error: AuthError): AuthResult {
+    return { ok: false, error, message: AUTH_MESSAGES[error] };
+  }
+}

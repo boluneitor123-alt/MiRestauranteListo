@@ -17,6 +17,7 @@ import {
 import { calculate, routePanel, urgency } from '@/domain/landing';
 import { money } from '@/domain/format';
 import { track } from '@/lib/track';
+import { getDeviceId } from '@/lib/device';
 
 /** Landing de venta (README § 12). */
 export default function LandingPage() {
@@ -87,9 +88,20 @@ export default function LandingPage() {
     window.location.href = '/app';
   };
 
-  const checkout = () => {
+  const checkout = async () => {
     track('InitiateCheckout', { value: LAUNCH.price, currency: 'MXN' });
-    window.location.href = `/checkout?volver=${encodeURIComponent('/?pago=ok')}`;
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: getDeviceId(), returnPath: '/app?pago=1' }),
+      });
+      const data = (await response.json()) as { ok: boolean; url?: string };
+      // Sin cobro configurado, el camino sigue siendo la prueba de 7 días.
+      window.location.href = data.ok && data.url ? data.url : '/app';
+    } catch {
+      window.location.href = '/app';
+    }
   };
 
   return (
