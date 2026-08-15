@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/organic-73d3c073-e3d2-4604-902e-6c42f54c8619/styles.css">
+<script src="_ds/organic-73d3c073-e3d2-4604-902e-6c42f54c8619/_ds_bundle.js"></script>
+<style>
+  :root {
+    --color-bg:#f7f5f3; --color-surface:#ffffff; --color-text:#1d1b1a; --color-divider:rgba(29,27,26,.10);
+    --color-accent:#d63a26; --color-accent-2:#22a05f;
+    --color-neutral-100:#ffffff; --color-neutral-200:#f4f1ee; --color-neutral-300:#e6e1dc;
+    --color-neutral-400:#c9c3bc; --color-neutral-500:#a09a93; --color-neutral-600:#7b756e;
+    --color-neutral-700:#5a544e; --color-neutral-800:#3b3733; --color-neutral-900:#211f1d;
+    --color-accent-100:#fdeeea; --color-accent-200:#fbd8d0; --color-accent-700:#992414; --color-accent-800:#6f1a0f; --color-accent-900:#4a120a;
+    --color-accent-2-100:#e8f7ee; --color-accent-2-200:#cdead9; --color-accent-2-600:#17854d; --color-accent-2-800:#0b4a2b;
+    --color-warn-100:#fdf3e0; --color-warn:#e8a317;
+    --font-heading:"Figtree", system-ui, sans-serif; --font-heading-weight:800;
+    --shadow-sm:0 1px 3px rgba(29,27,26,.07); --shadow-md:0 6px 18px rgba(29,27,26,.10);
+  }
+  body { margin:0; background:var(--color-bg); }
+  h1,h2,h3,h4 { letter-spacing:-.02em; }
+  input.input, select.input { font-size:14px; }
+  .adm-scroll { scrollbar-width:thin; }
+</style>
+</helmet>
+
+<div style="display:flex; min-height:100vh; background:var(--color-bg); font-family:var(--font-body); color:var(--color-text)">
+
+  <!-- Sidebar -->
+  <aside style="width:248px; flex:none; padding:26px 18px; background:var(--color-neutral-900); color:#fff; display:flex; flex-direction:column; gap:22px">
+    <div style="display:flex; align-items:center; gap:11px">
+      <span style="width:38px; height:38px; border-radius:50%; background:var(--color-accent); display:grid; place-items:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6A4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></svg>
+      </span>
+      <span>
+        <span style="display:block; font-family:var(--font-heading); font-size:15px; line-height:1.1">MiRestauranteListo</span>
+        <span style="display:block; font-size:11.5px; opacity:.6">Panel del dueño</span>
+      </span>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:4px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+        <button style="{{ n.style }}" onClick="{{ n.go }}">
+          <span style="flex:1; text-align:left">{{ n.label }}</span>
+          <span style="{{ n.badgeStyle }}">{{ n.badge }}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div style="margin-top:auto; padding:14px; border-radius:16px; background:rgba(255,255,255,.08); font-size:12px; line-height:1.5">
+      <div style="font-weight:700; margin-bottom:4px">Producto de pago único</div>
+      <div style="opacity:.75">Precio actual {{ priceLabel }} · prueba de {{ trialDaysLabel }} · {{ maxDevicesLabel }} por licencia</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main style="flex:1; min-width:0; padding:28px 34px 40px">
+    <header style="display:flex; align-items:flex-start; gap:18px; margin-bottom:24px">
+      <div style="flex:1">
+        <h2 style="margin:0; font-size:28px">{{ pageTitle }}</h2>
+        <p style="margin:3px 0 0; font-size:13.5px; color:var(--color-neutral-600)">{{ pageHint }}</p>
+      </div>
+      <button class="btn btn-secondary" style="height:42px" onClick="{{ simulatePayment }}">Simular pago recibido</button>
+      <button class="btn btn-primary" style="height:42px" onClick="{{ openIssue }}">Emitir licencia</button>
+    </header>
+
+    <!-- Emitir licencia -->
+    <sc-if value="{{ issueOpen }}">
+      <div style="margin-bottom:22px; padding:20px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-md); border:1px solid var(--color-accent-200)">
+        <div style="font-family:var(--font-heading); font-size:18px; margin-bottom:12px">Emitir licencia manualmente</div>
+        <div style="display:grid; grid-template-columns:1.4fr 1.4fr 1fr 1fr auto; gap:12px; align-items:end">
+          <div class="field"><label>Nombre del cliente</label><input class="input" style="height:42px" placeholder="Ana Rodríguez" value="{{ newName }}" onChange="{{ setNewName }}"></div>
+          <div class="field"><label>Correo de compra</label><input class="input" style="height:42px" placeholder="ana@correo.com" value="{{ newEmail }}" onChange="{{ setNewEmail }}"></div>
+          <div class="field"><label>Origen</label>
+            <select class="input" style="height:42px" value="{{ newSource }}" onChange="{{ setNewSource }}">
+              <option value="Stripe">Stripe</option>
+              <option value="Mercado Pago">Mercado Pago</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Cortesía">Cortesía</option>
+              <option value="Referido">Referido</option>
+            </select>
+          </div>
+          <div class="field"><label>Monto cobrado</label><input class="input" inputmode="decimal" style="height:42px" value="{{ newAmount }}" onChange="{{ setNewAmount }}"></div>
+          <button class="btn btn-primary" style="height:42px" onClick="{{ issueLicense }}">Generar código</button>
+        </div>
+        <div style="margin-top:10px; font-size:12.5px; color:var(--color-neutral-600)">El código se genera con formato MRL-XXXX-XXXX y queda listo para enviarse por correo o WhatsApp.</div>
+      </div>
+    </sc-if>
+
+    <!-- Resumen -->
+    <sc-if value="{{ pageResumen }}">
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px">
+          <sc-for list="{{ periods }}" as="p" hint-placeholder-count="7">
+            <button style="{{ p.style }}" onClick="{{ p.pick }}">{{ p.label }}</button>
+          </sc-for>
+          <sc-if value="{{ customPeriod }}">
+            <span style="display:flex; align-items:center; gap:8px; margin-left:4px">
+              <input class="input" type="date" style="height:40px" value="{{ from }}" onChange="{{ setFrom }}">
+              <span style="font-size:13px; color:var(--color-neutral-600)">a</span>
+              <input class="input" type="date" style="height:40px" value="{{ to }}" onChange="{{ setTo }}">
+            </span>
+          </sc-if>
+          <span style="margin-left:auto; font-size:12.5px; color:var(--color-neutral-600)">{{ rangeLabel }}</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+            <div style="padding:18px 20px; border-radius:18px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+              <div style="font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-neutral-600)">{{ k.label }}</div>
+              <div style="font-family:var(--font-heading); font-size:30px; line-height:1.1; margin-top:5px">{{ k.value }}</div>
+              <div style="{{ k.deltaStyle }}">{{ k.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.35fr 1fr; gap:16px; margin-top:16px">
+          <div style="padding:20px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+            <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:14px">
+              <div style="flex:1; font-family:var(--font-heading); font-size:18px">Ingresos por origen</div>
+              <div style="flex:none; white-space:nowrap; font-size:12.5px; color:var(--color-neutral-600)">Neto {{ revenueLabel }}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px">
+              <sc-for list="{{ bySource }}" as="s" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; gap:12px">
+                  <span style="width:110px; font-size:13px">{{ s.name }}</span>
+                  <span style="flex:1; height:10px; border-radius:999px; background:var(--color-neutral-200); overflow:hidden"><span style="{{ s.bar }}"></span></span>
+                  <span style="width:96px; text-align:right; font-size:13px; font-weight:700">{{ s.amount }}</span>
+                  <span style="width:54px; text-align:right; font-size:12px; color:var(--color-neutral-600)">{{ s.count }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--color-divider); display:grid; grid-template-columns:repeat(3,1fr); gap:12px">
+              <sc-for list="{{ funnel }}" as="fn" hint-placeholder-count="3">
+                <div>
+                  <div style="font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-neutral-600)">{{ fn.label }}</div>
+                  <div style="font-family:var(--font-heading); font-size:22px">{{ fn.value }}</div>
+                  <div style="font-size:12px; color:var(--color-neutral-600)">{{ fn.hint }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:20px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+            <div style="font-family:var(--font-heading); font-size:18px; margin-bottom:12px">Requiere tu atención</div>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <sc-for list="{{ attention }}" as="a" hint-placeholder-count="3">
+                <div style="display:flex; gap:11px; align-items:flex-start; padding:13px 14px; border-radius:14px; background:var(--color-neutral-200)">
+                  <span style="{{ a.dot }}"></span>
+                  <div style="flex:1">
+                    <div style="font-weight:700; font-size:13.5px">{{ a.title }}</div>
+                    <div style="font-size:12.5px; color:var(--color-neutral-700); margin-top:2px">{{ a.body }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; padding:20px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+          <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:14px">
+            <div style="flex:1; font-family:var(--font-heading); font-size:18px">Cómo va la demo de prueba</div>
+            <div style="font-size:12.5px; color:var(--color-neutral-600)">{{ rangeLabel }}</div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px">
+            <sc-for list="{{ demoStats }}" as="d" hint-placeholder-count="4">
+              <div style="padding:14px 16px; border-radius:14px; background:var(--color-neutral-200)">
+                <div style="font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-neutral-600)">{{ d.label }}</div>
+                <div style="font-family:var(--font-heading); font-size:24px; margin-top:3px">{{ d.value }}</div>
+                <div style="font-size:12px; color:var(--color-neutral-600)">{{ d.hint }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:14px">
+            <span style="font-size:12.5px; color:var(--color-neutral-600); width:120px">Convierten a pago</span>
+            <span style="flex:1; height:10px; border-radius:999px; background:var(--color-neutral-200); overflow:hidden"><span style="{{ demoBar }}"></span></span>
+          </div>
+          <p style="margin:12px 0 0; font-size:13px; line-height:1.5; color:var(--color-neutral-700)">{{ demoRead }}</p>
+        </div>
+
+        <div style="margin-top:16px; padding:20px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+          <div style="font-family:var(--font-heading); font-size:18px; margin-bottom:12px">Últimas licencias</div>
+          <div style="display:grid; grid-template-columns:150px 1.4fr 1fr 110px 130px 90px; padding:8px 0; border-bottom:1px solid var(--color-divider); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-neutral-600)">
+            <span>Código</span><span>Cliente</span><span>Origen</span><span>Monto</span><span>Estado</span><span style="text-align:right">Equipos</span>
+          </div>
+          <sc-for list="{{ recent }}" as="r" hint-placeholder-count="5">
+            <div style="display:grid; grid-template-columns:150px 1.4fr 1fr 110px 130px 90px; padding:11px 0; border-bottom:1px solid var(--color-neutral-200); align-items:center; font-size:13.5px">
+              <span style="font-weight:700; font-family:ui-monospace, monospace; font-size:12.5px">{{ r.code }}</span>
+              <span>{{ r.name }}<span style="display:block; font-size:12px; color:var(--color-neutral-600)">{{ r.email }}</span></span>
+              <span style="font-size:13px; color:var(--color-neutral-700)">{{ r.source }}<span style="display:block; font-size:12px; color:var(--color-neutral-600)">{{ r.created }}</span></span>
+              <span style="font-weight:700">{{ r.amount }}</span>
+              <span><span style="{{ r.tagStyle }}">{{ r.status }}</span></span>
+              <span style="text-align:right; color:var(--color-neutral-700)">{{ r.devices }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Licencias -->
+    <sc-if value="{{ pageLicencias }}">
+      <div>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px">
+          <input class="input" style="height:44px; max-width:340px" placeholder="Buscar por código, nombre o correo…" value="{{ query }}" onChange="{{ setQuery }}">
+          <div style="display:flex; gap:7px">
+            <sc-for list="{{ statusFilters }}" as="s" hint-placeholder-count="5">
+              <button style="{{ s.style }}" onClick="{{ s.pick }}">{{ s.label }}</button>
+            </sc-for>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary" style="height:42px" onClick="{{ exportCsv }}">Exportar CSV</button>
+        </div>
+
+        <div style="border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm); overflow:hidden">
+          <div style="display:grid; grid-template-columns:150px 1.3fr 1fr 100px 120px 80px 250px; padding:12px 18px; border-bottom:1px solid var(--color-divider); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-neutral-600)">
+            <span>Código</span><span>Cliente</span><span>Origen</span><span>Monto</span><span>Estado</span><span>Equipos</span><span style="text-align:right">Acciones</span>
+          </div>
+          <sc-for list="{{ licenses }}" as="l" hint-placeholder-count="6">
+            <div style="display:grid; grid-template-columns:150px 1.3fr 1fr 100px 120px 80px 250px; padding:13px 18px; border-bottom:1px solid var(--color-neutral-200); align-items:center; font-size:13.5px">
+              <span style="font-weight:700; font-family:ui-monospace, monospace; font-size:12.5px">{{ l.code }}</span>
+              <span>{{ l.name }}<span style="display:block; font-size:12px; color:var(--color-neutral-600)">{{ l.email }}</span></span>
+              <span style="font-size:13px; color:var(--color-neutral-700)">{{ l.source }}<span style="display:block; font-size:12px; color:var(--color-neutral-600)">{{ l.created }}</span></span>
+              <span style="font-weight:700">{{ l.amount }}</span>
+              <span><span style="{{ l.tagStyle }}">{{ l.status }}</span></span>
+              <span style="color:var(--color-neutral-700)">{{ l.devices }}</span>
+              <span style="display:flex; gap:6px; justify-content:flex-end">
+                <button class="btn btn-secondary" style="height:34px; font-size:12.5px" onClick="{{ l.copy }}">Copiar</button>
+                <button class="btn btn-secondary" style="height:34px; font-size:12.5px" onClick="{{ l.resend }}">Reenviar</button>
+                <button class="btn btn-secondary" style="height:34px; font-size:12.5px" onClick="{{ l.freeDevices }}">Liberar</button>
+                <button style="{{ l.dangerStyle }}" onClick="{{ l.toggleRevoke }}">{{ l.dangerLabel }}</button>
+              </span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noLicenses }}">
+            <div style="padding:34px; text-align:center">
+              <div style="font-family:var(--font-heading); font-size:18px">Sin licencias que coincidan</div>
+              <p style="margin:6px 0 0; font-size:13px; color:var(--color-neutral-600)">Emite una licencia o simula un pago para ver el flujo completo.</p>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Clientes -->
+    <sc-if value="{{ pageClientes }}">
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px">
+        <sc-for list="{{ customers }}" as="c" hint-placeholder-count="6">
+          <div style="padding:18px; border-radius:18px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+            <div style="display:flex; align-items:center; gap:12px">
+              <span style="width:42px; height:42px; flex:none; border-radius:50%; background:var(--color-accent-2-100); color:var(--color-accent-2-800); display:grid; place-items:center; font-family:var(--font-heading); font-size:17px">{{ c.initial }}</span>
+              <span style="flex:1">
+                <span style="display:block; font-weight:700; font-size:14.5px">{{ c.name }}</span>
+                <span style="display:block; font-size:12.5px; color:var(--color-neutral-600)">{{ c.email }}</span>
+              </span>
+            </div>
+            <div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12.5px; color:var(--color-neutral-700)">
+              <span>Licencias: <b>{{ c.count }}</b></span>
+              <span>Pagado: <b>{{ c.paid }}</b></span>
+              <span style="grid-column:1 / -1">Estado: <b>{{ c.state }}</b></span>
+              <span style="grid-column:1 / -1">Alta: {{ c.created }}</span>
+            </div>
+            <button class="btn btn-secondary btn-block" style="height:38px; font-size:12.5px; margin-top:12px" onClick="{{ c.mail }}">Escribirle por correo</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noCustomers }}">
+          <div style="grid-column:1 / -1; padding:34px; text-align:center; border-radius:20px; background:var(--color-neutral-100)">
+            <div style="font-family:var(--font-heading); font-size:18px">Todavía no hay clientes</div>
+            <p style="margin:6px 0 0; font-size:13px; color:var(--color-neutral-600)">Cada licencia emitida crea su ficha aquí.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- Ajustes -->
+    <sc-if value="{{ pageAjustes }}">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1000px">
+        <div style="padding:22px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+          <div style="font-family:var(--font-heading); font-size:18px; margin-bottom:14px">Producto y precio</div>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <div class="field"><label>Precio del pago único (MXN)</label><input class="input" inputmode="decimal" style="height:44px" value="{{ price }}" onChange="{{ setPrice }}"></div>
+            <div class="field"><label>Días de prueba antes del bloqueo</label><input class="input" inputmode="decimal" style="height:44px" value="{{ trialDays }}" onChange="{{ setTrialDays }}"></div>
+            <div class="field"><label>Equipos permitidos por licencia</label><input class="input" inputmode="decimal" style="height:44px" value="{{ maxDevices }}" onChange="{{ setMaxDevices }}"></div>
+            <div class="field"><label>Descuento por referido (%)</label><input class="input" inputmode="decimal" style="height:44px" value="{{ refDiscount }}" onChange="{{ setRefDiscount }}"></div>
+            <div class="field"><label>Días de garantía de reembolso</label><input class="input" inputmode="decimal" style="height:44px" value="{{ warranty }}" onChange="{{ setWarranty }}"></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid var(--color-divider)">
+            <div style="flex:1">
+              <div style="font-weight:700; font-size:13.5px">Activación automática tras el pago</div>
+              <div style="font-size:12.5px; color:var(--color-neutral-600)">El acceso se abre solo al confirmarse el cobro, sin que el cliente escriba código. El código queda como respaldo.</div>
+            </div>
+            <button style="{{ autoStyle }}" onClick="{{ toggleAuto }}"><span style="{{ autoKnob }}"></span></button>
+          </div>
+          <button class="btn btn-primary btn-block" style="height:44px; margin-top:14px" onClick="{{ saveSettings }}">Guardar cambios</button>
+          <p style="margin:10px 0 0; font-size:12.5px; color:var(--color-neutral-600)">La app del emprendedor lee estos valores: el precio del paywall, la duración de la prueba y cuántos equipos acepta cada código.</p>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <div style="padding:22px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm)">
+            <div style="font-family:var(--font-heading); font-size:18px; margin-bottom:8px">Cómo conectar el cobro real</div>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+                <div style="display:flex; gap:11px">
+                  <span style="width:24px; height:24px; flex:none; border-radius:50%; background:var(--color-accent); color:#fff; display:grid; place-items:center; font-size:12px; font-weight:800">{{ s.n }}</span>
+                  <div>
+                    <div style="font-weight:700; font-size:13.5px">{{ s.title }}</div>
+                    <div style="font-size:12.5px; color:var(--color-neutral-700); margin-top:1px">{{ s.body }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:22px; border-radius:20px; background:var(--color-accent-100)">
+            <div style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent-900)">Zona de riesgo</div>
+            <p style="margin:6px 0 12px; font-size:12.5px; color:var(--color-accent-800)">Borra todas las licencias y eventos de este panel. La app de tus clientes volverá al estado de prueba en su siguiente arranque.</p>
+            <button class="btn btn-primary" style="height:40px; font-size:13px" onClick="{{ resetStore }}">Borrar licencias y eventos</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Registro -->
+    <sc-if value="{{ pageRegistro }}">
+      <div style="max-width:900px; border-radius:20px; background:var(--color-neutral-100); box-shadow:var(--shadow-sm); overflow:hidden">
+        <sc-for list="{{ events }}" as="e" hint-placeholder-count="6">
+          <div style="display:flex; gap:14px; padding:15px 20px; border-bottom:1px solid var(--color-neutral-200); align-items:flex-start">
+            <span style="{{ e.dot }}"></span>
+            <div style="flex:1">
+              <div style="font-weight:700; font-size:13.5px">{{ e.type }}</div>
+              <div style="font-size:12.5px; color:var(--color-neutral-700); margin-top:2px">{{ e.text }}</div>
+            </div>
+            <span style="font-size:12px; color:var(--color-neutral-600); white-space:nowrap">{{ e.when }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noEvents }}">
+          <div style="padding:34px; text-align:center">
+            <div style="font-family:var(--font-heading); font-size:18px">Sin movimientos todavía</div>
+            <p style="margin:6px 0 0; font-size:13px; color:var(--color-neutral-600)">Aquí quedan registrados pagos, activaciones, revocaciones y cambios de precio.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ toast }}">
+    <div style="position:fixed; left:50%; bottom:28px; transform:translateX(-50%); padding:13px 20px; border-radius:999px; background:var(--color-neutral-900); color:#fff; font-size:13.5px; font-weight:600; box-shadow:var(--shadow-md); z-index:50">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+const KEY = 'mrl.licenses.v1';
+const NAMES = [['Ana Rodríguez', 'ana@correo.com', 'Stripe'], ['Luis Márquez', 'luis.marquez@gmail.com', 'Mercado Pago'],
+  ['Carmen Ibarra', 'carmen.ib@hotmail.com', 'Stripe'], ['Jorge Peña', 'jorgepena@outlook.com', 'Transferencia'],
+  ['Sofía Nava', 'sofia.nava@gmail.com', 'Referido'], ['Miguel Ángel Ruiz', 'maruiz@correo.com', 'Stripe']];
+
+const money = n => '$' + Math.round(n).toLocaleString('es-MX');
+const num = s => { const v = parseFloat(String(s).replace(/[^0-9.]/g, '')); return isNaN(v) ? 0 : v; };
+const rnd = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let o = ''; for (let i = 0; i < 4; i++) o += A[Math.floor(Math.random() * A.length)]; return o; };
+const newCode = () => 'MRL-' + rnd() + '-' + rnd();
+const fmtDate = t => new Date(t).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtTime = t => new Date(t).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+const DEFAULTS = () => {
+  const now = Date.now(), DAY = 86400000;
+  const codes = NAMES.map((n, i) => {
+    const created = now - (26 - i * 4) * DAY;
+    const activated = i < 4 ? created + DAY * 0.2 : null;
+    return {
+      code: newCode(), name: n[0], email: n[1], source: n[2], amount: n[2] === 'Referido' ? 1960 : 2450,
+      createdAt: created, activatedAt: activated,
+      status: i === 5 ? 'nueva' : i === 4 ? 'reembolsada' : 'activada',
+      devices: activated ? [{ id: 'dev-' + i, when: activated }] : []
+    };
+  });
+  // Demos: cada instalación que arranca la prueba queda registrada aquí.
+  const trials = [];
+  for (let i = 0; i < 34; i++) {
+    const started = now - Math.round(Math.random() * 40 + 1) * DAY;
+    const ended = started + 7 * DAY;
+    const finished = ended < now;
+    trials.push({ id: 'dev-seed-' + i, startedAt: started, expiredAt: finished ? ended : null, converted: finished && Math.random() < 0.34 });
+  }
+  return {
+    settings: { price: 2450, trialDays: 7, maxDevices: 3, refDiscount: 20, warranty: 14, autoActivate: true },
+    codes, trials,
+    events: codes.slice().reverse().map(c => ({ when: c.createdAt, type: 'Pago recibido', text: c.name + ' pagó ' + money(c.amount) + ' por ' + c.source + ' · código ' + c.code + ' emitido' }))
+  };
+};
+
+const DAY = 86400000;
+const startOfDay = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const PERIODS = [['hoy', 'Hoy'], ['ayer', 'Ayer'], ['semana', 'Esta semana'], ['mes', 'Este mes'], ['pasado', 'Mes pasado'], ['todo', 'Todo'], ['custom', 'Personalizado']];
+const rangeOf = (id, from, to) => {
+  const now = Date.now(), d = new Date();
+  if (id === 'hoy') return [startOfDay(now), now, 'hoy'];
+  if (id === 'ayer') return [startOfDay(now) - DAY, startOfDay(now), 'ayer'];
+  if (id === 'semana') { const wd = (d.getDay() + 6) % 7; return [startOfDay(now) - wd * DAY, now, 'esta semana']; }
+  if (id === 'mes') return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), now, 'este mes'];
+  if (id === 'pasado') return [new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime(), new Date(d.getFullYear(), d.getMonth(), 1).getTime(), 'el mes pasado'];
+  if (id === 'custom') {
+    const a = from ? new Date(from + 'T00:00:00').getTime() : now - 30 * DAY;
+    const b = to ? new Date(to + 'T23:59:59').getTime() : now;
+    return [a, b, 'del periodo elegido'];
+  }
+  return [0, now, 'histórico'];
+};
+
+class Component extends DCLogic {
+  state = {
+    page: 'resumen', store: null, query: '', statusFilter: 'todas', toast: null, issueOpen: false,
+    period: 'mes', from: '', to: '',
+    newName: '', newEmail: '', newSource: 'Stripe', newAmount: '2450'
+  };
+
+  componentDidMount() { this.load(); }
+
+  load() {
+    let store = null;
+    try { const raw = window.localStorage.getItem(KEY); if (raw) store = JSON.parse(raw); } catch (e) {}
+    if (!store || !store.codes) { store = DEFAULTS(); this.save(store); }
+    if (!store.settings) store.settings = DEFAULTS().settings;
+    let migrated = false;
+    if (store.settings.price === 1490) { store.settings.price = 2450; migrated = true; }
+    if (store.settings.trialDays === 3) { store.settings.trialDays = 7; migrated = true; }
+    if (store.settings.autoActivate === undefined) { store.settings.autoActivate = true; migrated = true; }
+    if (migrated) this.save(store);
+    if (!store.trials || store.trials.length < 5) {
+      store.trials = (store.trials || []).concat(DEFAULTS().trials);
+      this.save(store);
+    }
+    this.setState({ store });
+  }
+  save(store) { try { window.localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  update(fn, msg) {
+    const store = JSON.parse(JSON.stringify(this.state.store || DEFAULTS()));
+    const out = fn(store) || store;
+    this.save(out);
+    this.setState({ store: out });
+    if (msg) this.flash(msg);
+  }
+  log(store, type, text) { store.events = [{ when: Date.now(), type, text }].concat(store.events || []).slice(0, 120); }
+  flash(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2400); }
+  tag(status) {
+    const map = {
+      activada: ['var(--color-accent-2-100)', 'var(--color-accent-2-800)'],
+      nueva: ['var(--color-warn-100)', '#8a6112'],
+      revocada: ['var(--color-accent-100)', 'var(--color-accent-800)'],
+      reembolsada: ['var(--color-neutral-200)', 'var(--color-neutral-700)']
+    };
+    const c = map[status] || map.nueva;
+    return { display: 'inline-block', padding: '4px 11px', borderRadius: '999px', fontSize: '11.5px', fontWeight: 700, background: c[0], color: c[1] };
+  }
+  pill(on) {
+    return { padding: '9px 14px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap', border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'), background: on ? 'var(--color-accent)' : 'var(--color-neutral-100)', color: on ? '#fff' : 'var(--color-text)' };
+  }
+
+  renderVals() {
+    const st = this.state, store = st.store || { codes: [], events: [], settings: DEFAULTS().settings };
+    const S = store.settings, codes = store.codes || [];
+    const active = codes.filter(c => c.status === 'activada');
+    const [rFrom, rTo, rWord] = rangeOf(st.period || 'mes', st.from, st.to);
+    const inRange = codes.filter(c => c.createdAt >= rFrom && c.createdAt <= rTo);
+    const gross = inRange.reduce((a, c) => a + (c.amount || 0), 0);
+    const refundedP = inRange.filter(c => c.status === 'reembolsada');
+    const refundedAmt = refundedP.reduce((a, c) => a + (c.amount || 0), 0);
+    const revenue = gross - refundedAmt;
+    const refundPct = gross ? Math.round(refundedAmt / gross * 100) : 0;
+    const refundCountPct = inRange.length ? Math.round(refundedP.length / inRange.length * 100) : 0;
+    const refunded = codes.filter(c => c.status === 'reembolsada').reduce((a, c) => a + (c.amount || 0), 0);
+    const pending = codes.filter(c => c.status === 'nueva');
+    // Demos
+    const trials = store.trials || [];
+    const trialsRange = trials.filter(t => t.startedAt >= rFrom && t.startedAt <= rTo);
+    const finished = trialsRange.filter(t => t.expiredAt);
+    const finishedNoPay = finished.filter(t => !t.converted);
+    const demoLostPct = finished.length ? Math.round(finishedNoPay.length / finished.length * 100) : 0;
+    const demoConvPct = finished.length ? 100 - demoLostPct : 0;
+    const sources = {};
+    inRange.forEach(c => { if (c.status === 'reembolsada') return; sources[c.source] = sources[c.source] || { amount: 0, count: 0 }; sources[c.source].amount += c.amount || 0; sources[c.source].count++; });
+    const maxSrc = Math.max(1, ...Object.values(sources).map(x => x.amount));
+    const q = (st.query || '').toLowerCase();
+
+    const page = st.page;
+    const nav = [['resumen', 'Resumen', ''], ['licencias', 'Licencias', codes.length + ''], ['clientes', 'Clientes', ''],
+      ['ajustes', 'Ajustes', ''], ['registro', 'Registro', (store.events || []).length + '']];
+
+    const rowsOf = list => list.map(c => ({
+      code: c.code, name: c.name, email: c.email, source: c.source, created: fmtDate(c.createdAt),
+      amount: money(c.amount || 0), status: c.status, tagStyle: this.tag(c.status),
+      devices: (c.devices || []).length + ' de ' + S.maxDevices,
+      copy: () => {
+        try { navigator.clipboard && navigator.clipboard.writeText(c.code); } catch (e) {}
+        this.flash('Código ' + c.code + ' copiado');
+      },
+      resend: () => this.update(s => { this.log(s, 'Código reenviado', 'Se reenvió ' + c.code + ' a ' + c.email); }, 'Código reenviado a ' + c.email),
+      freeDevices: () => this.update(s => {
+        const t = s.codes.find(x => x.code === c.code); t.devices = [];
+        this.log(s, 'Equipos liberados', c.name + ' puede volver a activar en ' + S.maxDevices + ' equipos');
+      }, 'Equipos liberados'),
+      dangerLabel: c.status === 'revocada' ? 'Reactivar' : 'Revocar',
+      dangerStyle: {
+        height: '34px', padding: '0 13px', borderRadius: '999px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 700,
+        fontFamily: 'var(--font-body)', border: '1px solid transparent',
+        background: c.status === 'revocada' ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)',
+        color: c.status === 'revocada' ? 'var(--color-accent-2-800)' : 'var(--color-accent-800)'
+      },
+      toggleRevoke: () => this.update(s => {
+        const t = s.codes.find(x => x.code === c.code);
+        if (t.status === 'revocada') { t.status = t.activatedAt ? 'activada' : 'nueva'; this.log(s, 'Licencia reactivada', c.code + ' vuelve a dar acceso a ' + c.name); }
+        else { t.status = 'revocada'; t.devices = []; this.log(s, 'Licencia revocada', c.code + ' quedó sin acceso · ' + c.name); }
+      }, c.status === 'revocada' ? 'Licencia reactivada' : 'Licencia revocada')
+    }));
+
+    const custMap = {};
+    codes.forEach(c => {
+      const k = c.email;
+      custMap[k] = custMap[k] || { name: c.name, email: c.email, count: 0, paid: 0, created: c.createdAt, states: [] };
+      custMap[k].count++; custMap[k].paid += c.status === 'reembolsada' ? 0 : (c.amount || 0);
+      custMap[k].created = Math.min(custMap[k].created, c.createdAt);
+      custMap[k].states.push(c.status);
+    });
+
+    return {
+      toast: st.toast,
+      nav: nav.map(n => ({
+        label: n[1], badge: n[2], go: () => this.setState({ page: n[0] }),
+        style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 13px', borderRadius: '12px', cursor: 'pointer', border: 'none', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: page === n[0] ? 800 : 500, background: page === n[0] ? 'var(--color-accent)' : 'transparent', color: page === n[0] ? '#fff' : 'rgba(255,255,255,.72)' },
+        badgeStyle: { fontSize: '11.5px', opacity: page === n[0] ? 0.9 : 0.5 }
+      })),
+      pageResumen: page === 'resumen', pageLicencias: page === 'licencias', pageClientes: page === 'clientes',
+      pageAjustes: page === 'ajustes', pageRegistro: page === 'registro',
+      pageTitle: { resumen: 'Resumen del negocio', licencias: 'Licencias y códigos', clientes: 'Clientes', ajustes: 'Ajustes del producto', registro: 'Registro de movimientos' }[page],
+      pageHint: {
+        resumen: 'Ventas, activaciones y lo que necesita tu atención hoy.',
+        licencias: 'Emite, reenvía, libera equipos o revoca acceso. Un código = una licencia de pago único.',
+        clientes: 'Quién compró, cuánto pagó y en qué estado está su acceso.',
+        ajustes: 'Precio, días de prueba y equipos permitidos. La app de tus clientes lee estos valores.',
+        registro: 'Bitácora de pagos, activaciones y cambios. Útil para aclaraciones.'
+      }[page],
+
+      priceLabel: money(S.price), trialDaysLabel: S.trialDays + ' días', maxDevicesLabel: S.maxDevices + ' equipos',
+
+      periods: PERIODS.map(p => ({ label: p[1], pick: () => this.setState({ period: p[0] }), style: this.pill((st.period || 'mes') === p[0]) })),
+      customPeriod: (st.period || 'mes') === 'custom',
+      from: st.from || '', to: st.to || '',
+      setFrom: e => { const v = e.target.value; this.setState({ from: v }); },
+      setTo: e => { const v = e.target.value; this.setState({ to: v }); },
+      rangeLabel: 'Mostrando ' + rWord + ' · ' + fmtDate(rFrom) + ' a ' + fmtDate(rTo),
+      kpis: [
+        { label: 'Ingresos netos ' + rWord, value: money(revenue), delta: refundedAmt ? 'Bruto ' + money(gross) + ' · reembolsado ' + money(refundedAmt) : 'Bruto ' + money(gross) + ' · sin reembolsos', deltaStyle: { fontSize: '12px', marginTop: '4px', color: refundedAmt ? 'var(--color-accent-800)' : 'var(--color-accent-2-800)' } },
+        { label: 'Licencias del periodo', value: inRange.filter(c => c.status !== 'reembolsada').length + '', delta: inRange.filter(c => c.status === 'nueva').length + ' sin activar · ' + codes.filter(c => c.status !== 'reembolsada').length + ' históricas', deltaStyle: { fontSize: '12px', marginTop: '4px', color: 'var(--color-neutral-600)' } },
+        { label: '% de reembolsos', value: refundPct + '%', delta: refundedP.length + ' de ' + inRange.length + ' ventas (' + refundCountPct + '% de las órdenes)', deltaStyle: { fontSize: '12px', marginTop: '4px', color: refundPct > 10 ? 'var(--color-accent-800)' : 'var(--color-neutral-600)' } },
+        { label: 'Demos terminadas sin pagar', value: demoLostPct + '%', delta: finishedNoPay.length + ' de ' + finished.length + ' demos concluidas · ' + demoConvPct + '% convirtió', deltaStyle: { fontSize: '12px', marginTop: '4px', color: demoLostPct > 75 ? 'var(--color-accent-800)' : 'var(--color-neutral-600)' } }
+      ],
+      demoStats: [
+        { label: 'Demos iniciadas', value: trialsRange.length + '', hint: 'Instalaciones que empezaron la prueba' },
+        { label: 'Demos concluidas', value: finished.length + '', hint: 'Ya cumplieron los ' + S.trialDays + ' días' },
+        { label: 'Concluidas sin pago', value: finishedNoPay.length + '', hint: demoLostPct + '% de las concluidas' },
+        { label: 'Conversión de la demo', value: demoConvPct + '%', hint: 'Pagaron al terminar la prueba' }
+      ],
+      demoRead: finished.length === 0
+        ? 'Todavía no hay demos concluidas en este periodo.'
+        : demoLostPct >= 80
+          ? 'La demo casi no está convirtiendo: revisa si ' + S.trialDays + ' días alcanzan para que el usuario vea valor, o abre más funciones durante la prueba.'
+          : demoLostPct >= 60
+            ? 'Conversión baja pero normal para pago único. Prueba recordatorios el último día de la demo.'
+            : 'La demo está funcionando bien: más de 1 de cada 3 termina pagando.',
+      demoBar: { display: 'block', width: demoConvPct + '%', height: '100%', borderRadius: '999px', background: 'var(--color-accent-2-600)' },
+      revenueLabel: money(revenue), grossLabel: money(gross),
+      bySource: Object.keys(sources).map(k => ({
+        name: k, amount: money(sources[k].amount), count: sources[k].count + ' lic.',
+        bar: { display: 'block', width: Math.round(sources[k].amount / maxSrc * 100) + '%', height: '100%', borderRadius: '999px', background: 'var(--color-accent)' }
+      })),
+      funnel: [
+        { label: 'Códigos emitidos', value: codes.length + '', hint: 'Total histórico' },
+        { label: 'Activados', value: active.length + '', hint: codes.length ? Math.round(active.length / codes.length * 100) + '% de los emitidos' : '—' },
+        { label: 'Sin activar', value: pending.length + '', hint: 'Recuérdales por correo' }
+      ],
+      attention: [
+        { title: pending.length + ' código(s) pagados sin activar', body: pending.length ? 'Reenvía el código a ' + pending.map(c => c.email).slice(0, 2).join(', ') + '. Es la causa número uno de soporte.' : 'Todos los códigos vendidos ya están en uso.', dot: { width: '10px', height: '10px', flex: 'none', marginTop: '5px', borderRadius: '50%', background: pending.length ? 'var(--color-warn)' : 'var(--color-accent-2-600)' } },
+        { title: codes.filter(c => (c.devices || []).length >= S.maxDevices).length + ' licencia(s) con equipos al límite', body: 'Si el cliente cambió de teléfono, usa "Liberar" para que pueda activar de nuevo.', dot: { width: '10px', height: '10px', flex: 'none', marginTop: '5px', borderRadius: '50%', background: 'var(--color-neutral-500)' } },
+        { title: 'Garantía de ' + S.warranty + ' días activa', body: 'Las compras de los últimos ' + S.warranty + ' días pueden pedir reembolso. Revísalas antes de contar el ingreso como firme.', dot: { width: '10px', height: '10px', flex: 'none', marginTop: '5px', borderRadius: '50%', background: 'var(--color-accent-2-600)' } }
+      ],
+      recent: rowsOf(codes.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 5)),
+
+      query: st.query,
+      setQuery: e => { const v = e.target.value; this.setState({ query: v }); },
+      statusFilters: [['todas', 'Todas'], ['activada', 'Activadas'], ['nueva', 'Sin activar'], ['revocada', 'Revocadas'], ['reembolsada', 'Reembolsadas']].map(f => ({
+        label: f[1], pick: () => this.setState({ statusFilter: f[0] }), style: this.pill(st.statusFilter === f[0])
+      })),
+      licenses: rowsOf(codes.filter(c => {
+        if (st.statusFilter !== 'todas' && c.status !== st.statusFilter) return false;
+        if (!q) return true;
+        return (c.code + ' ' + c.name + ' ' + c.email).toLowerCase().includes(q);
+      }).sort((a, b) => b.createdAt - a.createdAt)),
+      noLicenses: codes.filter(c => {
+        if (st.statusFilter !== 'todas' && c.status !== st.statusFilter) return false;
+        if (!q) return true;
+        return (c.code + ' ' + c.name + ' ' + c.email).toLowerCase().includes(q);
+      }).length === 0,
+      exportCsv: () => {
+        const rows = [['codigo', 'nombre', 'correo', 'origen', 'monto', 'estado', 'equipos', 'emitido', 'activado']]
+          .concat(codes.map(c => [c.code, c.name, c.email, c.source, c.amount, c.status, (c.devices || []).length, new Date(c.createdAt).toISOString(), c.activatedAt ? new Date(c.activatedAt).toISOString() : '']));
+        const csv = rows.map(r => r.join(',')).join('\n');
+        try {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+          a.download = 'licencias-mirestaurantelisto.csv';
+          document.body.appendChild(a); a.click(); a.remove();
+          this.flash('CSV exportado');
+        } catch (e) { this.flash('No se pudo exportar'); }
+      },
+
+      customers: Object.values(custMap).sort((a, b) => b.paid - a.paid).map(c => ({
+        name: c.name, email: c.email, initial: c.name.slice(0, 1).toUpperCase(),
+        count: c.count + '', paid: money(c.paid), created: fmtDate(c.created),
+        state: c.states.includes('activada') ? 'Acceso activo' : c.states.includes('revocada') ? 'Revocado' : c.states.includes('reembolsada') ? 'Reembolsado' : 'Pagado sin activar',
+        mail: () => { try { window.open('mailto:' + c.email, '_blank'); } catch (e) {} }
+      })),
+      noCustomers: Object.keys(custMap).length === 0,
+
+      issueOpen: st.issueOpen,
+      openIssue: () => this.setState({ issueOpen: !st.issueOpen }),
+      newName: st.newName, newEmail: st.newEmail, newSource: st.newSource, newAmount: st.newAmount,
+      setNewName: e => { const v = e.target.value; this.setState({ newName: v }); },
+      setNewEmail: e => { const v = e.target.value; this.setState({ newEmail: v }); },
+      setNewSource: e => { const v = e.target.value; this.setState({ newSource: v }); },
+      setNewAmount: e => { const v = e.target.value; this.setState({ newAmount: v }); },
+      issueLicense: () => {
+        const name = (st.newName || '').trim(), email = (st.newEmail || '').trim();
+        if (!name || !email) return this.flash('Escribe nombre y correo del cliente');
+        const code = newCode(), amount = num(st.newAmount) || S.price;
+        this.update(s => {
+          s.codes.push({ code, name, email, source: st.newSource, amount, createdAt: Date.now(), activatedAt: null, status: 'nueva', devices: [] });
+          this.log(s, 'Licencia emitida', code + ' para ' + name + ' (' + email + ') por ' + money(amount));
+        }, 'Código ' + code + ' emitido');
+        this.setState({ newName: '', newEmail: '', newAmount: String(S.price), issueOpen: false, page: 'licencias' });
+      },
+      simulatePayment: () => {
+        const pick = NAMES[Math.floor(Math.random() * NAMES.length)];
+        const code = newCode();
+        this.update(s => {
+          s.codes.push({ code, name: pick[0], email: Date.now().toString().slice(-4) + '.' + pick[1], source: pick[2], amount: S.price, createdAt: Date.now(), activatedAt: null, status: 'nueva', devices: [] });
+          this.log(s, 'Pago recibido', 'Webhook de ' + pick[2] + ': ' + money(S.price) + ' · código ' + code + ' generado' + (S.autoActivate ? ' · el acceso se abrirá automáticamente en la app' : ' y enviado por correo'));
+        }, 'Pago recibido · código ' + code + ' generado');
+        this.setState({ page: 'licencias' });
+      },
+
+      autoStyle: { width: '46px', height: '28px', flex: 'none', borderRadius: '999px', border: 'none', cursor: 'pointer', padding: '3px', display: 'flex', justifyContent: S.autoActivate ? 'flex-end' : 'flex-start', background: S.autoActivate ? 'var(--color-accent-2-600)' : 'var(--color-neutral-300)' },
+      autoKnob: { width: '22px', height: '22px', borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-sm)' },
+      toggleAuto: () => this.update(s => { s.settings.autoActivate = !s.settings.autoActivate; this.log(s, 'Ajustes actualizados', 'Activación automática ' + (s.settings.autoActivate ? 'encendida' : 'apagada')); }),
+      price: S.price, trialDays: S.trialDays, maxDevices: S.maxDevices, refDiscount: S.refDiscount, warranty: S.warranty,
+      setPrice: e => { const v = num(e.target.value); this.update(s => { s.settings.price = v; }); },
+      setTrialDays: e => { const v = Math.max(1, num(e.target.value)); this.update(s => { s.settings.trialDays = v; }); },
+      setMaxDevices: e => { const v = Math.max(1, num(e.target.value)); this.update(s => { s.settings.maxDevices = v; }); },
+      setRefDiscount: e => { const v = num(e.target.value); this.update(s => { s.settings.refDiscount = v; }); },
+      setWarranty: e => { const v = num(e.target.value); this.update(s => { s.settings.warranty = v; }); },
+      saveSettings: () => this.update(s => { this.log(s, 'Ajustes actualizados', 'Precio ' + money(s.settings.price) + ' · prueba ' + s.settings.trialDays + ' días · ' + s.settings.maxDevices + ' equipos'); }, 'Ajustes guardados y publicados a la app'),
+      steps: [
+        { n: '1', title: 'Crea el link de pago', body: 'Un producto de pago único en Stripe o Mercado Pago con el precio de arriba y la garantía en la descripción.' },
+        { n: '2', title: 'Conecta el webhook', body: 'Al confirmarse el pago, tu servidor crea el código en esta base y lo envía por correo y WhatsApp.' },
+        { n: '3', title: 'Valida desde la app', body: 'La app manda el código y el identificador del equipo; el servidor responde si es válido y cuántos equipos quedan.' },
+        { n: '4', title: 'Revalida al abrir', body: 'Como la app exige internet, cada arranque confirma que la licencia sigue vigente y no fue reembolsada.' },
+        { n: '5', title: 'Atiende reembolsos', body: 'Marca la licencia como reembolsada aquí: el acceso del cliente vuelve a prueba en su siguiente arranque.' }
+      ],
+      resetStore: () => { const fresh = DEFAULTS(); this.save(fresh); this.setState({ store: fresh }); this.flash('Licencias y eventos restablecidos'); },
+
+      events: (store.events || []).map(e => ({
+        type: e.type, text: e.text, when: fmtTime(e.when),
+        dot: { width: '9px', height: '9px', flex: 'none', marginTop: '6px', borderRadius: '50%', background: e.type === 'Pago recibido' ? 'var(--color-accent-2-600)' : e.type === 'Licencia revocada' ? 'var(--color-accent)' : 'var(--color-neutral-500)' }
+      })),
+      noEvents: (store.events || []).length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

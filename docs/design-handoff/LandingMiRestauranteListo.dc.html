@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;800&amp;family=Roboto+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  :root {
+    --ink:#14110f; --paper:#ffffff; --bone:#f4f1ec; --line:rgba(20,17,15,.12);
+    --red:#d63a26; --red-soft:#fdeeea; --red-deep:#8f2213;
+    --green:#1f8a5a; --green-soft:#e8f7ee;
+    --pencil:#87807a;
+    --num:"Bricolage Grotesque", system-ui, sans-serif;
+    --body:"Figtree", system-ui, sans-serif;
+    --mono:"Roboto Mono", ui-monospace, monospace;
+  }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--body); }
+  * { box-sizing:border-box; }
+  a { color:var(--red); text-underline-offset:3px; }
+  a:hover { color:var(--red-deep); }
+  :focus-visible { outline:2.5px solid var(--red); outline-offset:3px; }
+  input, button, select { font-family:inherit; }
+  input::placeholder { color:var(--pencil); font-weight:500; opacity:1; }
+  @keyframes lpUp { from { transform:translateY(14px); opacity:0 } to { transform:none; opacity:1 } }
+  @keyframes lpPrint { from { transform:translateY(-16px) scaleY(.96); opacity:0 } to { transform:none; opacity:1 } }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important } html { scroll-behavior:auto } }
+</style>
+</helmet>
+
+<div style="max-width:1180px; margin:0 auto; padding:0 clamp(14px,4vw,18px) 132px">
+
+  <!-- Barra de urgencia -->
+  <sc-if value="{{ launchOn }}">
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:10px; padding:11px 16px; border-radius:14px; background:var(--ink); color:#fff">
+      <span style="font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#ffb3a3">Precio de lanzamiento</span>
+      <span style="font-size:13.5px; font-weight:600">{{ daysLeftLabel }} · quedan {{ spotsLabel }}</span>
+      <span style="flex:1; min-width:80px; height:6px; border-radius:999px; background:rgba(255,255,255,.18); overflow:hidden"><span style="{{ spotsBar }}"></span></span>
+      <a href="#precio" style="font-size:13.5px; font-weight:600; color:#fff">Ver precio</a>
+    </div>
+  </sc-if>
+
+  <!-- Nav -->
+  <header style="display:flex; align-items:center; gap:12px; padding:18px 0 6px">
+    <span style="width:34px; height:34px; border-radius:50%; background:var(--red); display:grid; place-items:center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6A4 4 0 0 1 18 13.87V21H6Z"></path><path d="M6 17h12"></path></svg>
+    </span>
+    <span style="font-family:var(--num); font-weight:800; font-size:16px; letter-spacing:-.02em">MiRestauranteListo</span>
+    <span style="flex:1"></span>
+    <span style="display:none; font-size:13px; color:var(--pencil)">Pago único · sin mensualidades</span>
+  </header>
+
+  <!-- 1 · HERO + CALCULADORA -->
+  <section style="padding:12px 0 10px">
+    <p style="margin:0 0 8px; font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--red-deep)">Diagnóstico gratuito · sin registro</p>
+    <h1 style="margin:0; font-family:var(--num); font-weight:800; font-size:clamp(21px,5.2vw,54px); line-height:1.05; letter-spacing:-.03em; max-width:19ch">¿Quieres abrir tu negocio de comida y no sabes ni por dónde empezar?</h1>
+    <p style="margin:10px 0 0; font-size:clamp(14.5px,3.6vw,18px); line-height:1.45; max-width:46ch; color:#4a443f">Contesta dos cosas y te digo en qué paso vas, qué sigue y cuánto te falta.</p>
+
+    <div style="display:flex; flex-flow:row wrap-reverse; gap:14px; margin-top:16px; align-items:flex-end">
+
+      <!-- Diagnóstico de dos preguntas -->
+      <div style="flex:1 1 300px; min-width:0; padding:18px; border:1.5px solid var(--line); border-radius:20px; background:var(--paper); box-shadow:0 12px 30px rgba(20,17,15,.07)">
+        <p style="margin:0 0 10px; font-size:15px; font-weight:600">¿Qué quieres abrir?</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px">
+          <sc-for list="{{ giroOptions }}" as="g" hint-placeholder-count="6">
+            <button style="{{ g.style }}" onClick="{{ g.pick }}">{{ g.label }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ showQ2 }}">
+          <div style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--line); animation:lpUp .25s ease both">
+            <p style="margin:0 0 10px; font-size:15px; font-weight:600">¿En qué punto estás hoy?</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px">
+              <sc-for list="{{ stageOptions }}" as="s" hint-placeholder-count="4">
+                <button style="{{ s.style }}" onClick="{{ s.pick }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noDiag }}">
+          <p style="margin:14px 0 0; font-size:13px; color:var(--pencil)">Dos taps y ves tu ruta: en qué paso vas de los 43 y cuál es el siguiente. Sin correo, sin registro.</p>
+        </sc-if>
+      </div>
+
+      <!-- Panel de la ruta -->
+      <div style="flex:1 1 300px; min-width:0; position:relative">
+        <sc-if value="{{ showRoute }}">
+          <div style="position:relative; background:var(--ink); color:#fff; border-radius:6px; padding:clamp(20px,5vw,26px) clamp(16px,4.2vw,22px) clamp(24px,6vw,30px); animation:lpPrint .45s cubic-bezier(.2,.7,.2,1) both; box-shadow:0 18px 44px rgba(20,17,15,.28)">
+            <div style="position:absolute; left:0; right:0; top:-1px; height:12px; background:repeating-linear-gradient(90deg, var(--ink) 0 10px, transparent 10px 20px); clip-path:polygon(0 100%, 0 0, 100% 0, 100% 100%)"></div>
+            <p style="margin:0; font-family:var(--num); font-weight:800; font-size:clamp(21px,5.4vw,28px); line-height:1.1; letter-spacing:-.03em">{{ routeTitle }}</p>
+            <p style="margin:6px 0 0; font-size:14px; color:rgba(255,255,255,.75)">43 pasos, 10 etapas. <b style="color:#fff">Estás en el paso {{ paso }}.</b></p>
+            <div style="margin-top:12px; height:8px; border-radius:999px; background:rgba(255,255,255,.16); overflow:hidden"><div style="{{ routeBar }}"></div></div>
+
+            <sc-if value="{{ hasDone }}">
+              <div style="margin-top:18px; display:flex; flex-direction:column; gap:7px">
+                <sc-for list="{{ doneSteps }}" as="d" hint-placeholder-count="2">
+                  <div style="display:flex; align-items:center; gap:9px; font-size:13.5px; color:rgba(255,255,255,.45)">
+                    <svg width="15" height="15" style="flex:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span style="text-decoration:line-through">{{ d.title }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ skipped }}">
+              <div style="margin-top:16px; padding:14px 15px; border-radius:12px; background:rgba(255,255,255,.1)">
+                <div style="font-family:var(--num); font-weight:800; font-size:15.5px; line-height:1.3">Hay 3 pasos que van antes de buscar local, y la mayoría se los salta.</div>
+                <p style="margin:6px 0 0; font-size:13px; line-height:1.45; color:rgba(255,255,255,.8)">Uno de ellos determina qué tamaño de local necesitas. Empezar al revés es la razón número uno por la que se renta de más.</p>
+              </div>
+            </sc-if>
+
+            <div style="margin-top:18px; padding:16px 17px; border-radius:12px; background:var(--red)">
+              <p style="margin:0 0 4px; font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:rgba(255,255,255,.8)">Lo que sigue</p>
+              <div style="font-family:var(--num); font-weight:800; font-size:clamp(19px,4.8vw,24px); line-height:1.15; letter-spacing:-.025em">{{ nextTitle }}</div>
+              <p style="margin:8px 0 0; font-size:14px; line-height:1.45; color:rgba(255,255,255,.92)">{{ nextDo }}</p>
+              <p style="margin:6px 0 0; font-size:13px; line-height:1.45; color:rgba(255,255,255,.75)">{{ nextWhy }}</p>
+            </div>
+
+            <div style="margin-top:16px; padding-top:14px; border-top:1px dashed rgba(255,255,255,.28); display:flex; flex-direction:column; gap:6px">
+              <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="2">
+                <div style="font-size:14px; color:rgba(255,255,255,.8)">{{ u.title }}</div>
+              </sc-for>
+              <div style="font-size:13px; font-style:italic; color:rgba(255,255,255,.5)">{{ restLine }}</div>
+            </div>
+          </div>
+
+          <sc-if value="{{ routeLeadPending }}">
+            <div style="margin-top:14px; padding:16px 18px; border:1.5px dashed var(--line); border-radius:16px; background:var(--bone)">
+              <button style="background:none; border:none; padding:0; cursor:pointer; font-size:15px; font-weight:600; color:var(--red-deep); text-decoration:underline; text-underline-offset:3px" onClick="{{ openRouteLead }}">Mándame mi ruta completa</button>
+              <p style="margin:6px 0 0; font-size:13px; color:var(--pencil)">Te llegan los 43 pasos en orden, con qué hacer en cada uno.</p>
+              <sc-if value="{{ routeLeadOpen }}">
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px">
+                  <input type="email" inputmode="email" placeholder="tu@correo.com" style="flex:1; min-width:200px; height:50px; padding:0 14px; border:1.5px solid var(--line); border-radius:14px; background:var(--paper); font-size:16px; outline:none" value="{{ routeEmail }}" onChange="{{ setRouteEmail }}">
+                  <button style="height:50px; padding:0 20px; border:none; border-radius:14px; background:var(--ink); color:#fff; font-size:15px; font-weight:600; cursor:pointer" onClick="{{ saveRouteLead }}">Mándame mi ruta</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ routeLeadDone }}">
+            <div style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--green-soft); color:#0b4a2b; font-size:14px">Listo, te la mandamos. Revisa tu correo en unos minutos.</div>
+          </sc-if>
+        </sc-if>
+
+      </div>
+    </div>
+
+
+    <!-- CTA con el número del usuario -->
+    <div style="margin-top:16px; padding:clamp(16px,4.5vw,22px); border-radius:20px; background:var(--bone); display:flex; flex-wrap:wrap; gap:16px; align-items:center">
+      <div style="flex:1; min-width:240px">
+        <div style="font-family:var(--num); font-weight:800; font-size:clamp(20px,5vw,28px); line-height:1.15; letter-spacing:-.025em">{{ ctaStep }}</div>
+        <p style="margin:6px 0 0; font-size:15px; color:#4a443f">{{ ctaRest }}</p>
+      </div>
+      <button style="height:56px; padding:0 24px; border:none; border-radius:16px; background:var(--red); color:#fff; font-size:16px; font-weight:600; cursor:pointer" onClick="{{ startTrial }}">Empezar mi prueba de 7 días</button>
+    </div>
+  </section>
+
+  <!-- 2 · EL PUENTE -->
+  <section style="margin-top:clamp(44px,9vw,64px); padding:clamp(20px,5vw,34px) clamp(16px,4.5vw,24px); border-radius:24px; background:var(--bone)">
+    <p style="margin:0 0 8px; font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--red-deep)">Y ahora qué</p>
+    <h2 style="margin:0; font-family:var(--num); font-weight:800; font-size:clamp(26px,5.5vw,40px); line-height:1.06; letter-spacing:-.025em; max-width:24ch">Ya sabes cocinar. Falta todo lo que hay entre hoy y el día que abres.</h2>
+    <p style="margin:14px 0 0; font-size:clamp(15px,3.8vw,17.5px); line-height:1.55; max-width:60ch; color:#4a443f">Eso es <strong>MiRestauranteListo</strong>: la app donde armas tu ruta de apertura, costeas tus platillos con precios reales y cierras tus números antes de gastar el primer peso. Se usa desde el celular y no necesitas saber de contabilidad.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:18px">
+      <sc-for list="{{ bridge }}" as="b" hint-placeholder-count="3">
+        <div style="padding:18px; border-radius:16px; background:var(--paper); border:1px solid var(--line)">
+          <div style="font-family:var(--num); font-weight:800; font-size:26px; letter-spacing:-.02em; font-variant-numeric:tabular-nums">{{ b.figure }}</div>
+          <div style="margin-top:4px; font-size:14px; line-height:1.45; color:#4a443f">{{ b.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- 3 · VIDEO DEMO -->
+  <section style="margin-top:64px">
+    <h2 style="margin:0 0 6px; font-family:var(--num); font-weight:800; font-size:clamp(24px,5vw,34px); letter-spacing:-.025em">Así se ve por dentro</h2>
+    <p style="margin:0 0 18px; font-size:15.5px; color:#4a443f; max-width:56ch">Un minuto y medio: meter tus datos, ver tu punto de equilibrio, abrir tu ruta y costear un platillo.</p>
+    <div style="position:relative; border-radius:20px; overflow:hidden; background:var(--ink); aspect-ratio:16/10">
+      <video style="width:100%; height:100%; object-fit:cover; display:block" playsinline="" muted="" autoplay="" loop="" preload="metadata" onTimeUpdate="{{ videoProgress }}"></video>
+      <div style="position:absolute; inset:0; pointer-events:none; display:grid; place-items:center">
+        <div style="padding:12px 16px; border-radius:12px; background:rgba(255,255,255,.92); font-size:13px; font-weight:600; color:var(--ink); text-align:center; max-width:80%">[EDITAR] Pega aquí el MP4 self-hosted con subtítulos quemados</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · LAS TRES HERRAMIENTAS -->
+  <section style="margin-top:64px">
+    <h2 style="margin:0 0 20px; font-family:var(--num); font-weight:800; font-size:clamp(24px,5vw,34px); letter-spacing:-.025em">Tres herramientas, una sola app</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px">
+      <sc-for list="{{ tools }}" as="t" hint-placeholder-count="3">
+        <div style="border:1px solid var(--line); border-radius:20px; overflow:hidden; background:var(--paper)">
+          <div style="aspect-ratio:9/17; background:var(--bone); display:grid; place-items:center; padding:16px">
+            <image-slot id="{{ t.slot }}" shape="rounded" radius="18" fit="contain" placeholder="{{ t.slotHint }}" style="width:100%; height:100%"></image-slot>
+          </div>
+          <div style="padding:18px 20px 22px">
+            <div style="font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--red-deep)">{{ t.kicker }}</div>
+            <div style="margin-top:4px; font-family:var(--num); font-weight:800; font-size:21px; letter-spacing:-.02em">{{ t.name }}</div>
+            <p style="margin:7px 0 0; font-size:14.5px; line-height:1.5; color:#4a443f">{{ t.body }}</p>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- 4b · CALCULADORA -->
+  <section style="margin-top:64px">
+    <h2 style="margin:0 0 6px; font-family:var(--num); font-weight:800; font-size:clamp(24px,5vw,34px); letter-spacing:-.025em; max-width:26ch">Y cuando llegues a los números, ya están resueltos</h2>
+    <p style="margin:0 0 18px; font-size:15.5px; line-height:1.5; color:#4a443f; max-width:56ch">Mete tres datos y sabes cuánto tienes que vender al día para no perder, y cuánto para ganar lo que quieres ganar.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin-top:22px; align-items:start">
+
+      <!-- Calculadora -->
+      <form style="padding:clamp(15px,4vw,20px); border:1.5px solid var(--line); border-radius:20px; background:var(--paper); box-shadow:0 12px 30px rgba(20,17,15,.07)" onSubmit="{{ noSubmit }}">
+        <div style="display:flex; flex-direction:column; gap:14px">
+          <label style="display:block">
+            <span style="display:block; font-size:13.5px; font-weight:600; margin-bottom:6px">Renta mensual del local</span>
+            <span style="display:flex; align-items:center; gap:8px; padding:0 14px; border:1.5px solid var(--line); border-radius:14px; background:var(--bone)">
+              <span style="font-family:var(--mono); font-size:15px; color:var(--pencil)">$</span>
+              <input inputmode="numeric" placeholder="18,000" style="flex:1; min-width:0; height:54px; border:none; background:transparent; font-family:var(--mono); font-weight:700; font-size:19px; letter-spacing:-.01em; outline:none" value="{{ rentaTxt }}" onChange="{{ setRenta }}">
+            </span>
+          </label>
+          <label style="display:block">
+            <span style="display:block; font-size:13.5px; font-weight:600; margin-bottom:6px">Nómina mensual estimada</span>
+            <span style="display:flex; align-items:center; gap:8px; padding:0 14px; border:1.5px solid var(--line); border-radius:14px; background:var(--bone)">
+              <span style="font-family:var(--mono); font-size:15px; color:var(--pencil)">$</span>
+              <input inputmode="numeric" placeholder="32,000" style="flex:1; min-width:0; height:54px; border:none; background:transparent; font-family:var(--mono); font-weight:700; font-size:19px; outline:none" value="{{ nominaTxt }}" onChange="{{ setNomina }}">
+            </span>
+          </label>
+          <label style="display:block">
+            <span style="display:block; font-size:13.5px; font-weight:600; margin-bottom:6px">Otros gastos fijos al mes</span>
+            <span style="display:flex; align-items:center; gap:8px; padding:0 14px; border:1.5px solid var(--line); border-radius:14px; background:var(--bone)">
+              <span style="font-family:var(--mono); font-size:15px; color:var(--pencil)">$</span>
+              <input inputmode="numeric" placeholder="9,000" style="flex:1; min-width:0; height:54px; border:none; background:transparent; font-family:var(--mono); font-weight:700; font-size:19px; outline:none" value="{{ otrosTxt }}" onChange="{{ setOtros }}">
+            </span>
+            <span style="display:block; margin-top:6px; font-size:12.5px; color:var(--pencil)">Luz, gas, agua, internet, licencias, contador.</span>
+          </label>
+          <label style="display:block">
+            <span style="display:block; font-size:13.5px; font-weight:600; margin-bottom:6px">¿Cuánto quieres ganar tú al mes?</span>
+            <span style="display:flex; align-items:center; gap:8px; padding:0 14px; border:1.5px solid var(--red); border-radius:14px; background:var(--red-soft)">
+              <span style="font-family:var(--mono); font-size:15px; color:var(--red-deep)">$</span>
+              <input inputmode="numeric" style="flex:1; min-width:0; height:54px; border:none; background:transparent; font-family:var(--mono); font-weight:700; font-size:19px; outline:none; color:var(--red-deep)" value="{{ metaTxt }}" onChange="{{ setMeta }}">
+            </span>
+            <span style="display:block; margin-top:6px; font-size:12.5px; color:var(--pencil)">Tu sueldo como dueño, lo que quieres que te quede.</span>
+          </label>
+
+          <div style="display:flex; align-items:center; gap:12px; padding-top:12px; border-top:1px dashed var(--line)">
+            <label style="flex:1">
+              <span style="display:block; font-size:13px; font-weight:600; margin-bottom:6px">Ticket promedio <span style="color:var(--pencil); font-weight:400">(opcional)</span></span>
+              <span style="display:flex; align-items:center; gap:8px; padding:0 12px; border:1.5px solid var(--line); border-radius:14px; background:var(--paper)">
+                <span style="font-family:var(--mono); font-size:14px; color:var(--pencil)">$</span>
+                <input inputmode="numeric" style="flex:1; min-width:0; height:46px; border:none; background:transparent; font-family:var(--mono); font-weight:700; font-size:17px; outline:none" value="{{ ticketTxt }}" onChange="{{ setTicket }}">
+              </span>
+            </label>
+            <span style="flex:1; font-size:12.5px; color:var(--pencil); padding-top:18px">Lo que gasta cada cliente en promedio. Ajústalo a tu negocio.</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- El número: bloque tipo comanda -->
+      <div style="position:relative">
+        <sc-if value="{{ hasResult }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative; background:var(--ink); color:#fff; border-radius:6px; padding:clamp(20px,5vw,26px) clamp(16px,4.2vw,22px) clamp(24px,6vw,30px); animation:lpPrint .45s cubic-bezier(.2,.7,.2,1) both; box-shadow:0 18px 44px rgba(20,17,15,.28)">
+            <div style="position:absolute; left:0; right:0; top:-1px; height:12px; background:repeating-linear-gradient(90deg, var(--ink) 0 10px, transparent 10px 20px); clip-path:polygon(0 100%, 0 0, 100% 0, 100% 100%)"></div>
+            <sc-if value="{{ isExample }}">
+              <div style="display:inline-block; margin-bottom:12px; padding:6px 11px; border-radius:999px; background:rgba(255,255,255,.14); font-size:11.5px; font-weight:600; color:rgba(255,255,255,.9)">Ejemplo de una taquería. Cambia los datos por los tuyos.</div>
+            </sc-if>
+            <p style="margin:0 0 16px; font-family:var(--num); font-weight:600; font-size:clamp(16px,4.4vw,20px); line-height:1.25; letter-spacing:-.02em"><span style="font-weight:800">{{ fixedLine }}</span> <span style="color:rgba(255,255,255,.65)">Se pagan abras o no, vendas o no.</span></p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:18px; padding-top:16px; border-top:1px dashed rgba(255,255,255,.28)">
+              <div>
+                <p style="margin:0 0 4px; font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:rgba(255,255,255,.55)">Para no perder</p>
+                <div style="font-family:var(--num); font-weight:800; font-size:clamp(38px,10vw,60px); line-height:.95; letter-spacing:-.04em; font-variant-numeric:tabular-nums">{{ perDay }}</div>
+                <div style="font-family:var(--num); font-weight:600; font-size:16px; color:rgba(255,255,255,.85)">al día · {{ ticketsDay }}</div>
+              </div>
+              <div>
+                <p style="margin:0 0 4px; font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:#ffb3a3">Para ganar {{ metaLabel }}</p>
+                <div style="font-family:var(--num); font-weight:800; font-size:clamp(38px,10vw,60px); line-height:.95; letter-spacing:-.04em; font-variant-numeric:tabular-nums; color:#fff">{{ goalDay }}</div>
+                <div style="font-family:var(--num); font-weight:600; font-size:16px; color:rgba(255,255,255,.85)">al día · {{ goalTicketsDay }}</div>
+              </div>
+            </div>
+
+            <p style="margin:18px 0 0; padding:14px 15px; border-radius:12px; background:rgba(255,255,255,.1); font-family:var(--num); font-weight:600; font-size:clamp(15px,4vw,19px); line-height:1.35; letter-spacing:-.015em">{{ pace }}</p>
+
+            <button style="{{ closedStyle }}" onClick="{{ toggleClosed }}">
+              <span style="{{ closedBox }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+              </span>
+              <span style="flex:1">Cierro un día a la semana <span style="color:rgba(255,255,255,.6)">· {{ daysLabel }}</span></span>
+            </button>
+            <sc-if value="{{ closedOn }}">
+              <p style="margin:8px 0 0; font-size:13px; color:rgba(255,255,255,.75)">{{ closedNote }}</p>
+            </sc-if>
+
+            <div style="margin-top:16px; padding-top:14px; border-top:1px dashed rgba(255,255,255,.28); display:flex; justify-content:space-between; gap:10px; font-family:var(--mono); font-size:13px">
+              <span style="color:rgba(255,255,255,.6)">Venta al mes para no perder</span><span style="font-weight:700; font-variant-numeric:tabular-nums">{{ perMonth }}</span>
+            </div>
+            <sc-if value="{{ outOfRange }}">
+              <p style="margin:12px 0 0; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.1); font-size:13px; color:rgba(255,255,255,.85)">{{ rangeNote }}</p>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ leadPending }}">
+            <div style="margin-top:14px; padding:16px 18px; border:1.5px dashed var(--line); border-radius:16px; background:var(--bone)">
+              <button style="display:flex; align-items:center; gap:8px; background:none; border:none; padding:0; cursor:pointer; font-size:15px; font-weight:600; color:var(--red-deep); text-decoration:underline; text-underline-offset:3px" onClick="{{ openLead }}">Guardar mi cálculo</button>
+              <p style="margin:6px 0 0; font-size:13px; color:var(--pencil)">Te lo mando por correo con el desglose y qué hacer con cada número.</p>
+              <sc-if value="{{ leadOpen }}">
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px">
+                  <input type="email" inputmode="email" placeholder="tu@correo.com" style="flex:1; min-width:200px; height:50px; padding:0 14px; border:1.5px solid var(--line); border-radius:14px; background:var(--paper); font-size:16px; outline:none" value="{{ email }}" onChange="{{ setEmail }}">
+                  <button style="height:50px; padding:0 20px; border:none; border-radius:14px; background:var(--ink); color:#fff; font-size:15px; font-weight:600; cursor:pointer" onClick="{{ saveLead }}">Guardar mi cálculo</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ leadDone }}">
+            <div style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--green-soft); color:#0b4a2b; font-size:14px">Listo, te lo mandamos. Revisa tu correo en unos minutos.</div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ noResult }}">
+          <div style="padding:26px 22px; border:1.5px dashed var(--line); border-radius:20px; background:var(--bone)">
+            <p style="margin:0; font-size:14.5px; line-height:1.5; color:#4a443f">Llena los tres primeros campos y tus dos números se calculan solos. No pedimos correo ni tarjeta.</p>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 5 · COMPARATIVA -->
+  <section style="margin-top:clamp(44px,9vw,64px); padding:clamp(20px,5vw,30px) clamp(15px,4vw,22px) clamp(24px,6vw,34px); border-radius:24px; background:var(--ink); color:#fff">
+    <h2 style="margin:0 0 4px; font-family:var(--num); font-weight:800; font-size:clamp(24px,5vw,34px); letter-spacing:-.025em">Lo que cuesta resolver esto de otra forma</h2>
+    <p style="margin:0 0 20px; font-size:15px; color:rgba(255,255,255,.7)">Precios de referencia en México.</p>
+    <div style="display:flex; flex-direction:column">
+      <sc-for list="{{ compare }}" as="c" hint-placeholder-count="4">
+        <div style="{{ c.rowStyle }}">
+          <span style="flex:1; min-width:0">
+            <span style="display:block; font-size:15.5px; font-weight:600">{{ c.what }}</span>
+            <span style="display:block; margin-top:2px; font-size:13px; color:{{ c.noteColor }}">{{ c.note }}</span>
+          </span>
+          <span style="{{ c.priceStyle }}">{{ c.price }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:24px 0 0; font-family:var(--num); font-weight:600; font-size:clamp(18px,4.6vw,26px); line-height:1.25; letter-spacing:-.02em; max-width:34ch">Vas a invertir alrededor de <span style="color:#ffb3a3">$263,500</span> en abrir. Esto es el <span style="color:#ffb3a3">0.9%</span> de eso.</p>
+    <p style="margin:8px 0 0; font-size:12.5px; color:rgba(255,255,255,.5)">[EDITAR] Verifica el monto de inversión típica con tus propios datos.</p>
+  </section>
+
+  <!-- 5b · EL COSTO DE EQUIVOCARSE -->
+  <section style="margin-top:22px; padding:clamp(22px,5.5vw,30px) clamp(16px,4.5vw,24px); border-radius:24px; background:var(--red-soft)">
+    <div style="font-family:var(--num); font-weight:800; font-size:clamp(24px,5.6vw,38px); line-height:1.08; letter-spacing:-.03em; color:var(--red-deep); max-width:26ch">Un mes de renta mal elegida te cuesta {{ rentLoss }}.</div>
+    <p style="margin:10px 0 0; font-family:var(--num); font-weight:600; font-size:clamp(17px,4.4vw,22px); color:var(--ink)">Esto cuesta $2,450, una sola vez.</p>
+  </section>
+
+  <!-- 6 · OBJECIONES -->
+  <section style="margin-top:64px">
+    <h2 style="margin:0 0 6px; font-family:var(--num); font-weight:800; font-size:clamp(24px,5vw,34px); letter-spacing:-.025em">Las cuatro dudas que siempre nos hacen</h2>
+    <p style="margin:0 0 20px; font-size:15.5px; color:#4a443f; max-width:56ch">Respondidas a cámara, sin guion. Cada una en 40 segundos.</p>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <sc-for list="{{ objections }}" as="o" hint-placeholder-count="4">
+        <div style="border:1px solid var(--line); border-radius:18px; background:var(--paper); overflow:hidden">
+          <button style="width:100%; display:flex; align-items:center; gap:14px; padding:14px 16px; background:none; border:none; cursor:pointer; text-align:left" onClick="{{ o.toggle }}">
+            <span style="width:64px; height:64px; flex:none; border-radius:14px; overflow:hidden; background:var(--bone)">
+              <image-slot id="{{ o.slot }}" shape="rounded" radius="14" placeholder="Cara" style="width:64px; height:64px"></image-slot>
+            </span>
+            <span style="flex:1; min-width:0">
+              <span style="display:block; font-size:16px; font-weight:600; line-height:1.3">{{ o.q }}</span>
+              <span style="display:block; margin-top:3px; font-size:13.5px; color:var(--pencil)">{{ o.summary }}</span>
+            </span>
+            <span style="{{ o.chev }}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+            </span>
+          </button>
+          <sc-if value="{{ o.open }}">
+            <div style="padding:0 16px 18px; animation:lpUp .25s ease both">
+              <div style="border-radius:14px; overflow:hidden; background:var(--ink); aspect-ratio:16/9; display:grid; place-items:center">
+                <span style="padding:10px 14px; border-radius:10px; background:rgba(255,255,255,.9); font-size:12.5px; font-weight:600; color:var(--ink)">[EDITAR] Clip de 40 s · {{ o.q }}</span>
+              </div>
+              <p style="margin:12px 0 0; font-size:14.5px; line-height:1.55; color:#4a443f">{{ o.text }}</p>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- 7 · PRECIO -->
+  <section id="precio" style="margin-top:64px; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; align-items:start">
+    <div style="padding:clamp(20px,5vw,28px) clamp(16px,4.5vw,24px) clamp(22px,5.5vw,30px); border:2px solid var(--ink); border-radius:24px">
+      <p style="margin:0 0 6px; font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--red-deep)">Pago único · precio de lanzamiento</p>
+      <div style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap">
+        <span style="font-family:var(--num); font-weight:600; font-size:26px; color:var(--pencil); text-decoration:line-through; text-decoration-thickness:2px">$3,900</span>
+        <span style="font-family:var(--num); font-weight:800; font-size:clamp(46px,12vw,72px); line-height:.9; letter-spacing:-.04em; font-variant-numeric:tabular-nums">$2,450</span>
+        <span style="font-size:14px; color:var(--pencil); padding-bottom:10px">MXN, una vez</span>
+      </div>
+      <p style="margin:8px 0 0; font-size:13.5px; color:var(--pencil)">Precio de los primeros usuarios. Sube cuando cerremos el cupo de lanzamiento.</p>
+      <sc-if value="{{ launchOn }}">
+        <div style="margin-top:12px; padding:14px 15px; border-radius:16px; background:var(--ink); color:#fff">
+          <div style="display:flex; flex-wrap:wrap; align-items:baseline; gap:8px">
+            <span style="font-family:var(--num); font-weight:800; font-size:17px">{{ daysLeftLabel }}</span>
+            <span style="font-size:13px; color:rgba(255,255,255,.75)">a este precio · {{ saveLabel }}</span>
+          </div>
+          <div style="margin-top:9px; height:7px; border-radius:999px; background:rgba(255,255,255,.18); overflow:hidden"><div style="{{ spotsBar }}"></div></div>
+          <div style="margin-top:7px; display:flex; justify-content:space-between; gap:10px; font-size:12.5px; color:rgba(255,255,255,.7)">
+            <span>{{ spotsTaken }}</span><span>quedan {{ spotsLabel }}</span>
+          </div>
+        </div>
+      </sc-if>
+      <div style="margin-top:12px; padding:14px 15px; border-radius:16px; background:var(--bone)">
+        <div style="font-family:var(--num); font-weight:800; font-size:15.5px; line-height:1.3">{{ investLine }}</div>
+        <p style="margin:5px 0 0; font-size:13px; color:#4a443f">{{ investLine2 }}</p>
+      </div>
+      <p style="margin:10px 0 0; font-family:var(--num); font-weight:600; font-size:18px">o 3 pagos de $817 sin intereses</p>
+      <button style="width:100%; height:58px; margin-top:18px; border:none; border-radius:16px; background:var(--red); color:#fff; font-size:17px; font-weight:600; cursor:pointer" onClick="{{ startTrial }}">Empezar mi prueba de 7 días</button>
+      <div style="display:flex; flex-wrap:wrap; align-items:baseline; gap:7px; margin-top:12px">
+        <button style="background:none; border:none; padding:0; cursor:pointer; font-size:15px; font-weight:600; color:var(--ink); text-decoration:underline; text-underline-offset:3px" onClick="{{ checkout }}">Pagar ahora y desbloquear todo</button>
+        <span style="font-size:13.5px; color:var(--pencil)">Ya lo tengo claro, sáltate la prueba.</span>
+      </div>
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px">
+        <sc-for list="{{ included }}" as="i" hint-placeholder-count="6">
+          <div style="display:flex; gap:9px; align-items:flex-start; font-size:14.5px; line-height:1.45">
+            <svg width="17" height="17" style="flex:none; margin-top:3px; color:var(--green)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+            <span>{{ i.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="padding:clamp(16px,4.5vw,22px); border-radius:20px; background:var(--green-soft)">
+        <div style="font-family:var(--num); font-weight:800; font-size:20px; color:#0b4a2b">14 días para pedir tu dinero de vuelta</div>
+        <p style="margin:7px 0 0; font-size:14.5px; line-height:1.5; color:#12603a">Si la app no te sirve, escribes un mensaje y te devolvemos el pago completo. No tienes que explicar por qué. El riesgo es nuestro, no tuyo.</p>
+      </div>
+      <div style="padding:clamp(16px,4.5vw,22px); border-radius:20px; background:var(--bone)">
+        <div style="font-family:var(--num); font-weight:800; font-size:20px">Prueba 7 días antes de pagar</div>
+        <p style="margin:7px 0 0; font-size:14.5px; line-height:1.5; color:#4a443f">Entras, contestas tu diagnóstico y empiezas tu ruta y ves tus números completos. Al terminar los 7 días decides.</p>
+      </div>
+      <sc-if value="{{ launchOn }}">
+        <div style="padding:clamp(16px,4.5vw,22px); border-radius:20px; background:var(--red-soft)">
+          <div style="font-family:var(--num); font-weight:800; font-size:20px; color:var(--red-deep)">Por qué sube el precio</div>
+          <p style="margin:7px 0 0; font-size:14.5px; line-height:1.5; color:var(--red-deep)">Los primeros {{ spotsLabel }} entran a $2,450 porque su uso nos dice qué mejorar. Al cerrar el cupo, el precio queda en $3,900 y quien ya entró conserva su acceso sin pagar la diferencia.</p>
+        </div>
+      </sc-if>
+      <div style="padding:clamp(16px,4.5vw,22px); border-radius:20px; border:1px solid var(--line)">
+        <div style="font-family:var(--num); font-weight:800; font-size:20px">Sin mensualidades</div>
+        <p style="margin:7px 0 0; font-size:14.5px; line-height:1.5; color:#4a443f">Un software de restaurante te cobraría todos los meses para siempre. Aquí pagas una vez porque abrir es un proyecto, no una suscripción.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · CTA FINAL -->
+  <section style="margin-top:clamp(48px,10vw,70px); text-align:center; padding:clamp(28px,7vw,40px) clamp(16px,4vw,20px) clamp(30px,7vw,44px); border-radius:24px; background:var(--red-soft)">
+    <h2 style="margin:0 auto; max-width:22ch; font-family:var(--num); font-weight:800; font-size:clamp(26px,6vw,40px); line-height:1.05; letter-spacing:-.03em; color:var(--red-deep)">Puedes calcular todo esto después de firmar el local. Sale mucho más caro.</h2>
+    <button style="height:58px; margin-top:20px; padding:0 30px; border:none; border-radius:16px; background:var(--ink); color:#fff; font-size:17px; font-weight:600; cursor:pointer" onClick="{{ startTrial }}">Empezar mi prueba de 7 días</button>
+    <p style="margin:12px 0 0; font-size:13.5px; color:var(--red-deep)">Sin tarjeta para la prueba · pago único de $2,450 · garantía de 14 días</p>
+    <sc-if value="{{ launchOn }}">
+      <p style="margin:6px 0 0; font-size:13.5px; font-weight:600; color:var(--ink)">{{ daysLeftLabel }} a este precio · quedan {{ spotsLabel }}</p>
+    </sc-if>
+  </section>
+
+  <footer style="margin-top:40px; padding-top:20px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:10px; font-size:12.5px; color:var(--pencil)">
+    <span>MiRestauranteListo · hecho en México</span>
+    <span style="flex:1"></span>
+    <span>Aviso de privacidad · Términos</span>
+  </footer>
+</div>
+
+<!-- CTA sticky móvil -->
+<sc-if value="{{ showSticky }}">
+  <div style="position:fixed; left:0; right:0; bottom:0; z-index:40; padding:10px 14px 14px; background:rgba(255,255,255,.94); backdrop-filter:blur(10px); border-top:1px solid var(--line); display:flex; align-items:center; gap:10px">
+    <span style="flex:1; min-width:0">
+      <span style="display:block; font-family:var(--num); font-weight:800; font-size:16px; line-height:1.1">$2,450 pago único</span>
+      <sc-if value="{{ launchOn }}">
+        <span style="display:block; font-size:12px; color:var(--red-deep); font-weight:600">{{ daysLeftLabel }} a este precio · quedan {{ spotsLabel }}</span>
+      </sc-if>
+      <sc-if value="{{ launchOff }}">
+        <span style="display:block; font-size:12px; color:var(--pencil)">o 3 de $817 · prueba 7 días</span>
+      </sc-if>
+    </span>
+    <button style="height:48px; padding:0 18px; border:none; border-radius:14px; background:var(--red); color:#fff; font-size:15px; font-weight:600; cursor:pointer; white-space:nowrap" onClick="{{ startTrial }}">Empezar prueba</button>
+  </div>
+</sc-if>
+
+<!-- WhatsApp -->
+<a href="https://wa.me/525544332211" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp" style="position:fixed; right:14px; bottom:86px; z-index:41; width:50px; height:50px; border-radius:50%; background:var(--ink); display:grid; place-items:center; box-shadow:0 8px 20px rgba(20,17,15,.28)" onClick="{{ waClick }}">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.2-5.6A8.4 8.4 0 1 1 21 11.5Z"></path><path d="M8.6 9.3c.5 2.4 2.6 4.2 4.9 4.7"></path></svg>
+</a>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:1000}}">
+const MARGIN = 0.68;
+
+// [EDITAR] Cupo y fecha reales del lanzamiento. Si ya pasó la fecha, la urgencia se oculta sola.
+const LAUNCH = { deadline: '2026-09-15', spotsTotal: 100, spotsLeft: 23, listPrice: 3900, price: 2450 };
+const INVERSION_TIPICA = 263500;
+
+// Primeros pasos de la ruta real de la app (Concepto → Local)
+const RUTA = [
+  { t: 'Define el tipo de negocio', d: 'Escribe en una frase qué vendes, a quién y en cuánto tiempo lo entregas.', w: 'El tipo de negocio define tu inversión, tu personal y tu ticket promedio.' },
+  { t: 'Identifica a tu cliente ideal', d: 'Describe a tu cliente en 3 líneas: quién es, cuándo te visita y cuánto puede pagar.', w: 'Sin cliente claro, el menú y los precios se vuelven un volado.' },
+  { t: 'Crea tu propuesta de valor', d: 'Completa la frase: "Somos el único lugar de la zona donde…".', w: 'Sin esto, el menú y el local se eligen a ciegas.' },
+  { t: 'Investiga a tu competencia', d: 'Visita 5 negocios parecidos y anota precios, tiempos y qué te molestó.', w: 'Sus precios marcan el techo de los tuyos y sus fallas son tu oportunidad.' },
+  { t: 'Define tu menú inicial', d: 'Elige entre 8 y 12 platillos y márcalos como estrella.', w: 'Un menú corto se cocina mejor, se compra mejor y deja más utilidad.' },
+  { t: 'Valida tu concepto', d: 'Haz una degustación con 10 personas y pregunta cuánto pagarían.', w: 'Validar antes de invertir es la forma más barata de equivocarse.' },
+  { t: 'Define tu zona objetivo', d: 'Elige 2 colonias y cuenta el flujo de gente en dos horarios distintos.', w: 'La ubicación es la mitad del éxito en comida.' },
+  { t: 'Calcula los metros que necesitas', d: 'Dibuja tu cocina mínima y suma el área de mesas que quieres.', w: 'Rentar de más quema tu presupuesto cada mes.' }
+];
+const GIROS_D = ['Taquería', 'Cafetería', 'Food truck', 'Restaurante', 'Fonda / cocina económica', 'Otro'];
+const ETAPAS = [
+  { label: 'Solo tengo la idea', paso: 1, next: 0, skip: false },
+  { label: 'Ya sé qué voy a vender', paso: 3, next: 1, skip: false },
+  { label: 'Estoy buscando local', paso: 4, next: 2, skip: true },
+  { label: 'Ya tengo el local', paso: 6, next: 4, skip: true }
+];
+const TOTAL_PASOS = 43;
+const fmt = n => n.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+const money = n => '$' + fmt(Math.round(n));
+const digits = s => String(s).replace(/[^0-9]/g, '');
+
+class Component extends DCLogic {
+  state = {
+    renta: '18000', nomina: '32000', otros: '9000', ticket: '120', meta: '25000',
+    closedDay: false, touched: false,
+    dGiro: null, dStage: null, routeLeadOpen: false, routeLeadDone: false, routeEmail: '',
+    shown: 0, shownGoal: 0, leadOpen: false, leadDone: false, email: '', openObj: null, fired: {}, vprog: {}
+  };
+
+  track(event, data) {
+    const payload = data || {};
+    try { if (window.fbq) window.fbq('trackCustom', event, payload); } catch (e) {}
+    try { window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: event, ...payload }); } catch (e) {}
+    if (!this.state.fired[event]) this.setState(s => ({ fired: { ...s.fired, [event]: true } }));
+  }
+  fixed() { return [this.state.renta, this.state.nomina, this.state.otros].reduce((a, v) => a + (parseFloat(digits(v)) || 0), 0); }
+  complete() { return [this.state.renta, this.state.nomina, this.state.otros].every(v => (parseFloat(digits(v)) || 0) > 0); }
+  ticketVal() { return Math.max(1, parseFloat(digits(this.state.ticket)) || 120); }
+  metaVal() { return Math.max(0, parseFloat(digits(this.state.meta)) || 0); }
+  days() { return this.state.closedDay ? 26 : 30; }
+  perDayValue() { return this.complete() ? this.fixed() / MARGIN / this.days() : 0; }
+  goalDayValue() { return this.complete() ? (this.fixed() + this.metaVal()) / MARGIN / this.days() : 0; }
+
+  animateTo(v, g) {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ shown: v, shownGoal: g }); return; }
+    const f1 = this.state.shown, f2 = this.state.shownGoal, t0 = performance.now(), dur = 650;
+    const step = t => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      this.setState({ shown: f1 + (v - f1) * e, shownGoal: f2 + (g - f2) * e });
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+  recalc() {
+    const v = this.perDayValue(), g = this.goalDayValue();
+    this.animateTo(v, g);
+    if (v > 0) this.track('CalculadoraUsada', { venta_diaria: Math.round(v), venta_meta: Math.round(g) });
+  }
+  setField(k) {
+    return e => {
+      const raw = digits(e.target.value).slice(0, 9);
+      this.setState({ [k]: raw, touched: true }, () => this.recalc());
+    };
+  }
+  componentDidMount() {
+    this.setState({ shown: this.perDayValue(), shownGoal: this.goalDayValue() });
+    this._scroll = () => {
+      const y = window.scrollY || 0;
+      if ((y > 420) !== !!this.state.sticky) this.setState({ sticky: y > 420 });
+    };
+    window.addEventListener('scroll', this._scroll, { passive: true });
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this._scroll); if (this._raf) cancelAnimationFrame(this._raf); }
+
+  chip(on) {
+    return {
+      padding: '13px 16px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'var(--body)',
+      fontSize: '15px', fontWeight: on ? 700 : 500, lineHeight: 1.1,
+      border: '1.5px solid ' + (on ? 'var(--red)' : 'var(--line)'),
+      background: on ? 'var(--red-soft)' : 'var(--paper)',
+      color: on ? 'var(--red-deep)' : 'var(--ink)'
+    };
+  }
+  renderVals() {
+    const s = this.state, ok = this.complete(), fx = this.fixed();
+    const et = ETAPAS.find(e => e.label === s.dStage) || null;
+    const daysLeft = Math.max(0, Math.ceil((new Date(LAUNCH.deadline + 'T23:59:59').getTime() - Date.now()) / 86400000));
+    const perDay = this.perDayValue(), goalDay = this.goalDayValue();
+    const tickets = perDay ? Math.ceil(perDay / this.ticketVal()) : 0;
+    const goalTickets = goalDay ? Math.ceil(goalDay / this.ticketVal()) : 0;
+    const mins = goalTickets ? Math.max(1, Math.round(8 * 60 / goalTickets)) : 0;
+    const odd = ok && (fx < 4000 || fx > 400000);
+    const base30 = ok ? fx / MARGIN / 30 : 0, base26 = ok ? fx / MARGIN / 26 : 0;
+
+    return {
+      noSubmit: e => e.preventDefault(),
+      rentaTxt: s.renta ? fmt(parseFloat(s.renta)) : '', setRenta: this.setField('renta'),
+      nominaTxt: s.nomina ? fmt(parseFloat(s.nomina)) : '', setNomina: this.setField('nomina'),
+      otrosTxt: s.otros ? fmt(parseFloat(s.otros)) : '', setOtros: this.setField('otros'),
+      ticketTxt: s.ticket ? fmt(parseFloat(digits(s.ticket)) || 0) : '', setTicket: this.setField('ticket'),
+
+      hasResult: ok, noResult: !ok,
+      isExample: !s.touched,
+      perDay: money(s.shown), goalDay: money(s.shownGoal),
+      perMonth: money(perDay * this.days()),
+      ticketsDay: tickets + ' tickets', goalTicketsDay: goalTickets + ' tickets',
+      metaTxt: s.meta ? fmt(parseFloat(digits(s.meta)) || 0) : '', setMeta: this.setField('meta'),
+      metaLabel: money(this.metaVal()),
+      fixedLine: money(fx) + ' al mes en gastos fijos.',
+      pace: goalTickets + ' tickets al día ≈ un cliente cada ' + mins + ' minutos, en un turno de 8 horas, todos los días.',
+      closedOn: s.closedDay,
+      closedStyle: {
+        display: 'flex', alignItems: 'center', gap: '9px', padding: '11px 13px', borderRadius: '12px',
+        border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+        background: s.closedDay ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.07)', color: '#fff', fontFamily: 'var(--body)', fontSize: '13.5px'
+      },
+      closedBox: {
+        width: '20px', height: '20px', flex: 'none', borderRadius: '6px', display: 'grid', placeItems: 'center',
+        background: s.closedDay ? 'var(--red)' : 'transparent', border: '1.5px solid ' + (s.closedDay ? 'var(--red)' : 'rgba(255,255,255,.4)')
+      },
+      toggleClosed: () => this.setState({ closedDay: !s.closedDay, touched: true }, () => this.recalc()),
+      closedNote: 'Cerrar un día sube tu venta diaria de ' + money(base30) + ' a ' + money(base26) + '.',
+      daysLabel: this.days() + ' días al mes',
+      fixedLabel: money(fx) + ' al mes',
+      outOfRange: odd,
+      rangeNote: fx < 4000
+        ? 'Esa cifra de gastos fijos se ve muy baja para un local. Si vas a operar desde casa o en cocina compartida, el número es válido; si no, revisa que no falte algo.'
+        : 'Son gastos fijos altos: verifica que la renta y la nómina correspondan a un solo mes.',
+
+      leadPending: !s.leadDone, leadDone: s.leadDone, leadOpen: s.leadOpen, email: s.email,
+      openLead: () => { this.setState({ leadOpen: true }); this.track('LeadIntent'); },
+      setEmail: e => { const v = e.target.value; this.setState({ email: v }); },
+      saveLead: () => {
+        if (!/.+@.+\..+/.test(s.email)) return;
+        this.setState({ leadDone: true, leadOpen: false });
+        this.track('Lead', { venta_diaria: Math.round(perDay) });
+      },
+
+      bridge: [
+        { figure: '43 tareas', text: 'De concepto y local a permisos y día de apertura, en orden y con explicación.' },
+        { figure: 'Costo real', text: 'Cada platillo con merma, sub-recetas y precio de venta sugerido.' },
+        { figure: '3 equipos', text: 'Tu proyecto en celular, tablet y compu, con un solo pago.' }
+      ],
+      tools: [
+        { kicker: 'Mi Ruta', name: 'Qué te falta para abrir', body: 'Diez módulos con barra de progreso. Cada tarea dice por qué importa y qué hacer hoy.', slot: 'shot-ruta', slotHint: '[EDITAR] Captura de Mi Ruta' },
+        { kicker: 'Costeador', name: 'Cuánto cuesta cada platillo', body: 'Captura ingredientes con precio de compra y merma; te da el food cost y a cuánto venderlo.', slot: 'shot-costeador', slotHint: '[EDITAR] Captura del Costeador' },
+        { kicker: 'Números', name: 'Cuánto invertir y cuánto vender', body: 'Presupuesto de apertura con subconceptos, gastos fijos y tu punto de equilibrio al día.', slot: 'shot-numeros', slotHint: '[EDITAR] Captura de Números' }
+      ],
+      compare: [
+        { what: 'Curso de capacitación restaurantera', note: 'Aprendes, pero te quedas sin herramienta', price: '$2,490 – $3,960', highlight: false },
+        { what: 'Software de restaurante en México', note: 'Software de gestión, no punto de venta · desde $811 al mes, para siempre', price: '$9,732 al año', highlight: false },
+        { what: 'Asesor de apertura', note: 'Excelente si tu presupuesto lo permite', price: '$15,000 – $30,000', highlight: false },
+        { what: 'MiRestauranteListo', note: 'Pago único, acceso de por vida', price: '$2,450 una vez', highlight: true }
+      ].map(c => ({
+        what: c.what, note: c.note, price: c.price,
+        noteColor: c.highlight ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.5)',
+        rowStyle: {
+          display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: c.highlight ? '16px 14px' : '13px 14px',
+          borderRadius: c.highlight ? '16px' : '0', marginTop: c.highlight ? '10px' : '0',
+          borderBottom: c.highlight ? 'none' : '1px solid rgba(255,255,255,.14)',
+          background: c.highlight ? 'var(--red)' : 'transparent'
+        },
+        priceStyle: {
+          fontFamily: 'var(--num)', fontWeight: 800, fontSize: c.highlight ? '22px' : '17px',
+          letterSpacing: '-.02em', fontVariantNumeric: 'tabular-nums', textAlign: 'right', whiteSpace: 'nowrap'
+        }
+      })),
+      objections: [
+        { q: '¿Por qué pago único y no mensualidad?', summary: 'Porque abrir es un proyecto con fecha, no una renta eterna.', text: 'Un software de operación cobra cada mes porque te acompaña todos los días. Esta app te acompaña en la etapa de abrir: cuando ya operas, la usas de referencia. Cobrarte para siempre por algo que usas unos meses sería abusivo.' },
+        { q: '¿Y si no soy bueno con los números?', summary: 'Por eso existe: tú capturas, la app calcula y te traduce.', text: 'No hay fórmulas que escribir. Escribes cuánto pagas de renta o cuánto te costó el kilo de carne y la app te dice el resto en palabras: cuánto vender al día, cuántos clientes, si el platillo deja o no deja.' },
+        { q: '¿Esto reemplaza a un asesor?', summary: 'No. Te evita pagarle por lo que puedes hacer tú.', text: 'Un buen asesor vale lo que cuesta cuando negocia tu local o diseña tu cocina. Lo que no tiene sentido es pagarle $20,000 para que te ordene tus pendientes y te haga las cuentas básicas. Eso es lo que hace la app.' },
+        { q: '¿Y si no me sirve?', summary: 'Te devolvemos el pago completo en 14 días.', text: 'Pruebas 7 días antes de pagar. Y si ya pagaste y no te sirvió, mandas un mensaje y te regresamos el dinero dentro de los primeros 14 días, sin preguntas.' }
+      ].map((o, i) => ({
+        q: o.q, summary: o.summary, text: o.text, open: s.openObj === i, slot: 'obj-' + i,
+        toggle: () => { this.setState({ openObj: s.openObj === i ? null : i }); if (s.openObj !== i) this.track('VideoObjecion', { pregunta: o.q }); },
+        chev: { display: 'grid', placeItems: 'center', color: 'var(--pencil)', transform: s.openObj === i ? 'rotate(180deg)' : 'none', transition: 'transform .2s ease' }
+      })),
+      included: [
+        { text: 'Mi Ruta con 43 tareas guiadas y progreso por módulo' },
+        { text: 'Costeador con merma, sub-recetas y precio sugerido' },
+        { text: 'Presupuesto de apertura, gastos fijos y punto de equilibrio' },
+        { text: 'Ficha técnica de platillo y resumen financiero en PDF' },
+        { text: 'Recomendaciones tipo mentor sobre tus pendientes críticos' },
+        { text: 'Uso en hasta 3 equipos y actualizaciones de las herramientas de apertura incluidas' }
+      ],
+      // Diagnóstico del hero
+      giroOptions: GIROS_D.map(g => ({
+        label: g, pick: () => this.setState({ dGiro: g }),
+        style: this.chip(s.dGiro === g)
+      })),
+      stageOptions: ETAPAS.map(e => ({
+        label: e.label,
+        pick: () => { this.setState({ dStage: e.label }); this.track('DiagnosticoCompletado', { giro: s.dGiro, etapa: e.label }); },
+        style: this.chip(s.dStage === e.label)
+      })),
+      showQ2: !!s.dGiro, noDiag: !s.dGiro,
+      showRoute: !!(s.dGiro && s.dStage), noRoute: !(s.dGiro && s.dStage),
+      routeTitle: 'Tu ruta para abrir ' + (!s.dGiro || s.dGiro === 'Otro' ? 'tu negocio de comida'
+        : s.dGiro === 'Food truck' ? 'un food truck'
+        : s.dGiro === 'Restaurante' ? 'un restaurante'
+        : s.dGiro === 'Fonda / cocina económica' ? 'una fonda'
+        : 'una ' + s.dGiro.toLowerCase()),
+      paso: et ? et.paso : 1,
+      routeBar: { width: (et ? et.paso / TOTAL_PASOS * 100 : 2) + '%', height: '100%', borderRadius: '999px', background: 'var(--red)', transition: 'width .5s ease' },
+      doneSteps: et ? RUTA.slice(0, et.next).map(r => ({ title: r.t })) : [],
+      hasDone: !!(et && et.next > 0),
+      skipped: !!(et && et.skip),
+      nextTitle: et ? RUTA[et.next].t : '', nextDo: et ? RUTA[et.next].d : '', nextWhy: et ? RUTA[et.next].w : '',
+      upcoming: et ? RUTA.slice(et.next + 1, et.next + 3).map(r => ({ title: r.t })) : [],
+      restLine: et ? '+' + (TOTAL_PASOS - (et.next + 3)) + ' pasos más, en orden.' : '',
+      ctaStep: et ? 'Vas en el paso ' + et.paso + ' de ' + TOTAL_PASOS + '.' : 'Tu ruta tiene 43 pasos.',
+      ctaRest: et ? 'Los otros ' + (TOTAL_PASOS - et.paso) + ' ya están armados y en orden, esperándote.' : 'Están armados y en orden, esperándote.',
+      routeLeadPending: !s.routeLeadDone, routeLeadDone: s.routeLeadDone, routeLeadOpen: s.routeLeadOpen, routeEmail: s.routeEmail,
+      openRouteLead: () => { this.setState({ routeLeadOpen: true }); this.track('LeadIntent', { origen: 'ruta' }); },
+      setRouteEmail: e => { const v = e.target.value; this.setState({ routeEmail: v }); },
+      saveRouteLead: () => {
+        if (!/.+@.+\..+/.test(s.routeEmail)) return;
+        this.setState({ routeLeadDone: true, routeLeadOpen: false });
+        this.track('Lead', { origen: 'ruta', etapa: s.dStage });
+      },
+
+      // Urgencia y encuadre de inversión
+      launchOn: daysLeft > 0 && LAUNCH.spotsLeft > 0,
+      launchOff: !(daysLeft > 0 && LAUNCH.spotsLeft > 0),
+      daysLeftLabel: daysLeft === 1 ? 'último día' : 'últimos ' + daysLeft + ' días',
+      spotsLabel: LAUNCH.spotsLeft + ' de ' + LAUNCH.spotsTotal + ' lugares',
+      spotsBar: { width: Math.round((LAUNCH.spotsTotal - LAUNCH.spotsLeft) / LAUNCH.spotsTotal * 100) + '%', height: '100%', borderRadius: '999px', background: 'var(--red)' },
+      spotsTaken: (LAUNCH.spotsTotal - LAUNCH.spotsLeft) + ' ya lo tomaron',
+      saveLabel: 'Ahorras ' + money(LAUNCH.listPrice - LAUNCH.price),
+      investLine: 'Abrir cuesta alrededor de ' + money(INVERSION_TIPICA) + '. Esto es el 0.9% de esa inversión.',
+      investLine2: 'Se paga solo si te ahorra un mes de renta mal elegida.',
+      ctaNumber: money(perDay),
+      rentLoss: money(parseFloat(digits(s.renta)) || 0),
+      startTrial: () => { this.track('InicioPrueba'); try { window.open('MiRestauranteListo.dc.html', '_blank'); } catch (e) {} },
+      checkout: () => { this.track('InitiateCheckout', { value: 2450, currency: 'MXN' }); try { window.open('https://buy.stripe.com/', '_blank'); } catch (e) {} },
+      waClick: () => this.track('ContactoWhatsApp'),
+      videoProgress: e => {
+        const v = e.target;
+        if (!v.duration) return;
+        const p = v.currentTime / v.duration;
+        [25, 50, 75].forEach(mark => {
+          const key = 'VideoDemo' + mark;
+          if (p >= mark / 100 && !s.vprog[key]) {
+            this.setState(st => ({ vprog: { ...st.vprog, [key]: true } }));
+            this.track(key);
+          }
+        });
+      },
+      showSticky: !!s.sticky
+    };
+  }
+}
+</script>
+</body>
+</html>
