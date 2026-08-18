@@ -87,7 +87,7 @@ export function DishEditor({
         action={<InfoButton onClick={() => setInfo('foodCost')} />}
       />
 
-      <div className="mrl-measure" style={{ padding: '16px 20px 32px', display: 'grid', gap: 16 }}>
+      <div className="mrl-measure" style={{ padding: '16px 20px 32px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}>
         <Row gap={14}>
           <span
             style={{
@@ -105,7 +105,7 @@ export function DishEditor({
           >
             {dish.name.slice(0, 1).toUpperCase()}
           </span>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <input
               value={dish.name}
               onChange={(e) => setField('name', e.target.value)}
@@ -128,7 +128,7 @@ export function DishEditor({
 
         <div>
           <H size={16}>Ingredientes</H>
-          <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             {dish.ingredients.map((ingredient) => {
               const open = openIngredient === ingredient.id;
               const unitPrice = ingredientUnitPrice(ingredient, ctx);
@@ -144,7 +144,7 @@ export function DishEditor({
                       onChange={(e) => setIngredient(ingredient.id, { name: e.target.value })}
                       aria-label="Nombre del ingrediente"
                       style={{
-                        flex: 1,
+                        flex: 1, minWidth: 0,
                         height: 44,
                         padding: '0 14px',
                         borderRadius: RADIUS.small,
@@ -174,7 +174,7 @@ export function DishEditor({
                   </Muted>
 
                   {open ? (
-                    <div style={{ marginTop: 12, display: 'grid', gap: 10, animation: 'mrlUp .2s ease both' }}>
+                    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, animation: 'mrlUp .2s ease both' }}>
                       <NumberField
                         label="Cantidad que usas en la receta"
                         value={ingredient.qty}
@@ -208,7 +208,7 @@ export function DishEditor({
                             onChange={(v) => setIngredient(ingredient.id, { buyUnit: v })}
                           />
                           <Row gap={8}>
-                            <span style={{ flex: 1 }}>
+                            <span style={{ flex: 1, minWidth: 0 }}>
                               <NumberField
                                 label="Merma: lo que se desperdicia (%)"
                                 value={ingredient.waste ?? 0}
@@ -251,7 +251,7 @@ export function DishEditor({
             })}
           </div>
 
-          <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             <Button
               variant="secondary"
               height={46}
@@ -271,7 +271,7 @@ export function DishEditor({
               + Agregar sub-receta (salsa, marinada, base)
             </Button>
             {showSubrecipePicker ? (
-              <Card radius={RADIUS.block} style={{ display: 'grid', gap: 8 }}>
+              <Card radius={RADIUS.block} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
                 {state.subrecipes.length ? (
                   state.subrecipes.map((sub) => (
                     <button
@@ -316,7 +316,7 @@ export function DishEditor({
           </div>
         </div>
 
-        <Card style={{ display: 'grid', gap: 12 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           <H size={16}>Rendimiento y extras</H>
           <NumberField label="Porciones que rinde" value={dish.portions ?? 1} onChange={(v) => setField('portions', v)} />
           <NumberField
@@ -350,7 +350,7 @@ export function DishEditor({
           </Muted>
         </Card>
 
-        <Card style={{ display: 'grid', gap: 12 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           <H size={16}>Sección del menú</H>
           <Row gap={8} style={{ flexWrap: 'wrap' }}>
             {MENU_SECTIONS.map((section) => (
@@ -373,7 +373,7 @@ export function DishEditor({
           </Row>
         </Card>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           <ResultCard label="Costo por porción" value={money2(m.costPerPortion)} onInfo={() => setInfo('costo')} />
           <ResultCard
             label="Food cost"
@@ -487,7 +487,7 @@ export function DishEditor({
           </Muted>
         </Card>
 
-        <Card style={{ display: 'grid', gap: 10 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           <H size={16}>Precio para apps de delivery</H>
           <H size={21}>{money(m.deliveryPrice)}</H>
           <NumberField

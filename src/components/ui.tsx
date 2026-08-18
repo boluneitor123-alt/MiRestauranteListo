@@ -165,7 +165,7 @@ export function Field({
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           style={{
-            flex: 1,
+            flex: 1, minWidth: 0,
             width: '100%',
             height: 48,
             padding: '0 16px',

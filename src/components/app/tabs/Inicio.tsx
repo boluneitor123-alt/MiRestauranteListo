@@ -64,7 +64,7 @@ export function Inicio({
   const recent = state.dishes.slice(-6).reverse();
 
   return (
-    <div className="mrl-measure" style={{ padding: '18px 20px 20px', display: 'grid', gap: 16 }}>
+    <div className="mrl-measure" style={{ padding: '18px 20px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}>
       <Row style={{ justifyContent: 'space-between' }}>
         <Row gap={12}>
           <button
@@ -139,7 +139,7 @@ export function Inicio({
       <Card>
         <Row gap={16}>
           <ProgressRing pct={diagnosis.progress.pct} />
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <H size={17}>{diagnosis.progress.level}</H>
             <Muted size={12.5} style={{ marginTop: 3 }}>
               {diagnosis.progress.done} de {diagnosis.progress.total} tareas completadas
@@ -188,7 +188,7 @@ export function Inicio({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div className="mrl-duo">
         <button
           type="button"
           onClick={() => (can.budget ? onGo({ tab: 'numeros', view: 'presupuesto' }) : onOpenPaywall())}
@@ -263,7 +263,7 @@ export function Inicio({
 
       <div>
         <H size={18}>Pendientes críticos</H>
-        <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+        <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           {diagnosis.recommendations.slice(0, 3).map((rec) => (
             <Card key={rec.id} radius={RADIUS.block} style={{ padding: 16 }}>
               <Row gap={10} align="flex-start">
@@ -277,7 +277,7 @@ export function Inicio({
                     flexShrink: 0,
                   }}
                 />
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 700 }}>{rec.title}</div>
                   <Muted size={12.5} style={{ marginTop: 4 }}>
                     {rec.body}
@@ -308,7 +308,7 @@ export function Inicio({
 
       <div>
         <H size={18}>Progreso por módulo</H>
-        <Card style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+        <Card style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           {diagnosis.progress.modules.map((module) => (
             <Row key={module.id} gap={10}>
               <span
@@ -328,8 +328,8 @@ export function Inicio({
                   color={module.pct === 100 ? 'var(--color-accent-2-600)' : 'var(--color-neutral-500)'}
                 />
               </span>
-              <span style={{ width: 104, fontSize: 13, fontWeight: 600 }}>{module.name}</span>
-              <span style={{ flex: 1 }}>
+              <span style={{ flex: '0 1 104px', minWidth: 0, fontSize: 13, fontWeight: 600 }}>{module.name}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
                 <ProgressBar pct={module.skipped ? 0 : module.pct} />
               </span>
               <span
@@ -395,7 +395,7 @@ export function Inicio({
 
       <div>
         <H size={18}>Accesos rápidos</H>
-        <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           {[
             { label: 'Nuevo platillo', action: () => onNewDish() },
             { label: 'Mi Ruta', action: () => onGo({ tab: 'ruta' }) },

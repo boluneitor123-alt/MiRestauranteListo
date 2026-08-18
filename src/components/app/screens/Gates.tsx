@@ -40,7 +40,7 @@ export function Paywall({
   };
 
   return (
-    <div className="mrl-measure" style={{ padding: '24px 22px 40px', display: 'grid', gap: 16 }}>
+    <div className="mrl-measure" style={{ padding: '24px 22px 40px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}>
       <Row style={{ justifyContent: 'space-between' }}>
         <span
           style={{
@@ -82,7 +82,7 @@ export function Paywall({
         </Muted>
       </div>
 
-      <div style={{ display: 'grid', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         {BENEFITS.map((benefit) => (
           <Row key={benefit} gap={10} align="flex-start">
             <span
@@ -176,7 +176,7 @@ export function Blocked({
       <Muted size={14} style={{ marginTop: 10 }}>
         Recuperas Inicio, Mi Ruta, el Costeador de Platillos y Números tal como los dejaste: nada se borró.
       </Muted>
-      <div style={{ marginTop: 24, display: 'grid', gap: 10 }}>
+      <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         <Button onClick={onOpenPaywall}>Ver el pago único</Button>
         <Button variant="secondary" height={48} onClick={onGoMore}>
           Ir a Más

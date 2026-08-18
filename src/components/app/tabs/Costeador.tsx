@@ -61,7 +61,7 @@ export function Costeador({
   const limitNotice = dishLimitNotice(level, state.dishes.length);
 
   return (
-    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gap: 14 }}>
+    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <H size={25}>Costeador de Platillos</H>
 
       <Row gap={6} style={{ background: 'var(--color-neutral-200)', borderRadius: RADIUS.pill, padding: 4 }}>
@@ -77,7 +77,7 @@ export function Costeador({
             type="button"
             onClick={() => onChangeView(id)}
             style={{
-              flex: 1,
+              flex: 1, minWidth: 0,
               height: 38,
               borderRadius: RADIUS.pill,
               border: 'none',
@@ -97,7 +97,7 @@ export function Costeador({
 
       {view === 'platillos' ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
             <Kpi label="Platillos" value={String(state.dishes.length)} />
             <Kpi label="Food cost promedio" value={pct(aggregates.averageFoodCost)} />
             <Kpi label="Precio promedio" value={aggregates.averagePrice === null ? '—' : money(aggregates.averagePrice)} />
@@ -136,7 +136,7 @@ export function Costeador({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar por nombre"
                 style={{
-                  flex: 1,
+                  flex: 1, minWidth: 0,
                   height: 44,
                   padding: '0 16px',
                   borderRadius: RADIUS.pill,
@@ -181,7 +181,7 @@ export function Costeador({
           {typeFilter === 'subrecetas' ? (
             <SubrecipeList state={state} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} />
           ) : rows.length ? (
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
               {rows.map(({ dish, metrics }) => (
                 <button
                   key={dish.id}
@@ -214,7 +214,7 @@ export function Costeador({
                     >
                       {dish.name.slice(0, 1).toUpperCase()}
                     </span>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14.5, fontWeight: 700 }}>{dish.name}</div>
                       <Muted size={12}>
                         Costo {money2(metrics.costPerPortion)} · Precio {money(metrics.price)} · Utilidad{' '}
@@ -287,7 +287,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 function MenuKpis({ state }: { state: ProjectState }) {
   const aggregates = menuAggregates(state.dishes, { subrecipes: state.subrecipes });
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
       <Kpi label="Platillos en la carta" value={String(aggregates.priced)} />
       <Kpi label="Ticket promedio" value={aggregates.averageTicket === null ? '—' : money(aggregates.averageTicket)} />
       <Kpi label="Food cost ponderado" value={pct(aggregates.weightedFoodCost)} />
@@ -310,7 +310,7 @@ function SubrecipeList({
 }) {
   const ctx = { subrecipes: state.subrecipes };
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
       {state.subrecipes.map((sub) => (
         <button
           key={sub.id}
@@ -344,7 +344,7 @@ function SubrecipeList({
             >
               {sub.name.slice(0, 1).toUpperCase()}
             </span>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14.5, fontWeight: 700 }}>{sub.name}</div>
               <Muted size={12}>
                 Lote de {sub.yieldQty} {sub.unit} · {sub.ingredients.length} ingredientes
@@ -376,7 +376,7 @@ function LockedView({
     <Card style={{ background: 'var(--color-accent-100)' }}>
       <Row gap={10} align="flex-start">
         <Lock size={18} color="var(--color-accent-700)" strokeWidth={2.6} style={{ marginTop: 2 }} />
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-accent-900)' }}>{title}</div>
           <Muted size={13} style={{ marginTop: 4 }}>
             {body}

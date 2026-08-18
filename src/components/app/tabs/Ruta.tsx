@@ -57,7 +57,7 @@ export function Ruta({
   const unlocked = canOpenRouteModule(level, current.id);
 
   return (
-    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gap: 14 }}>
+    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <Row style={{ justifyContent: 'space-between' }}>
         <div>
           <H size={25}>Mi Ruta</H>
@@ -106,13 +106,13 @@ export function Ruta({
           >
             <TargetIcon size={22} color="var(--color-accent)" strokeWidth={2.6} />
           </span>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <H size={19}>{current.name}</H>
             <Muted size={12.5} style={{ marginTop: 3 }}>
               {current.desc}
             </Muted>
             <Row gap={10} style={{ marginTop: 12 }}>
-              <span style={{ flex: 1 }}>
+              <span style={{ flex: 1, minWidth: 0 }}>
                 <ProgressBar pct={current.skipped ? 0 : current.pct} />
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>
@@ -156,7 +156,7 @@ export function Ruta({
         <Card style={{ background: 'var(--color-accent-100)' }}>
           <Row gap={10}>
             <Lock size={18} color="var(--color-accent-700)" strokeWidth={2.6} />
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-accent-900)' }}>{PAYWALL_HINT}</div>
               <Muted size={12.5} style={{ marginTop: 3 }}>
                 En la prueba están abiertos Concepto y Local. Los otros 8 módulos los ves completos aquí y se abren con
@@ -172,7 +172,7 @@ export function Ruta({
         </Card>
       ) : null}
 
-      <div style={{ display: 'grid', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         {current.tasks.map((task) => (
           <TaskCard
             key={task.key}
@@ -188,7 +188,7 @@ export function Ruta({
       </div>
 
       {showForm ? (
-        <Card style={{ display: 'grid', gap: 12 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           <H size={16}>Agregar tarea a {current.name}</H>
           <Field label="Qué tienes que hacer" value={title} onChange={setTitle} placeholder="Ej. Cotizar el letrero" />
           <Field label="Pista corta (opcional)" value={hint} onChange={setHint} placeholder="Con dos proveedores" />
@@ -279,7 +279,7 @@ function TaskCard({
           type="button"
           onClick={onOpen}
           style={{
-            flex: 1,
+            flex: 1, minWidth: 0,
             textAlign: 'left',
             border: 'none',
             background: 'transparent',
@@ -313,7 +313,7 @@ function TaskCard({
       </Row>
 
       {open ? (
-        <div style={{ marginTop: 14, animation: 'mrlUp .2s ease both', display: 'grid', gap: 10 }}>
+        <div style={{ marginTop: 14, animation: 'mrlUp .2s ease both', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           <div style={{ background: 'var(--color-neutral-200)', borderRadius: RADIUS.small, padding: 12 }}>
             <div style={{ fontSize: 11.5, fontWeight: 800, color: text(55) }}>Por qué importa</div>
             <div style={{ fontSize: 13, marginTop: 4, lineHeight: 1.45 }}>{task.why}</div>
@@ -398,7 +398,7 @@ function SkipDialog({
             <Muted size={13} style={{ marginTop: 6 }}>
               Nos sirve para no volver a recomendártelo.
             </Muted>
-            <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
+            <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
               {SKIP_REASONS.map((reason) => (
                 <button
                   key={reason}

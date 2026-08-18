@@ -88,8 +88,8 @@ export interface ProjectState {
 }
 
 export const ACCENT_OPTIONS = [
-  { name: 'Rojo', value: '#d63a26' },
   { name: 'Terracota', value: '#c67139' },
+  { name: 'Rojo', value: '#d63a26' },
   { name: 'Ámbar', value: '#e0891c' },
   { name: 'Verde', value: '#1f8a5a' },
   { name: 'Azul', value: '#2f6fd0' },

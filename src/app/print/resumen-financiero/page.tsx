@@ -33,7 +33,7 @@ export default function ResumenFinancieroPage() {
             padding: '0 18px',
             borderRadius: 999,
             border: 'none',
-            background: '#d63a26',
+            background: '#c67139',
             color: '#fff',
             fontWeight: 800,
             cursor: 'pointer',

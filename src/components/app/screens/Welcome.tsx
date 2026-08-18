@@ -40,7 +40,7 @@ export function Welcome({ onStart, onSignIn }: { onStart: () => void; onSignIn: 
         para no fracasar.
       </p>
 
-      <div style={{ marginTop: 24, display: 'grid', gap: 12 }}>
+      <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
         {BULLETS.map((bullet) => (
           <Row key={bullet} gap={12}>
             <span
@@ -61,7 +61,7 @@ export function Welcome({ onStart, onSignIn }: { onStart: () => void; onSignIn: 
         ))}
       </div>
 
-      <div style={{ marginTop: 30, display: 'grid', gap: 10 }}>
+      <div style={{ marginTop: 30, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         <Button onClick={onStart}>Empezar mi proyecto</Button>
         <Button variant="secondary" height={48} onClick={onSignIn}>
           Ya tengo cuenta

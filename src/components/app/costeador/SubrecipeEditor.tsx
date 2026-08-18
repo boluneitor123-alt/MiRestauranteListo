@@ -42,8 +42,8 @@ export function SubrecipeEditor({
         tone="success"
       />
 
-      <div className="mrl-measure" style={{ padding: '16px 20px 32px', display: 'grid', gap: 16 }}>
-        <Card style={{ display: 'grid', gap: 12 }}>
+      <div className="mrl-measure" style={{ padding: '16px 20px 32px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           <label style={{ display: 'block' }}>
             <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: text(62), marginBottom: 6 }}>
               Nombre
@@ -76,7 +76,7 @@ export function SubrecipeEditor({
 
         <div>
           <H size={16}>Ingredientes del lote</H>
-          <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             {subrecipe.ingredients.map((ingredient) => {
               const open = openIngredient === ingredient.id;
               return (
@@ -87,7 +87,7 @@ export function SubrecipeEditor({
                       onChange={(e) => setIngredient(ingredient.id, { name: e.target.value })}
                       aria-label="Nombre del ingrediente"
                       style={{
-                        flex: 1,
+                        flex: 1, minWidth: 0,
                         height: 44,
                         padding: '0 14px',
                         borderRadius: RADIUS.small,
@@ -117,7 +117,7 @@ export function SubrecipeEditor({
                   </Muted>
 
                   {open ? (
-                    <div style={{ marginTop: 12, display: 'grid', gap: 10, animation: 'mrlUp .2s ease both' }}>
+                    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, animation: 'mrlUp .2s ease both' }}>
                       <NumberField
                         label="Cantidad que usas en la receta"
                         value={ingredient.qty}
@@ -195,7 +195,7 @@ export function SubrecipeEditor({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           <Card radius={RADIUS.inner} style={{ padding: 16 }}>
             <Muted size={11}>Costo del lote</Muted>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 21, marginTop: 4 }}>{money2(batch)}</div>

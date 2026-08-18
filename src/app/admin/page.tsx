@@ -261,7 +261,7 @@ export default function AdminPage() {
         ) : null}
 
         {issuing ? (
-          <section style={{ ...card, marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, alignItems: 'end' }}>
+          <section style={{ ...card, marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 12, alignItems: 'end' }}>
             {(
               [
                 ['name', 'Nombre'],
@@ -422,7 +422,7 @@ export default function AdminPage() {
         ) : null}
 
         {page === 'clientes' ? (
-          <section style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <section style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}>
             {customers.map((customer) => (
               <div key={customer.email} style={card}>
                 <div style={{ fontWeight: 800, fontSize: 15 }}>{customer.name ?? customer.email}</div>
@@ -530,7 +530,7 @@ function Resumen({
         ) : null}
       </section>
 
-      <section style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <section style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
         <Kpi title="Ingresos netos" value={money(summary.net)} hint={`Bruto ${money(summary.gross)} · reembolsado ${money(summary.refunded)}`} />
         <Kpi title="Licencias del periodo" value={String(summary.issued)} hint={`${summary.activated} activadas · ${summary.notActivated} sin activar`} />
         <Kpi
@@ -546,13 +546,13 @@ function Resumen({
         />
       </section>
 
-      <section style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14 }}>
+      <section style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 14 }}>
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <h2 style={h2}>Ingresos por origen</h2>
             <span style={{ fontWeight: 800 }}>Neto {money(summary.net)}</span>
           </div>
-          <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+          <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
             {summary.revenueBySource.map((row) => (
               <div key={row.source}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
@@ -592,7 +592,7 @@ function Resumen({
 
         <div style={card}>
           <h2 style={h2}>Requiere tu atención</h2>
-          <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+          <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
             {summary.attention.map((item) => (
               <div key={item.kind} style={{ background: 'var(--color-neutral-200)', borderRadius: 14, padding: 12 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>{item.title}</div>
@@ -606,7 +606,7 @@ function Resumen({
 
       <section style={{ ...card, marginTop: 16 }}>
         <h2 style={h2}>Cómo va la demo de prueba</h2>
-        <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
           <Metric label="Demos iniciadas" value={summary.demos.started} />
           <Metric label="Demos concluidas" value={summary.demos.finished} />
           <Metric label="Concluidas sin pago" value={summary.demos.finishedWithoutPaying} />
@@ -663,10 +663,10 @@ function Ajustes({
   ];
 
   return (
-    <section style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+    <section style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
       <div style={card}>
         <h2 style={h2}>Cobro y acceso</h2>
-        <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
+        <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           {fields.map(([key, label]) => (
             <label key={key} style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-neutral-600)' }}>
               {label}
@@ -693,7 +693,7 @@ function Ajustes({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         <div style={card}>
           <h2 style={h2}>Cómo conectar el cobro real</h2>
           <ol style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--color-neutral-700)', paddingLeft: 18 }}>

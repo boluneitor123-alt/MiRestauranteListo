@@ -211,7 +211,7 @@ export default function LandingPage() {
                 {panel.skippedNote ? (
                   <>
                     <hr />
-                    <div style={{ fontSize: 13, color: '#ffb3a3' }}>{panel.skippedNote}</div>
+                    <div style={{ fontSize: 13, color: '#eec49b' }}>{panel.skippedNote}</div>
                   </>
                 ) : null}
 
@@ -282,7 +282,7 @@ export default function LandingPage() {
                   <button
                     type="button"
                     className="lp-link-cta"
-                    style={{ color: '#ffb3a3' }}
+                    style={{ color: '#eec49b' }}
                     onClick={() => {
                       track('LeadIntent', { origen: 'ruta' });
                       setLeadOpen(true);
@@ -319,7 +319,7 @@ export default function LandingPage() {
           <h2 className="lp-display" style={{ fontSize: 'clamp(24px, 4vw, 34px)' }}>
             Eso es MiRestauranteListo
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginTop: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: 14, marginTop: 16 }}>
             {[
               ['43 tareas', 'Tu ruta completa, en orden, con el porqué de cada paso.'],
               ['Costo real', 'Lo que cuesta cada platillo con merma, empaque y mano de obra.'],
@@ -348,7 +348,7 @@ export default function LandingPage() {
           <h2 className="lp-display" style={{ fontSize: 'clamp(24px, 4vw, 34px)' }}>
             Las tres herramientas
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginTop: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: 14, marginTop: 16 }}>
             {TOOLS.map((tool) => (
               <div key={tool.slot}>
                 <div className="lp-slot" style={{ aspectRatio: '9 / 17' }}>
@@ -372,8 +372,8 @@ export default function LandingPage() {
             Sin botón de calcular y sin pedirte el correo: escribe tus gastos y el resultado se mueve solo.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginTop: 18 }}>
-            <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20, marginTop: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
               {(
                 [
                   ['Renta mensual del local', rent, setRent],
@@ -400,7 +400,7 @@ export default function LandingPage() {
                 Gastos fijos: {money(result.fixedExpenses)} al mes. Se pagan abras o no, vendas o no.
               </div>
               <hr />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
                 <div>
                   <div style={{ fontSize: 11.5, opacity: 0.7, fontWeight: 700 }}>Para no perder</div>
                   <div className="lp-num" style={{ fontSize: 26, marginTop: 2 }}>
@@ -426,13 +426,13 @@ export default function LandingPage() {
                 {result.days} días de venta.
               </div>
               {result.note ? (
-                <div style={{ fontSize: 12.5, marginTop: 10, color: '#ffb3a3' }}>{result.note}</div>
+                <div style={{ fontSize: 12.5, marginTop: 10, color: '#eec49b' }}>{result.note}</div>
               ) : null}
               <hr />
               <button
                 type="button"
                 className="lp-link-cta"
-                style={{ color: '#ffb3a3' }}
+                style={{ color: '#eec49b' }}
                 onClick={() => {
                   track('LeadIntent', { origen: 'calculadora' });
                   setLeadOpen(true);
@@ -455,7 +455,7 @@ export default function LandingPage() {
           <h2 className="lp-display" style={{ fontSize: 'clamp(22px, 4vw, 30px)', marginTop: 8 }}>
             Lo que cuesta resolver esto de otras formas
           </h2>
-          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
             {COST_COMPARISON.map((row) => (
               <div
                 key={row.label}
@@ -480,8 +480,8 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="lp-num" style={{ fontSize: 'clamp(18px, 4.6vw, 26px)', lineHeight: 1.25, marginTop: 24, maxWidth: '34ch' }}>
-            Vas a invertir alrededor de <span style={{ color: '#ffb3a3' }}>{money(TYPICAL_INVESTMENT)}</span> en abrir.
-            Esto es el <span style={{ color: '#ffb3a3' }}>{result.pricePctOfInvestment}</span> de eso.
+            Vas a invertir alrededor de <span style={{ color: '#eec49b' }}>{money(TYPICAL_INVESTMENT)}</span> en abrir.
+            Esto es el <span style={{ color: '#eec49b' }}>{result.pricePctOfInvestment}</span> de eso.
           </p>
         </section>
 
@@ -490,7 +490,7 @@ export default function LandingPage() {
           <h2 className="lp-display" style={{ fontSize: 'clamp(24px, 4vw, 34px)' }}>
             Lo que todos preguntan
           </h2>
-          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
             {OBJECTIONS.map((objection) => (
               <div key={objection.id} className="lp-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button
@@ -534,7 +534,7 @@ export default function LandingPage() {
         </section>
 
         {/* 9 · Precio y cierre */}
-        <section className="lp-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <section className="lp-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20 }}>
           <div className="lp-bone">
             {showUrgency ? (
               <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--red-deep)' }}>
@@ -555,7 +555,7 @@ export default function LandingPage() {
               pago único · o {LAUNCH.installments} pagos de {money(LAUNCH.installmentAmount)} sin intereses
             </div>
 
-            <div style={{ marginTop: 18, display: 'grid', gap: 10 }}>
+            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
               <button type="button" className="lp-cta" onClick={startTrial}>
                 Empezar mi prueba de {LAUNCH.trialDays} días
               </button>
@@ -583,7 +583,7 @@ export default function LandingPage() {
             <div className="lp-display" style={{ fontSize: 20 }}>
               Qué incluye
             </div>
-            <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
               {INCLUDED.map((item) => (
                 <div key={item} style={{ display: 'flex', gap: 10, fontSize: 14.5 }}>
                   <span style={{ color: 'var(--green)', fontWeight: 800 }}>✓</span>

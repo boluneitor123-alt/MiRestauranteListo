@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#d63a26',
+  themeColor: '#c67139',
   width: 'device-width',
   initialScale: 1,
   // Los inputs van a 16px; no hace falta bloquear el zoom del usuario.

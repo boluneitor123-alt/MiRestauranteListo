@@ -44,7 +44,7 @@ export function Diagnostic({
       <H size={18} style={{ marginTop: 24 }}>
         Lo que más te falta
       </H>
-      <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+      <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         {gaps.map((gap) => (
           <Card key={gap.n} radius={RADIUS.block} style={{ padding: 16 }}>
             <Row gap={12} align="flex-start">
@@ -79,7 +79,7 @@ export function Diagnostic({
           <H size={18} style={{ marginTop: 24 }}>
             Riesgos detectados
           </H>
-          <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             {risks.map((risk) => (
               <div
                 key={risk}
@@ -117,7 +117,7 @@ export function Diagnostic({
           {nextStep.title}
         </H>
         <div style={{ fontSize: 13, marginTop: 6, opacity: 0.92, lineHeight: 1.45 }}>{nextStep.body}</div>
-        <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
           <Button variant="light" height={48} onClick={onEnter}>
             Entrar a mi tablero
           </Button>

@@ -71,7 +71,7 @@ export function Numeros({
   });
 
   return (
-    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gap: 14 }}>
+    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <H size={25}>Números</H>
 
       <ModuleCard
@@ -225,7 +225,7 @@ function Budget({
   return (
     <div>
       <ScreenHeader title="Presupuesto de apertura" subtitle="Cuánto necesitas para abrir" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 14 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         <div
           style={{
             borderRadius: RADIUS.card,
@@ -258,7 +258,7 @@ function Budget({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
           {state.budget.map((concept) => {
             const subs = state.budgetSub[concept.key] ?? [];
             const total = conceptTotal(concept.amount, subs);
@@ -271,7 +271,7 @@ function Budget({
                     type="button"
                     onClick={() => setOpen(isOpen ? null : concept.key)}
                     style={{
-                      flex: 1,
+                      flex: 1, minWidth: 0,
                       textAlign: 'left',
                       border: 'none',
                       background: 'transparent',
@@ -318,7 +318,7 @@ function Budget({
                 </Row>
 
                 {isOpen ? (
-                  <div style={{ marginTop: 12, display: 'grid', gap: 8, animation: 'mrlUp .2s ease both' }}>
+                  <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8, animation: 'mrlUp .2s ease both' }}>
                     {subs.map((sub) => (
                       <Row key={sub.id} gap={8}>
                         <input
@@ -331,7 +331,7 @@ function Budget({
                           }
                           aria-label="Nombre del subconcepto"
                           style={{
-                            flex: 1,
+                            flex: 1, minWidth: 0,
                             height: 42,
                             padding: '0 12px',
                             borderRadius: RADIUS.small,
@@ -422,7 +422,7 @@ function Budget({
         </div>
 
         {showForm ? (
-          <Card style={{ display: 'grid', gap: 12 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <H size={16}>Agregar otro concepto</H>
             <Field label="Nombre del concepto" value={label} onChange={setLabel} placeholder="Ej. Letrero luminoso" />
             <Field label="Monto" prefix="$" value={amount} onChange={setAmount} inputMode="decimal" placeholder="0" />
@@ -485,7 +485,7 @@ function FixedExpenses({
   return (
     <div>
       <ScreenHeader title="Gastos fijos mensuales" subtitle="Se pagan vendas o no" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 14 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         <div
           style={{
             borderRadius: RADIUS.card,
@@ -500,10 +500,10 @@ function FixedExpenses({
           <div style={{ fontSize: 13, opacity: 0.9 }}>≈ {money(perDay)} por día de operación</div>
         </div>
 
-        <Card style={{ display: 'grid', gap: 10 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           {state.fixed.map((concept) => (
             <Row key={concept.key} gap={10}>
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{concept.label}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600 }}>{concept.label}</span>
               <span style={{ fontSize: 14, color: text(50) }}>$</span>
               <input
                 inputMode="decimal"
@@ -559,7 +559,7 @@ function Breakeven({
   return (
     <div>
       <ScreenHeader title="Punto de equilibrio" subtitle="Cuánto tienes que vender" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 14 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         <div
           style={{
             borderRadius: RADIUS.card,
@@ -573,7 +573,7 @@ function Breakeven({
             Gastos fijos: {money(fixed)} al mes. Se pagan abras o no, vendas o no.
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, marginTop: 16 }}>
             <div>
               <div style={{ fontSize: 11.5, fontWeight: 800, opacity: 0.85 }}>Para no perder</div>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, lineHeight: 1.05, marginTop: 2 }}>
@@ -601,7 +601,7 @@ function Breakeven({
           </div>
         </div>
 
-        <Card style={{ display: 'grid', gap: 14 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
           <NumberField
             label="¿Cuánto quieres ganar tú al mes?"
             value={state.ownerGoal}

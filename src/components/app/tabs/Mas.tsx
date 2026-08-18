@@ -170,15 +170,16 @@ export function Mas({
   }
 
   return (
-    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gap: 14 }}>
+    <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <H size={25}>Más</H>
 
       <Card>
-        <Row gap={12}>
+        <Row gap={12} style={{ flexWrap: 'wrap' }}>
           <span
             style={{
               width: 46,
               height: 46,
+              flexShrink: 0,
               borderRadius: RADIUS.pill,
               background: 'var(--color-accent-100)',
               color: 'var(--color-accent-700)',
@@ -190,7 +191,7 @@ export function Mas({
           >
             {(state.profile.name || 'T').slice(0, 1).toUpperCase()}
           </span>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15.5, fontWeight: 700 }}>{state.profile.name || 'Tu perfil'}</div>
             <Muted size={12}>{state.profile.email || 'Sin correo capturado'}</Muted>
           </div>
@@ -284,7 +285,7 @@ function SubScreenView(props: {
   const wrap = (title: string, subtitle: string, children: React.ReactNode) => (
     <div>
       <ScreenHeader title={title} subtitle={subtitle} onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 14 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         {children}
       </div>
     </div>
@@ -301,13 +302,13 @@ function SubScreenView(props: {
       const aggregates = menuAggregates(state.dishes, { subrecipes: state.subrecipes });
       return wrap('Mi perfil', 'Tus datos de contacto', (
         <>
-          <Card style={{ display: 'grid', gap: 12 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <Field label="Nombre" value={state.profile.name} onChange={(v) => onPatch({ profile: { ...state.profile, name: v } })} />
             <Field label="Correo" value={state.profile.email} onChange={(v) => onPatch({ profile: { ...state.profile, email: v } })} />
             <Field label="Teléfono" value={state.profile.phone} onChange={(v) => onPatch({ profile: { ...state.profile, phone: v } })} />
             <Field label="Ciudad" value={state.profile.city} onChange={(v) => onPatch({ profile: { ...state.profile, city: v } })} />
           </Card>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
             <MiniKpi label="Avance del proyecto" value={`${progress.pct}%`} />
             <MiniKpi label="Tareas completadas" value={`${progress.done} de ${progress.total}`} />
             <MiniKpi label="Platillos costeados" value={String(state.dishes.length)} />
@@ -320,7 +321,7 @@ function SubScreenView(props: {
     case 'proyecto':
       return wrap('Datos del proyecto', 'Afectan tus números', (
         <>
-          <Card style={{ display: 'grid', gap: 12 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <Field label="Nombre del negocio" value={state.project.name} onChange={(v) => onPatch({ project: { ...state.project, name: v } })} />
             <Field
               label="Presupuesto tope"
@@ -406,7 +407,7 @@ function SubScreenView(props: {
               <span style={{ fontSize: 13, fontWeight: 700 }}>{props.platform.label}</span>
             </Row>
           </Card>
-          <Card style={{ display: 'grid', gap: 14 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
             <Switch label="Alertas de mi proyecto" checked={state.settings.alerts} onChange={(v) => onPatch({ settings: { ...state.settings, alerts: v } })} />
             <Switch label="Recordatorio semanal" checked={state.settings.weekly} onChange={(v) => onPatch({ settings: { ...state.settings, weekly: v } })} />
             <Switch label="Guardar en el teléfono" checked={state.settings.saveOnDevice} onChange={(v) => onPatch({ settings: { ...state.settings, saveOnDevice: v } })} />
@@ -515,7 +516,7 @@ function SubScreenView(props: {
     case 'compra':
       return wrap('Mi compra', 'Estado de tu acceso', (
         <>
-          <Card style={{ display: 'grid', gap: 8 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             <Row style={{ justifyContent: 'space-between' }}>
               <Muted size={13}>Estado</Muted>
               <span style={{ fontSize: 13, fontWeight: 700 }}>
@@ -564,7 +565,7 @@ function SubScreenView(props: {
           {RESOURCES.map(([label, file]) => (
             <Card key={file} radius={RADIUS.block} style={{ padding: 14 }}>
               <Row style={{ justifyContent: 'space-between' }}>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{label}</div>
                   <Muted size={11.5}>{file}</Muted>
                 </div>
@@ -729,7 +730,7 @@ function SubScreenView(props: {
                     flexShrink: 0,
                   }}
                 />
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 700 }}>{rec.title}</div>
                   <Muted size={12.5} style={{ marginTop: 4 }}>
                     {rec.body}
@@ -764,7 +765,7 @@ function SubScreenView(props: {
           {props.diagnosis.progress.modules.map((module) => (
             <Card key={module.id} radius={RADIUS.block} style={{ padding: 14 }}>
               <Row style={{ justifyContent: 'space-between' }}>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 700 }}>{module.name}</div>
                   <Muted size={12}>
                     {module.skipped ? `Omitido · ${module.reason}` : `${module.done} de ${module.total} tareas`}
@@ -828,7 +829,7 @@ function Notes({
   return (
     <div>
       <ScreenHeader title="Mis notas" subtitle="Lo que no quieres olvidar" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 12 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
         {state.notes.map((note) => (
           <Card key={note.id} radius={RADIUS.block} style={{ padding: 14 }}>
             <Row style={{ justifyContent: 'space-between' }}>
@@ -852,7 +853,7 @@ function Notes({
         ))}
 
         {showForm ? (
-          <Card style={{ display: 'grid', gap: 12 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <Field label="Título" value={title} onChange={setTitle} placeholder="Ej. Local de Av. Juárez" />
             <label style={{ display: 'block' }}>
               <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: text(62), marginBottom: 6 }}>
@@ -924,7 +925,7 @@ function Suppliers({
   return (
     <div>
       <ScreenHeader title="Mis proveedores" subtitle="Quién te surte y en qué condiciones" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 12 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
         {state.suppliers.map((supplier) => (
           <Card key={supplier.id} radius={RADIUS.block} style={{ padding: 14 }}>
             <Row style={{ justifyContent: 'space-between' }}>
@@ -948,7 +949,7 @@ function Suppliers({
         ))}
 
         {showForm ? (
-          <Card style={{ display: 'grid', gap: 12 }}>
+          <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <Field label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} />
             <Field label="Qué te surte" value={draft.item} onChange={(v) => setDraft({ ...draft, item: v })} />
             <Field label="Contacto" value={draft.contact} onChange={(v) => setDraft({ ...draft, contact: v })} />
@@ -985,7 +986,7 @@ function Faq({ onBack }: { onBack: () => void }) {
   return (
     <div>
       <ScreenHeader title="Preguntas frecuentes" subtitle={`${FAQ.length} respuestas directas`} onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 8 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
         {FAQ.map((item, i) => (
           <Card key={item.q} radius={RADIUS.block} style={{ padding: 14 }}>
             <button
@@ -1045,7 +1046,7 @@ function Recover({
   return (
     <div>
       <ScreenHeader title="Recuperar acceso" subtitle="Cambiaste de equipo" onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gap: 14 }}>
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
         <Muted size={13.5}>
           Si ya pagaste, primero intenta desbloquear sin escribir nada: buscamos tu compra automáticamente.
         </Muted>
@@ -1063,7 +1064,7 @@ function Recover({
           Buscar mi pago y desbloquear
         </Button>
 
-        <Card style={{ display: 'grid', gap: 12 }}>
+        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
           <Field label="Tu código" value={code} onChange={setCode} placeholder="MRL-XXXX-XXXX" />
           <Button
             disabled={busy || !code.trim()}

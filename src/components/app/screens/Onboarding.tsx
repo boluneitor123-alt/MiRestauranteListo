@@ -43,7 +43,7 @@ export function Onboarding({
           >
             ‹
           </button>
-          <div style={{ flex: 1, height: 8, borderRadius: RADIUS.pill, background: 'var(--color-neutral-300)' }}>
+          <div style={{ flex: 1, minWidth: 0, height: 8, borderRadius: RADIUS.pill, background: 'var(--color-neutral-300)' }}>
             <div
               style={{
                 width: `${((step + 1) / ONBOARDING_QUESTIONS.length) * 100}%`,
@@ -60,14 +60,14 @@ export function Onboarding({
         </Row>
       </div>
 
-      <div className="mrl-measure" style={{ padding: '26px 22px 0', flex: 1, width: '100%' }}>
+      <div className="mrl-measure" style={{ padding: '26px 22px 0', flex: 1, minWidth: 0, width: '100%' }}>
         <Kicker>{question.kicker}</Kicker>
         <H size={26} style={{ marginTop: 8 }}>
           {question.question}
         </H>
         {question.help ? <Muted style={{ marginTop: 8 }}>{question.help}</Muted> : null}
 
-        <div style={{ marginTop: 20, display: 'grid', gap: 10 }}>
+        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
           {question.options.map((option) => {
             const active = selected === option;
             return (

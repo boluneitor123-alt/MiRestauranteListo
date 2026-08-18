@@ -573,7 +573,7 @@ export function App() {
 
       {fabOpen ? (
         <Sheet title="Agregar algo nuevo" onClose={() => setFabOpen(false)}>
-          <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
             {FAB_ACTIONS.map((action) => (
               <button
                 key={action.id}

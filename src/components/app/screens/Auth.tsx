@@ -65,7 +65,7 @@ export function Auth({
             if (ready) void submit();
           }}
         >
-          <div style={{ marginTop: 22, display: 'grid', gap: 14 }}>
+          <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
             {registering ? (
               <Field label="Tu nombre" value={name} onChange={setName} placeholder="Tu nombre" />
             ) : null}
