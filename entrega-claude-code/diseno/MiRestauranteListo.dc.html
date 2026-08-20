@@ -42,6 +42,7 @@
     --color-accent-2-400:#5cbe8b; --color-accent-2-500:#22a05f; --color-accent-2-600:#17854d;
     --color-accent-2-700:#10683c; --color-accent-2-800:#0b4a2b; --color-accent-2-900:#07301c;
     --color-warn:#e8a317; --color-warn-100:#fdf3e0;
+    --on-accent:#33190a;
     --font-heading:"Figtree", system-ui, sans-serif; --font-heading-weight:800;
     --shadow-sm:0 1px 3px rgba(29,27,26,.07); --shadow-md:0 6px 18px rgba(29,27,26,.10);
     --shadow-lg:0 18px 44px rgba(29,27,26,.16);
@@ -1851,7 +1852,7 @@
                   <div style="font-family:var(--font-heading); font-size:18px">{{ userName }}</div>
                   <div style="font-size:12.5px; color:color-mix(in srgb, var(--color-text) 58%, transparent)">{{ projectName }} · {{ giroLabel }}</div>
                 </div>
-                <span class="tag tag-accent-2">Acceso de por vida</span>
+                <span class="{{ accessTagClass }}">{{ accessTagLabel }}</span>
               </div>
 
               <div style="margin-top:12px; padding:16px; border-radius:26px; background:var(--color-accent-100); display:flex; gap:12px; align-items:center">
@@ -2785,7 +2786,7 @@ const CATS = [
     { t: 'Visita al menos 5 locales', h: 'Compara renta, flujo y estado.', d: 0, why: 'El primer local casi nunca es el mejor.', n: 'Llena una tabla con renta, metros, flujo y qué obra necesita cada uno.' },
     { t: 'Negocia renta y depósito', h: 'Meses de gracia y garantía.', d: 0, why: 'Un mes de gracia para obra puede salvarte el arranque.', n: 'Pide 1 o 2 meses de gracia para adecuaciones antes de firmar.' },
     { t: 'Revisa uso de suelo', h: 'Que permita venta de alimentos.', d: 0, why: 'El uso de suelo compatible es la base de todos los permisos.', n: 'Verifica el uso de suelo del predio con tu municipio.' } ] },
-  { id: 'equipamiento', name: 'Equipamiento', desc: 'Compra solo el equipo que tu menú realmente necesita.', tasks: [
+  { id: 'equipamiento', col: 'accent-600', name: 'Equipamiento', desc: 'Compra solo el equipo que tu menú realmente necesita.', tasks: [
     { t: 'Lista tu equipo mínimo', h: 'Sin extras que no vas a usar.', d: 1, why: 'Conviene reservar capital de trabajo antes de sumar equipo opcional.', n: 'Marca cada equipo como indispensable o deseable.' },
     { t: 'Cotiza la cocina básica', h: '3 proveedores distintos.', d: 1, why: 'La diferencia entre cotizaciones suele ser de 20% o más.', n: 'Consigue 3 cotizaciones formales de tu línea caliente.' },
     { t: 'Cotiza refrigeración', h: 'Cámara, congelador o refris.', d: 0, why: 'Refrigeración bien calculada te ahorra merma diaria.', n: 'Calcula litros necesarios según tus compras semanales.' },
@@ -3933,7 +3934,7 @@ const TEMPLATES = {
 };
 
 const CHANGELOG = [
-  ['Agosto 2026', 'v1.0 · Lanzamiento', 'Diagnóstico, Mi Ruta con 43 tareas, costeador con merma y sub-recetas, presupuesto con subconceptos, punto de equilibrio, Mi Menú con ingeniería de menú y ficha técnica en PDF.'],
+  ['Agosto 2026', 'v1.0 · Lanzamiento', 'Diagnóstico, Mi Ruta con 90 tareas en 14 módulos, costeador con merma y sub-recetas, presupuesto con subconceptos, punto de equilibrio, Mi Menú con ingeniería de menú y ficha técnica en PDF.'],
   ['Próxima', 'Respaldo en la nube', 'Tu proyecto sincronizado entre teléfono y computadora, incluido en tus actualizaciones.'],
   ['Próxima', 'Comparador de proveedores', 'Guarda precios por insumo y detecta cuándo te están subiendo el costo.'],
   ['Próxima', 'Plantillas de carta imprimible', 'Descarga tu menú ya distribuido según la sugerencia de ingeniería de menú.']
@@ -6041,7 +6042,7 @@ class Component extends DCLogic {
           { label: 'Términos y privacidad', meta: '', action: () => this.openSub('terminos') } ] }
       ],
       payFeatures: [
-        { text: 'Ruta de apertura con 43 tareas guiadas' }, { text: 'Costeador de platillos ilimitado' },
+        { text: 'Ruta de apertura con 90 tareas guiadas' }, { text: 'Costeador de platillos ilimitado' },
         { text: 'Presupuesto de apertura y gastos fijos' }, { text: 'Punto de equilibrio automático' },
         { text: 'Recomendaciones tipo mentor' }, { text: 'Úsalo en hasta ' + (this.serverSettings().maxDevices || 3) + ' equipos' },
         { text: 'Actualizaciones de las herramientas de apertura incluidas' }
@@ -6223,6 +6224,8 @@ class Component extends DCLogic {
 
       // licencia y demo
       licensed: !!s.license.active, isDemo: !s.license.active,
+      accessTagLabel: s.license.active ? 'Acceso de por vida' : 'Versión de prueba',
+      accessTagClass: s.license.active ? 'tag tag-accent-2' : 'tag tag-outline',
       demoDishesLeft: Math.max(0, 3 - s.dishes.length),
       trialScopeNote: 'En la prueba trabajas Concepto y Local completos, abres la primera lección de cada módulo, costeas 3 platillos y ves tu punto de equilibrio.',
       demoBanner: trial.expired
