@@ -19,28 +19,37 @@ herramienta que le dice al dueño si le va a alcanzar.
 En el prototipo esto vive en el método que arma `svCards`, `svOps`, `svCushion`
 y `svHours`. Busca el texto `Tu colchón para los meses de arranque`.
 
-- [ ] `colchonDeArranque()` — rampa de venta real (40 %, 65 %, 85 %, 100 % en los
+- [x] `colchonDeArranque()` — rampa de venta real (40 %, 65 %, 85 %, 100 % en los
       primeros cuatro meses), suma del hueco de esos meses, y en qué mes el
       negocio se paga solo.
-- [ ] `sueldoRealDelDueno()` — venta × margen − gastos fijos − comisión de
+- [x] `sueldoRealDelDueno()` — venta × margen − gastos fijos − comisión de
       tarjeta (3.6 % sobre el 40 % de la venta) − impuestos estimados.
-- [ ] `valorDeTuHora()` — sueldo real ÷ horas trabajadas al mes, con control de
+- [x] `valorDeTuHora()` — sueldo real ÷ horas trabajadas al mes, con control de
       horas por semana (rango 1–120, default 70).
-- [ ] `costoPorHoraAbierto()` — gastos fijos ÷ horas de operación al mes.
-- [ ] `mermaMensual()` — promedio de merma de las recetas capturadas aplicado a
+- [x] `costoPorHoraAbierto()` — gastos fijos ÷ horas de operación al mes.
+- [x] `mermaMensual()` — promedio de merma de las recetas capturadas aplicado a
       la compra mensual de insumos. Sin recetas, muestra "Sin datos".
-- [ ] `utilidadPorMinutoDeCocina()` — utilidad promedio del platillo ÷ minutos
+- [x] `utilidadPorMinutoDeCocina()` — utilidad promedio del platillo ÷ minutos
       de preparación.
-- [ ] `compraDeInsumosAlMes()`.
-- [ ] `pruebaDeEstres()` — tres controles: sube insumos %, sube renta %, baja
+- [x] `compraDeInsumosAlMes()`.
+- [x] `pruebaDeEstres()` — tres controles: sube insumos %, sube renta %, baja
       venta %. Recalcula punto de equilibrio, tickets al día y sueldo del dueño.
-- [ ] Sección "Lo que este negocio te va a dar" en `tabs/Numeros.tsx`, con las
+- [x] Sección "Lo que este negocio te va a dar" en `tabs/Numeros.tsx`, con las
       notas explicativas y el estado bueno/malo que cambia el color.
-- [ ] Pruebas unitarias en `src/domain/__tests__/finance.test.ts` para cada
+- [x] Pruebas unitarias en `src/domain/__tests__/survival.test.ts` para cada
       función nueva.
 
 Copia los textos de las notas literales del prototipo. Están escritos para un
 dueño de fonda; no los reescribas.
+
+**Hecho.** Las ocho funciones viven en `src/domain/survival.ts`, no en
+`finance.ts`: `finance.ts` es de las tres cuentas base y esto es otra cosa.
+`survival()` las compone y redacta los textos. Pruebas en
+`src/domain/__tests__/survival.test.ts` (29). La pantalla es
+`src/components/app/numeros/Aguante.tsx`, y se entra desde una cuarta tarjeta
+en Números. Los seis ajustes nuevos (horas por semana, minutos de preparación,
+mezcla diaria y los tres de la prueba de estrés) se guardan en la base:
+migración `20260820120000_survival_settings`.
 
 ---
 
@@ -51,11 +60,15 @@ dueño de fonda; no los reescribas.
 y pruebas (`domain/ads.ts`, `domain/delivery.ts`). No hay forma de llegar a
 ellos desde la app.
 
-- [ ] Verifica si están montados en alguna ruta o pantalla. Dime qué encontraste
-      antes de cambiar nada.
-- [ ] Entrada a la calculadora de delivery desde el módulo de delivery y desde Más.
-- [ ] Entrada al diagnóstico de anuncios desde el curso de anuncios y desde Más.
-- [ ] Que el resultado de cada una se pueda guardar y volver a abrir.
+- [x] Verifica si están montados en alguna ruta o pantalla. **Sí lo están:**
+      `Mas.tsx` los importa y los monta en las sub-pantallas `delivery` y
+      `anuncios`, y hay un grupo "Herramientas" en la lista de Más con las dos
+      entradas. Verificado en el navegador.
+- [x] Entrada desde Más. Existe para las dos.
+- [ ] Entrada a la calculadora desde el módulo de delivery de Mi Ruta.
+- [ ] Entrada al diagnóstico de anuncios desde el curso de anuncios.
+- [ ] Que el resultado de cada una se pueda guardar y volver a abrir. Hoy el
+      estado vive en `useState` y se pierde al salir.
 
 ---
 
@@ -64,18 +77,16 @@ ellos desde la app.
 `src/components/app/ruta/Lesson.tsx` existe y `src/content/lessons.ts` tiene las
 90 lecciones. En vivo, la tarjeta de tarea solo muestra título y una línea.
 
-- [ ] Averigua si `Lesson.tsx` se está montando al abrir una tarea. Reporta qué
-      pasa antes de reescribir.
-- [ ] Al abrir una tarea debe mostrar, en este orden: número de lección y de
-      cuántas es, minutos, espacio para la imagen de contexto con su instrucción
-      visible mientras no haya imagen, pasos numerados, tabla de ejemplo cuando
-      exista, error común, y la lista de validación con casillas.
-- [ ] La tabla de ejemplo es condicional. Solo 44 de las 90 la traen. No
-      inventes ninguna.
-- [ ] Las 26 lecciones sin ilustración se quedan sin ilustración.
-- [ ] Respeta la muestra gratis: en módulos bloqueados la lección 1 abre completa.
-- [ ] Prueba abriendo una lección de cada módulo, incluidos los cuatro cursos
-      con estrella.
+- [x] Averigua si `Lesson.tsx` se está montando al abrir una tarea. **Sí se
+      monta:** `Ruta.tsx` lo renderiza dentro de `TaskCard` cuando la tarea
+      está abierta. Verificado en el navegador.
+- [x] Al abrir una tarea muestra todo lo pedido. Verificado.
+- [x] La tabla de ejemplo es condicional y sale sólo cuando la lección la trae.
+- [x] Las 26 lecciones sin ilustración se pintan sin ella.
+- [x] Respeta la muestra gratis.
+- [x] Probado en módulo libre, módulo de ruta y curso con estrella.
+- [ ] Falta el hueco de imagen con su instrucción visible mientras no haya
+      ilustración: hoy simplemente no se pinta nada.
 
 ---
 

@@ -9,6 +9,8 @@ import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
+import { Aguante } from '../numeros/Aguante';
+import { survival, type SurvivalResult } from '@/domain/survival';
 import { BUDGET_CONCEPTS } from '@/content/catalog';
 
 /**
@@ -18,7 +20,49 @@ import { BUDGET_CONCEPTS } from '@/content/catalog';
 const EXAMPLE_BUDGET = BUDGET_CONCEPTS;
 const EXAMPLE_BUDGET_CAP = 250000;
 
-export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio';
+/**
+ * Arma la entrada de "Lo que este negocio te va a dar" con lo que el usuario
+ * ya capturó. La venta que se proyecta es la de su meta; si no tiene meta, la
+ * de equilibrio.
+ */
+function survivalOf(state: ProjectState): SurvivalResult {
+  const fixed = fixedExpensesTotal(state.fixed);
+  const be = breakeven({
+    fixedExpenses: fixed,
+    grossMargin: state.margin,
+    ticket: state.ticket,
+    ownerGoal: state.ownerGoal,
+    hours: state.hours,
+    closedOneDay: state.closedOneDay,
+  });
+  const invest = investment({
+    concepts: state.budget,
+    subconcepts: state.budgetSub,
+    budgetCap: state.project.budgetCap,
+  });
+
+  return survival({
+    monthlySales: be.goalMonthlySales || be.monthlySales,
+    fixedExpenses: fixed,
+    // Sólo la renta se mueve en la prueba de estrés.
+    rent: state.fixed.find((c) => c.key === 'renta')?.amount ?? 0,
+    days: be.days,
+    marginPct: state.margin,
+    ticket: state.ticket,
+    goalTicketsPerDay: be.goalTicketsPerDay,
+    investment: invest.total,
+    budgetCap: state.project.budgetCap,
+    hoursPerDay: state.hours,
+    weeklyHours: state.weeklyHours,
+    prepMinutes: state.prepMinutes,
+    dailyMix: state.dailyMix,
+    dishes: state.dishes,
+    costing: { subrecipes: state.subrecipes },
+    stress: state.stress,
+  });
+}
+
+export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio' | 'aguante';
 
 /** Números: inversión, gastos fijos y punto de equilibrio (README § 1.8). */
 export function Numeros({
@@ -67,6 +111,31 @@ export function Numeros({
     return <Breakeven state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />;
   }
 
+  if (view === 'aguante') {
+    return (
+      <Aguante
+        result={survivalOf(state)}
+        weeklyHours={state.weeklyHours}
+        prepMinutes={state.prepMinutes}
+        stress={state.stress}
+        goalTicketsPerDay={
+          breakeven({
+            fixedExpenses: fixedExpensesTotal(state.fixed),
+            grossMargin: state.margin,
+            ticket: state.ticket,
+            ownerGoal: state.ownerGoal,
+            hours: state.hours,
+            closedOneDay: state.closedOneDay,
+          }).goalTicketsPerDay
+        }
+        onBack={() => onChangeView('home')}
+        onChangeWeeklyHours={(weeklyHours) => onPatch({ weeklyHours })}
+        onChangePrepMinutes={(prepMinutes) => onPatch({ prepMinutes })}
+        onChangeStress={(stress) => onPatch({ stress })}
+      />
+    );
+  }
+
   const fixed = fixedExpensesTotal(state.fixed);
   const be = breakeven({
     fixedExpenses: fixed,
@@ -81,6 +150,7 @@ export function Numeros({
     subconcepts: state.budgetSub,
     budgetCap: state.project.budgetCap,
   });
+  const aguante = survivalOf(state);
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
@@ -112,6 +182,22 @@ export function Numeros({
         value={money(be.dailySales)}
         hint={`${be.ticketsPerDay} tickets al día para no perder`}
         onClick={() => onChangeView('equilibrio')}
+      />
+
+      {/*
+        "Lo que este negocio te va a dar": la cifra grande es el sueldo real
+        del dueño, que es la pregunta con la que llega. Las otras siete viven
+        dentro.
+      */}
+      <ModuleCard
+        title="Lo que este negocio te va a dar"
+        value={aguante.ownerSalary > 0 ? `${money(aguante.ownerSalary)} al mes` : 'Por calcular'}
+        hint={
+          aguante.paybackMonths
+            ? `Tu sueldo real · la inversión vuelve en el mes ${aguante.paybackMonths}`
+            : 'Tu sueldo real, el valor de tu hora y la prueba de estrés'
+        }
+        onClick={() => onChangeView('aguante')}
       />
 
       <button

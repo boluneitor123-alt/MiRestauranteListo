@@ -11,6 +11,7 @@ import { ROUTE_MODULES } from '@/content/route';
 import { taskKey, type ExtraTask } from './progress';
 import type { Concept, Subconcept } from './finance';
 import type { Dish, Ingredient, Subrecipe } from './types';
+import { SURVIVAL_DEFAULTS } from './survival';
 import { DEFAULT_FOOD_COST_TARGET } from './costing';
 import { BREAKEVEN_DEFAULTS } from './finance';
 import { DEFAULT_LAYOUT_ID } from './menu';
@@ -48,6 +49,18 @@ export interface Supplier {
   delivery: string;
 }
 
+/** Los tres supuestos de la prueba de estrés, en porcentaje. */
+export interface StressTest {
+  /** Si tus insumos suben. */
+  supplies: number;
+  /** Si tu renta sube. */
+  rent: number;
+  /** Si vendes menos de lo que esperas. */
+  sales: number;
+}
+
+export const NO_STRESS: StressTest = { supplies: 0, rent: 0, sales: 0 };
+
 export interface AppSettings {
   alerts: boolean;
   weekly: boolean;
@@ -82,6 +95,14 @@ export interface ProjectState {
   ownerGoal: number;
   hours: number;
   closedOneDay: boolean;
+  /** Horas que trabaja el dueño a la semana. Alimenta "Lo que vale tu hora". */
+  weeklyHours: number;
+  /** Minutos que tarda tu platillo promedio. Alimenta la utilidad por minuto. */
+  prepMinutes: number;
+  /** Cuántos platillos salen al día en total, para estimar la compra de insumos. */
+  dailyMix: number;
+  /** Prueba de estrés: cuánto suben los insumos, cuánto la renta, cuánto baja la venta. */
+  stress: StressTest;
   fcTarget: number;
   layout: string;
   settings: AppSettings;
@@ -131,6 +152,10 @@ export function emptyProjectState(overrides: Partial<ProjectState> = {}): Projec
     ownerGoal: BREAKEVEN_DEFAULTS.ownerGoal,
     hours: BREAKEVEN_DEFAULTS.hours,
     closedOneDay: false,
+    weeklyHours: SURVIVAL_DEFAULTS.weeklyHours,
+    prepMinutes: SURVIVAL_DEFAULTS.prepMinutes,
+    dailyMix: SURVIVAL_DEFAULTS.dailyMix,
+    stress: { ...NO_STRESS },
     fcTarget: DEFAULT_FOOD_COST_TARGET,
     layout: DEFAULT_LAYOUT_ID,
     settings: { ...DEFAULT_SETTINGS },
@@ -282,6 +307,7 @@ export function importBackup(input: unknown): ProjectState {
   const profile = asRecord(raw.profile);
   const project = asRecord(raw.project);
   const settings = asRecord(raw.settings);
+  const stress = asRecord(raw.stress);
 
   const state: ProjectState = {
     profile: {
@@ -347,6 +373,14 @@ export function importBackup(input: unknown): ProjectState {
     ownerGoal: asNumber(raw.ownerGoal ?? raw.meta, base.ownerGoal),
     hours: asNumber(raw.hours, base.hours),
     closedOneDay: asBoolean(raw.closedOneDay ?? raw.closedDay, false),
+    weeklyHours: asNumber(raw.weeklyHours ?? raw.hrsWeek, base.weeklyHours),
+    prepMinutes: asNumber(raw.prepMinutes ?? raw.prepMin, base.prepMinutes),
+    dailyMix: asNumber(raw.dailyMix ?? raw.mixDaily, base.dailyMix),
+    stress: {
+      supplies: asNumber(stress.supplies ?? raw.stressIns, 0),
+      rent: asNumber(stress.rent ?? raw.stressRent, 0),
+      sales: asNumber(stress.sales ?? raw.stressSales, 0),
+    },
     fcTarget: asNumber(raw.fcTarget, base.fcTarget),
     layout: asString(raw.layout, base.layout),
     settings: {

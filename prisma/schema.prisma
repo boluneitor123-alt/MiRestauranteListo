@@ -94,6 +94,14 @@ model Project {
   ownerGoal   Int     @default(25000)
   hours       Int     @default(8)
   closedOneDay Boolean @default(false)
+  /// Parámetros de "Lo que este negocio te va a dar".
+  weeklyHours Int     @default(70)
+  prepMinutes Int     @default(6)
+  dailyMix    Int     @default(100)
+  /// Prueba de estrés, en porcentaje.
+  stressSupplies Int  @default(0)
+  stressRent     Int  @default(0)
+  stressSales    Int  @default(0)
   fcTarget    Int     @default(30)
   layout      String  @default("p2")
 
