@@ -1,10 +1,12 @@
 'use client';
 
 import { money } from '@/domain/format';
+import { ArrowRight } from 'lucide-react';
 import {
   STRESS_CONTROLS,
   STRESS_STEPS,
   WEEKLY_HOURS_RANGE,
+  type StressLevel,
   type SurvivalResult,
 } from '@/domain/survival';
 import type { StressTest } from '@/domain/projectState';
@@ -20,8 +22,31 @@ import { Card, H, Muted, RADIUS, ScreenHeader, text } from '@/components/ui';
  * fonda y el tono es deliberado — cuando un número sale mal, la nota dice qué
  * mover, no que va a fracasar.
  */
+/**
+ * Los tres tramos del escenario de estrés, con tokens del sistema.
+ * El ámbar usa la rampa de advertencia; no es un color nuevo.
+ */
+const TONE: Record<StressLevel, { soft: string; ink: string; strong: string }> = {
+  aguanta: {
+    soft: 'var(--color-accent-2-100)',
+    ink: 'var(--color-accent-2-900)',
+    strong: 'var(--color-accent-2-700)',
+  },
+  aprieta: {
+    soft: 'var(--color-warn-100)',
+    ink: 'var(--color-neutral-900)',
+    strong: 'var(--color-warn)',
+  },
+  pierde: {
+    soft: 'var(--color-accent-100)',
+    ink: 'var(--color-accent-900)',
+    strong: 'var(--color-accent-700)',
+  },
+};
+
 export function Aguante({
   result,
+  ownerSalary,
   weeklyHours,
   prepMinutes,
   stress,
@@ -32,6 +57,8 @@ export function Aguante({
   onChangeStress,
 }: {
   result: SurvivalResult;
+  /** El sueldo de hoy, para poner el del escenario al lado. */
+  ownerSalary: number;
   weeklyHours: number;
   prepMinutes: number;
   stress: StressTest;
@@ -41,6 +68,8 @@ export function Aguante({
   onChangePrepMinutes: (minutes: number) => void;
   onChangeStress: (stress: StressTest) => void;
 }) {
+  const ticketDelta = result.stressTicketsPerDay - goalTicketsPerDay;
+
   return (
     <div>
       <ScreenHeader
@@ -239,24 +268,65 @@ export function Aguante({
 
           {result.stressOn ? (
             <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
-              <div className="mrl-duo">
-                <div style={{ padding: 14, borderRadius: 20, background: 'var(--color-neutral-200)' }}>
-                  <Muted size={11.5}>Tendrías que vender</Muted>
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, marginTop: 3 }}>
-                    {result.stressTicketsPerDay} tickets al día
-                  </div>
-                  <Muted size={11.8} style={{ marginTop: 2 }}>
-                    en lugar de {goalTicketsPerDay}
-                  </Muted>
+              {/*
+                La comparación es lo que se lee, no el número solo: de cuántos
+                tickets a cuántos, con la diferencia a un lado.
+              */}
+              <div style={{ padding: 14, borderRadius: 20, background: 'var(--color-neutral-200)' }}>
+                <Muted size={11.5}>Tendrías que vender</Muted>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: text(55) }}>
+                    {goalTicketsPerDay}
+                  </span>
+                  <ArrowRight size={16} strokeWidth={2.8} color={text(45)} style={{ flex: 'none' }} />
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: 26, color: TONE[result.stressLevel].strong }}>
+                    {result.stressTicketsPerDay}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>tickets al día</span>
+                  {ticketDelta !== 0 ? (
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '3px 10px',
+                        borderRadius: RADIUS.pill,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: TONE[result.stressLevel].soft,
+                        color: TONE[result.stressLevel].ink,
+                      }}
+                    >
+                      {ticketDelta > 0 ? '+' : '−'}
+                      {Math.abs(ticketDelta)}
+                    </span>
+                  ) : null}
                 </div>
-                <div style={{ padding: 14, borderRadius: 20, background: 'var(--color-neutral-200)' }}>
-                  <Muted size={11.5}>Te quedaría</Muted>
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, marginTop: 3 }}>
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 20, background: 'var(--color-neutral-200)' }}>
+                <Muted size={11.5}>Te quedaría al mes</Muted>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: text(55) }}>
+                    {money(ownerSalary)}
+                  </span>
+                  <ArrowRight size={16} strokeWidth={2.8} color={text(45)} style={{ flex: 'none' }} />
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: 26, color: TONE[result.stressLevel].strong }}>
                     {money(result.stressOwnerSalary)}
-                  </div>
-                  <Muted size={11.8} style={{ marginTop: 2 }}>
-                    al mes
-                  </Muted>
+                  </span>
+                  {result.stressLevel !== 'aguanta' && ownerSalary > 0 ? (
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '3px 10px',
+                        borderRadius: RADIUS.pill,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: TONE[result.stressLevel].soft,
+                        color: TONE[result.stressLevel].ink,
+                      }}
+                    >
+                      −{Math.round((1 - result.stressSalaryRatio) * 100)}%
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
@@ -268,8 +338,8 @@ export function Aguante({
                   borderRadius: 22,
                   fontSize: 12.8,
                   lineHeight: 1.5,
-                  background: result.stressOwnerSalary > 0 ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)',
-                  color: result.stressOwnerSalary > 0 ? 'var(--color-accent-2-900)' : 'var(--color-accent-900)',
+                  background: TONE[result.stressLevel].soft,
+                  color: TONE[result.stressLevel].ink,
                 }}
               >
                 {result.stressNote}

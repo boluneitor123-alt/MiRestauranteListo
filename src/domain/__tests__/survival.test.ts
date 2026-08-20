@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { survival, SURVIVAL_DEFAULTS, type SurvivalInput } from '../survival';
+import { nivelDeEstres, survival, SURVIVAL_DEFAULTS, type SurvivalInput } from '../survival';
 import { DEMO_DISHES, DEMO_SUBRECIPES } from '@/content/demo';
 
 /**
@@ -14,6 +14,7 @@ const base: SurvivalInput = {
   marginPct: 68,
   ticket: 120,
   goalTicketsPerDay: 43,
+  ownerGoal: 25000,
   investment: 263500,
   budgetCap: 250000,
   hoursPerDay: 8,
@@ -218,14 +219,28 @@ describe('prueba de estrés', () => {
   it('un alza de insumos se come parte del margen', () => {
     const r = survival(con({ stress: { supplies: 20, rent: 0, sales: 0 } }));
     // margen 0.68 − (1 − 0.68) × 0.20 = 0.616
-    // equilibrio 80,000 / 0.616 = 129,870.13 → /30 /120 = 36.07 → 37 tickets
-    expect(r.stressTicketsPerDay).toBe(37);
+    // (80,000 + 25,000) / 0.616 = 170,454.55 → /30 /120 = 47.35 → 48 tickets
+    expect(r.stressTicketsPerDay).toBe(48);
   });
 
   it('un alza de renta sube sólo la renta, no todo el gasto fijo', () => {
     const r = survival(con({ stress: { supplies: 0, rent: 30, sales: 0 } }));
-    // fijos 80,000 + 22,000 × 30% = 86,600; /0.68 = 127,352.94 → 36 tickets
-    expect(r.stressTicketsPerDay).toBe(36);
+    // fijos 80,000 + 22,000 × 30% = 86,600; (86,600 + 25,000) / 0.68 → 46 tickets
+    expect(r.stressTicketsPerDay).toBe(46);
+  });
+
+  it('los tickets del escenario se comparan con los de hoy, no con otra base', () => {
+    // Antes salían del punto de equilibrio pelón y se comparaban contra la
+    // meta: el escenario parecía pedir MENOS tickets que la situación normal.
+    const r = survival(con({ stress: { supplies: 20, rent: 0, sales: 0 } }));
+    expect(r.stressTicketsPerDay).toBeGreaterThan(base.goalTicketsPerDay);
+    expect(r.stressTicketsLine).toBe('De 43 a 48 tickets al día · +5');
+  });
+
+  it('avisa cuando el escenario no mueve los tickets', () => {
+    const r = survival(con({ goalTicketsPerDay: 43, stress: { supplies: 0, rent: 0, sales: 0 } }));
+    expect(r.stressTicketsPerDay).toBe(43);
+    expect(r.stressTicketsLine).toBe('Seguirían siendo 43 tickets al día');
   });
 
   it('una caída de venta baja el sueldo del dueño', () => {
@@ -238,12 +253,50 @@ describe('prueba de estrés', () => {
   it('avisa cuando el escenario deja la cuenta corta', () => {
     const r = survival(con({ stress: { supplies: 30, rent: 30, sales: 30 } }));
     expect(r.stressOwnerSalary).toBeLessThan(0);
+    expect(r.stressLevel).toBe('pierde');
     expect(r.stressNote).toContain('saberlo hoy es una ventaja');
+  });
+});
+
+describe('los tres tramos del sueldo bajo estrés', () => {
+  it('aguanta mientras quede arriba del 70% del sueldo de hoy', () => {
+    const r = survival(con({ stress: { supplies: 5, rent: 0, sales: 0 } }));
+    expect(r.stressSalaryRatio).toBeGreaterThanOrEqual(0.7);
+    expect(r.stressLevel).toBe('aguanta');
+    expect(r.stressNote).toContain('Aguanta bien');
+  });
+
+  it('aprieta cuando sigue en positivo pero cae más de 30%', () => {
+    const r = survival(con({ stress: { supplies: 20, rent: 0, sales: 0 } }));
+    expect(r.stressOwnerSalary).toBeGreaterThan(0);
+    expect(r.stressSalaryRatio).toBeLessThan(0.7);
+    expect(r.stressLevel).toBe('aprieta');
+    expect(r.stressNote).toContain('El negocio sobrevive, pero tú dejas de cobrar como esperabas');
+  });
+
+  it('en el tramo de en medio dice cuánto baja el sueldo', () => {
+    const r = survival(con({ stress: { supplies: 20, rent: 0, sales: 0 } }));
+    const caida = Math.round((1 - r.stressSalaryRatio) * 100);
+    expect(r.stressNote).toContain(`un ${caida}% menos`);
+  });
+
+  it('pierde en cuanto el sueldo se vuelve negativo', () => {
+    expect(nivelDeEstres(20000, -1)).toBe('pierde');
+    expect(nivelDeEstres(20000, 0)).toBe('pierde');
+  });
+
+  it('el tramo exacto del 70% todavía aguanta', () => {
+    expect(nivelDeEstres(10000, 7000)).toBe('aguanta');
+    expect(nivelDeEstres(10000, 6999)).toBe('aprieta');
+  });
+
+  it('sin sueldo de partida no hay contra qué comparar', () => {
+    expect(nivelDeEstres(-5000, 1000)).toBe('aguanta');
   });
 
   it('el margen bajo estrés nunca cae por debajo de 5%', () => {
     const r = survival(con({ marginPct: 8, stress: { supplies: 100, rent: 0, sales: 0 } }));
     // 0.08 − 0.92 = negativo, se topa en 0.05
-    expect(r.stressTicketsPerDay).toBe(Math.ceil(80000 / 0.05 / 30 / 120));
+    expect(r.stressTicketsPerDay).toBe(Math.ceil((80000 + 25000) / 0.05 / 30 / 120));
   });
 });

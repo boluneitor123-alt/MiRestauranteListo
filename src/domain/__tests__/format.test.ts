@@ -40,3 +40,20 @@ describe('formato de moneda y números', () => {
     expect(unitPriceLabel(0.09, 'g')).toBe('$0.09 por g');
   });
 });
+
+describe('cantidades negativas', () => {
+  it('pone el signo antes del símbolo, no después', () => {
+    expect(money(-22643)).toBe('−$22,643');
+    expect(money2(-6.25)).toBe('−$6.25');
+  });
+
+  it('deja las positivas como estaban', () => {
+    expect(money(22643)).toBe('$22,643');
+    expect(money2(6.25)).toBe('$6.25');
+  });
+
+  it('el cero no lleva signo', () => {
+    expect(money(0)).toBe('$0');
+    expect(money(-0.2)).toBe('$0');
+  });
+});

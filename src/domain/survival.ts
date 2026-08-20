@@ -57,8 +57,10 @@ export interface SurvivalInput {
   marginPct: number;
   /** Ticket promedio. */
   ticket: number;
-  /** Tickets diarios que pide la meta, para comparar contra el estrés. */
+  /** Tickets diarios que pide la meta hoy. Es el número contra el que se compara. */
   goalTicketsPerDay: number;
+  /** Lo que el dueño quiere ganar al mes. Entra en el estrés igual que hoy. */
+  ownerGoal: number;
   /** Inversión de apertura. */
   investment: number;
   /** Presupuesto disponible. */
@@ -93,6 +95,20 @@ export interface SurvivalCard {
   note: string;
   ok: boolean;
 }
+
+/**
+ * Cómo queda el dueño en el escenario de estrés.
+ *
+ *   'aguanta'  el sueldo se mantiene arriba del 70% del de hoy
+ *   'aprieta'  sigue en positivo pero cae más de 30%. El negocio sobrevive y
+ *              el dueño deja de cobrar lo que esperaba: es el caso más común
+ *              y el que nadie ve venir
+ *   'pierde'   el sueldo se vuelve negativo
+ */
+export type StressLevel = 'aguanta' | 'aprieta' | 'pierde';
+
+/** Debajo de este porcentaje del sueldo de hoy, el escenario ya aprieta. */
+export const STRESS_SALARY_FLOOR = 0.7;
 
 export interface SurvivalRow {
   label: string;
@@ -140,9 +156,22 @@ export interface SurvivalResult {
 
   /** ── Prueba de estrés ─────────────────────────────────────────────── */
   stressOn: boolean;
+  /** Tickets al día que pediría el escenario. Comparable con goalTicketsPerDay. */
   stressTicketsPerDay: number;
   stressOwnerSalary: number;
+  /** Qué parte del sueldo de hoy queda. 1 = igual, 0.5 = la mitad. */
+  stressSalaryRatio: number;
+  stressLevel: StressLevel;
+  /** "de 47 a 61 tickets al día", o el aviso de que no se mueve. */
+  stressTicketsLine: string;
   stressNote: string;
+}
+
+/** En qué tramo cae el sueldo del escenario contra el de hoy. */
+export function nivelDeEstres(ownerSalary: number, stressOwnerSalary: number): StressLevel {
+  if (stressOwnerSalary <= 0) return 'pierde';
+  if (ownerSalary <= 0) return 'aguanta';
+  return stressOwnerSalary >= ownerSalary * STRESS_SALARY_FLOOR ? 'aguanta' : 'aprieta';
 }
 
 /* ────────────────────────  Los ocho indicadores  ──────────────────────── */
@@ -282,6 +311,8 @@ export function pruebaDeEstres(input: {
   marginPct: number;
   ticket: number;
   days: number;
+  /** La meta del dueño entra en la cuenta, igual que en el número de hoy. */
+  ownerGoal: number;
   stress: { supplies: number; rent: number; sales: number };
 }): { margin: number; fixedExpenses: number; ticketsPerDay: number; ownerSalary: number } {
   const margin = input.marginPct / 100;
@@ -289,10 +320,16 @@ export function pruebaDeEstres(input: {
   const stressFixed = input.fixedExpenses + input.rent * (input.stress.rent / 100);
   const stressSales = (input.monthlySales || 1) * (1 - input.stress.sales / 100);
 
+  // Los tickets del escenario se calculan sobre la MISMA base que los de hoy:
+  // gastos fijos más la meta del dueño. Antes salían del punto de equilibrio
+  // pelón y se comparaban contra la meta, así que el escenario parecía pedir
+  // menos tickets que la situación normal. Eso era un error de lectura.
+  const stressGoalSales = (stressFixed + input.ownerGoal) / stressMargin;
+
   return {
     margin: stressMargin,
     fixedExpenses: stressFixed,
-    ticketsPerDay: Math.ceil(stressFixed / stressMargin / input.days / Math.max(1, input.ticket)),
+    ticketsPerDay: Math.ceil(stressGoalSales / input.days / Math.max(1, input.ticket)),
     ownerSalary: stressSales * stressMargin - stressFixed - stressSales * CARD_SHARE * CARD_FEE,
   };
 }
@@ -321,6 +358,9 @@ export function survival(input: SurvivalInput): SurvivalResult {
   const stress = pruebaDeEstres(input);
   const stressTicketsPerDay = stress.ticketsPerDay;
   const stressOwnerSalary = stress.ownerSalary;
+  const stressSalaryRatio = ownerSalary > 0 ? stressOwnerSalary / ownerSalary : 0;
+  const stressLevel = nivelDeEstres(ownerSalary, stressOwnerSalary);
+  const ticketDelta = stressTicketsPerDay - input.goalTicketsPerDay;
 
   const cards: SurvivalCard[] = [
     {
@@ -413,10 +453,19 @@ export function survival(input: SurvivalInput): SurvivalResult {
     stressOn: !!(input.stress.supplies || input.stress.rent || input.stress.sales),
     stressTicketsPerDay,
     stressOwnerSalary,
+    stressSalaryRatio,
+    stressLevel,
+    // La comparación es lo que se lee, no el número solo.
+    stressTicketsLine:
+      ticketDelta === 0
+        ? `Seguirían siendo ${input.goalTicketsPerDay} tickets al día`
+        : `De ${input.goalTicketsPerDay} a ${stressTicketsPerDay} tickets al día · ${ticketDelta > 0 ? '+' : '−'}${Math.abs(ticketDelta)}`,
     stressNote:
-      stressOwnerSalary > 0
+      stressLevel === 'aguanta'
         ? `Aguanta bien: te seguirían quedando ${money(stressOwnerSalary)} al mes, con ${stressTicketsPerDay} tickets diarios en lugar de ${input.goalTicketsPerDay}. Tu plan tiene margen de sobra para moverse.`
-        : `Ahí la cuenta queda ${money(Math.abs(stressOwnerSalary))} corta, y saberlo hoy es una ventaja: te da tiempo de preparar la respuesta con un poco más de precio, un ticket más alto o menos gasto fijo.`,
+        : stressLevel === 'aprieta'
+          ? `El negocio sobrevive, pero tú dejas de cobrar como esperabas: de ${money(ownerSalary)} bajas a ${money(stressOwnerSalary)} al mes, un ${Math.round((1 - stressSalaryRatio) * 100)}% menos, y tendrías que vender ${stressTicketsPerDay} tickets al día en lugar de ${input.goalTicketsPerDay}. Es el escenario más común y el que casi nadie ve venir. Se arregla antes de que pase: sube el ticket promedio, negocia el insumo que más te pesa o baja un gasto fijo.`
+          : `Ahí la cuenta queda ${money(Math.abs(stressOwnerSalary))} corta, y saberlo hoy es una ventaja: te da tiempo de preparar la respuesta con un poco más de precio, un ticket más alto o menos gasto fijo.`,
   };
 }
 

@@ -50,6 +50,7 @@ function survivalOf(state: ProjectState): SurvivalResult {
     marginPct: state.margin,
     ticket: state.ticket,
     goalTicketsPerDay: be.goalTicketsPerDay,
+    ownerGoal: state.ownerGoal,
     investment: invest.total,
     budgetCap: state.project.budgetCap,
     hoursPerDay: state.hours,
@@ -112,9 +113,11 @@ export function Numeros({
   }
 
   if (view === 'aguante') {
+    const result = survivalOf(state);
     return (
       <Aguante
-        result={survivalOf(state)}
+        result={result}
+        ownerSalary={result.ownerSalary}
         weeklyHours={state.weeklyHours}
         prepMinutes={state.prepMinutes}
         stress={state.stress}

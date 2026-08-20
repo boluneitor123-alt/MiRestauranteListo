@@ -13,16 +13,24 @@ export const CURRENCY_LOCALE: Record<Currency, string> = {
   USD: 'en-US',
 };
 
-/** Moneda redondeada al peso: "$2,450". */
+/**
+ * Moneda redondeada al peso: "$2,450".
+ *
+ * En negativo el signo va ANTES del símbolo: "−$2,450", no "$-2,450".
+ * Y es el menos tipográfico, que se lee mejor a tamaño chico.
+ */
 export function money(value: number, currency: Currency = 'MXN'): string {
   if (!Number.isFinite(value)) return '$0';
-  return `$${Math.round(value).toLocaleString(CURRENCY_LOCALE[currency])}`;
+  const rounded = Math.round(value);
+  const sign = rounded < 0 ? '−' : '';
+  return `${sign}$${Math.abs(rounded).toLocaleString(CURRENCY_LOCALE[currency])}`;
 }
 
 /** Moneda con dos decimales: "$142.30". Se usa en costos por porción. */
 export function money2(value: number, currency: Currency = 'MXN'): string {
   if (!Number.isFinite(value)) return '$0.00';
-  return `$${value.toLocaleString(CURRENCY_LOCALE[currency], {
+  const sign = value < 0 ? '−' : '';
+  return `${sign}$${Math.abs(value).toLocaleString(CURRENCY_LOCALE[currency], {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
