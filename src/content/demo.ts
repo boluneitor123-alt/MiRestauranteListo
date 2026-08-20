@@ -1,51 +1,161 @@
-/**
- * Datos de demostración: los mismos platillos, sub-recetas, notas y proveedores
- * del prototipo. Se usan como plantilla del giro, como semilla de la demo y
- * como fixtures de las pruebas del dominio.
- */
+// Generado por scripts/extraer-diseno.mjs desde el prototipo de diseño.
+// El proyecto de ejemplo: presupuesto, gastos fijos, platillos y sub-recetas.
+// No edites a mano: vuelve a correr el script.
 
-import type { Dish, Subrecipe } from '@/domain/types';
-
-export const DEMO_DISHES: readonly Dish[] = [
+export const BUDGET: [string, string, number][] = [
+  [
+    "renta",
+    "Renta y depósito",
+    45000
+  ],
+  [
+    "obra",
+    "Adecuaciones y obra",
+    40000
+  ],
+  [
+    "cocina",
+    "Cocina y línea caliente",
+    45000
+  ],
+  [
+    "refri",
+    "Refrigeración",
+    22000
+  ],
+  [
+    "mob",
+    "Mobiliario",
+    18000
+  ],
+  [
+    "uten",
+    "Utensilios y loza",
+    12000
+  ],
+  [
+    "inv",
+    "Inventario inicial",
+    18000
+  ],
+  [
+    "permisos",
+    "Permisos y trámites",
+    9000
+  ],
+  [
+    "mkt",
+    "Marketing de apertura",
+    8000
+  ],
+  [
+    "pos",
+    "Punto de venta",
+    6500
+  ],
+  [
+    "nomina",
+    "Nómina del primer mes",
+    20000
+  ],
+  [
+    "fondo",
+    "Fondo de emergencia",
+    15000
+  ],
+  [
+    "otros",
+    "Otros",
+    5000
+  ]
+];
+export const FIXED: [string, string, number][] = [
+  [
+    "renta",
+    "Renta",
+    22000
+  ],
+  [
+    "nomina",
+    "Nómina",
+    38000
+  ],
+  [
+    "luz",
+    "Luz",
+    6500
+  ],
+  [
+    "gas",
+    "Gas",
+    4200
+  ],
+  [
+    "internet",
+    "Internet",
+    700
+  ],
+  [
+    "agua",
+    "Agua",
+    900
+  ],
+  [
+    "software",
+    "Software",
+    500
+  ],
+  [
+    "conta",
+    "Contabilidad",
+    2500
+  ],
+  [
+    "mkt",
+    "Marketing",
+    3000
+  ],
+  [
+    "otros",
+    "Otros",
+    1500
+  ]
+];
+export const DISHES = [
   {
     "id": "d1",
     "name": "Taco de pastor",
     "price": 28,
-    "ingredients": [
+    "ing": [
       {
-        "id": "d1i0",
         "name": "Carne al pastor",
         "qty": 70,
-        "unit": "g",
-        "unitPrice": 0.09
+        "u": "g",
+        "uc": 0.09
       },
       {
-        "id": "d1i1",
         "name": "Tortilla de maíz",
         "qty": 2,
-        "unit": "pz",
-        "unitPrice": 0.75
+        "u": "pz",
+        "uc": 0.75
       },
       {
-        "id": "d1i2",
         "name": "Piña",
         "qty": 10,
-        "unit": "g",
-        "unitPrice": 0.03
+        "u": "g",
+        "uc": 0.03
       },
       {
-        "id": "d1i3",
         "name": "Cebolla y cilantro",
         "qty": 15,
-        "unit": "g",
-        "unitPrice": 0.02
+        "u": "g",
+        "uc": 0.02
       },
       {
-        "id": "d1i4",
         "name": "Salsa de la casa",
         "qty": 15,
-        "unit": "ml",
-        "unitPrice": 0.03
+        "u": "ml",
+        "uc": 0.03
       }
     ]
   },
@@ -53,41 +163,36 @@ export const DEMO_DISHES: readonly Dish[] = [
     "id": "d2",
     "name": "Hamburguesa clásica",
     "price": 129,
-    "ingredients": [
+    "ing": [
       {
-        "id": "d2i0",
         "name": "Carne molida",
         "qty": 150,
-        "unit": "g",
-        "unitPrice": 0.14
+        "u": "g",
+        "uc": 0.14
       },
       {
-        "id": "d2i1",
         "name": "Pan brioche",
         "qty": 1,
-        "unit": "pz",
-        "unitPrice": 8
+        "u": "pz",
+        "uc": 8
       },
       {
-        "id": "d2i2",
         "name": "Queso cheddar",
         "qty": 20,
-        "unit": "g",
-        "unitPrice": 0.22
+        "u": "g",
+        "uc": 0.22
       },
       {
-        "id": "d2i3",
         "name": "Jitomate y lechuga",
         "qty": 30,
-        "unit": "g",
-        "unitPrice": 0.04
+        "u": "g",
+        "uc": 0.04
       },
       {
-        "id": "d2i4",
         "name": "Aderezo de la casa",
         "qty": 20,
-        "unit": "ml",
-        "unitPrice": 0.06
+        "u": "ml",
+        "uc": 0.06
       }
     ]
   },
@@ -95,41 +200,36 @@ export const DEMO_DISHES: readonly Dish[] = [
     "id": "d3",
     "name": "Orden de alitas (12 pz)",
     "price": 149,
-    "ingredients": [
+    "ing": [
       {
-        "id": "d3i0",
         "name": "Alitas de pollo",
         "qty": 700,
-        "unit": "g",
-        "unitPrice": 0.075
+        "u": "g",
+        "uc": 0.075
       },
       {
-        "id": "d3i1",
         "name": "Salsa búfalo",
         "qty": 60,
-        "unit": "ml",
-        "unitPrice": 0.09
+        "u": "ml",
+        "uc": 0.09
       },
       {
-        "id": "d3i2",
         "name": "Apio y zanahoria",
         "qty": 40,
-        "unit": "g",
-        "unitPrice": 0.03
+        "u": "g",
+        "uc": 0.03
       },
       {
-        "id": "d3i3",
         "name": "Aderezo ranch",
         "qty": 40,
-        "unit": "ml",
-        "unitPrice": 0.08
+        "u": "ml",
+        "uc": 0.08
       },
       {
-        "id": "d3i4",
         "name": "Empaque y servilletas",
         "qty": 1,
-        "unit": "pz",
-        "unitPrice": 2
+        "u": "pz",
+        "uc": 2
       }
     ]
   },
@@ -137,78 +237,70 @@ export const DEMO_DISHES: readonly Dish[] = [
     "id": "d4",
     "name": "Latte 12 oz",
     "price": 55,
-    "ingredients": [
+    "ing": [
       {
-        "id": "d4i0",
         "name": "Leche entera",
         "qty": 240,
-        "unit": "ml",
-        "unitPrice": 0.026
+        "u": "ml",
+        "uc": 0.026
       },
       {
-        "id": "d4i1",
         "name": "Café de especialidad",
         "qty": 18,
-        "unit": "g",
-        "unitPrice": 0.35
+        "u": "g",
+        "uc": 0.35
       },
       {
-        "id": "d4i2",
         "name": "Vaso y tapa",
         "qty": 1,
-        "unit": "pz",
-        "unitPrice": 2.5
+        "u": "pz",
+        "uc": 2.5
       }
     ]
   }
-] as Dish[];
-
-export const DEMO_SUBRECIPES: readonly Subrecipe[] = [
+];
+export const SUBRECIPES = [
   {
     "id": "sr1",
     "name": "Salsa roja de la casa",
     "yieldQty": 3000,
-    "unit": "ml",
-    "ingredients": [
+    "u": "ml",
+    "ing": [
       {
-        "id": "sr1i0",
         "name": "Jitomate",
         "qty": 3,
-        "unit": "kg",
-        "buyUnit": "kg",
+        "u": "kg",
+        "bu": "kg",
         "buyPrice": 28,
         "buyQty": 1,
-        "waste": 10
+        "merma": 10
       },
       {
-        "id": "sr1i1",
         "name": "Chile de árbol",
         "qty": 200,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 180,
         "buyQty": 1,
-        "waste": 5
+        "merma": 5
       },
       {
-        "id": "sr1i2",
         "name": "Ajo",
         "qty": 100,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 90,
         "buyQty": 1,
-        "waste": 12
+        "merma": 12
       },
       {
-        "id": "sr1i3",
         "name": "Sal",
         "qty": 60,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 14,
         "buyQty": 1,
-        "waste": 0
+        "merma": 0
       }
     ]
   },
@@ -216,106 +308,228 @@ export const DEMO_SUBRECIPES: readonly Subrecipe[] = [
     "id": "sr2",
     "name": "Adobo para pastor",
     "yieldQty": 2000,
-    "unit": "g",
-    "ingredients": [
+    "u": "g",
+    "ing": [
       {
-        "id": "sr2i0",
         "name": "Chile guajillo",
         "qty": 500,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 160,
         "buyQty": 1,
-        "waste": 8
+        "merma": 8
       },
       {
-        "id": "sr2i1",
         "name": "Achiote",
         "qty": 300,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 120,
         "buyQty": 1,
-        "waste": 0
+        "merma": 0
       },
       {
-        "id": "sr2i2",
         "name": "Vinagre",
         "qty": 700,
-        "unit": "ml",
-        "buyUnit": "l",
+        "u": "ml",
+        "bu": "l",
         "buyPrice": 22,
         "buyQty": 1,
-        "waste": 0
+        "merma": 0
       },
       {
-        "id": "sr2i3",
         "name": "Especias",
         "qty": 120,
-        "unit": "g",
-        "buyUnit": "kg",
+        "u": "g",
+        "bu": "kg",
         "buyPrice": 210,
         "buyQty": 1,
-        "waste": 0
+        "merma": 0
       }
     ]
   }
-] as Subrecipe[];
-
-export interface DemoNote {
-  id: string;
-  title: string;
-  body: string;
-  date: string;
-}
-
-export const DEMO_NOTES: readonly DemoNote[] = [
+];
+export const LAYOUTS = [
   {
-    "id": "n1",
-    "title": "Local de Av. Juárez",
-    "body": "Renta $18,000, 62 m², cocina a medias. Pedir 2 meses de gracia para obra y revisar uso de suelo.",
-    "date": "Hoy"
+    "id": "p1",
+    "name": "1 hoja, 1 página",
+    "hint": "Un solo lado impreso",
+    "panels": 1,
+    "labels": [
+      "Página única"
+    ]
   },
   {
-    "id": "n2",
-    "title": "Idea de promoción de apertura",
-    "body": "2x1 solo en pastor de 6 a 8 pm la primera semana. Costear antes de anunciar.",
-    "date": "Ayer"
+    "id": "p2",
+    "name": "1 hoja, 2 páginas",
+    "hint": "Frente y vuelta",
+    "panels": 2,
+    "labels": [
+      "Frente",
+      "Vuelta"
+    ]
+  },
+  {
+    "id": "tri",
+    "name": "Tríptico",
+    "hint": "1 hoja doblada en 3 paneles",
+    "panels": 3,
+    "labels": [
+      "Panel 1 (portada interior)",
+      "Panel 2 (centro)",
+      "Panel 3"
+    ]
+  },
+  {
+    "id": "book",
+    "name": "2 hojas tipo libro",
+    "hint": "4 páginas",
+    "panels": 4,
+    "labels": [
+      "Página 1",
+      "Página 2",
+      "Página 3",
+      "Página 4"
+    ]
   }
 ];
+export const UNITS: [string, number, string][] = [
+  [
+    "g",
+    1,
+    "masa"
+  ],
+  [
+    "kg",
+    1000,
+    "masa"
+  ],
+  [
+    "oz",
+    28.35,
+    "masa"
+  ],
+  [
+    "lb",
+    453.6,
+    "masa"
+  ],
+  [
+    "ml",
+    1,
+    "vol"
+  ],
+  [
+    "l",
+    1000,
+    "vol"
+  ],
+  [
+    "taza",
+    240,
+    "vol"
+  ],
+  [
+    "cda",
+    15,
+    "vol"
+  ],
+  [
+    "pz",
+    1,
+    "pieza"
+  ],
+  [
+    "manojo",
+    1,
+    "pieza"
+  ]
+];
+/** Explicaciones de los botones (i): [título, qué es, cómo se calcula]. */
+export const INFO: Record<string, [string, string, string]> = {
+  "costo": [
+    "Costo por porción",
+    "Es la suma de lo que te cuestan los ingredientes de UNA porción del platillo, tal como lo sirves.",
+    "Suma de (cantidad × precio unitario) de cada ingrediente"
+  ],
+  "food": [
+    "Food cost (% costo de alimentos)",
+    "Qué parte del precio de venta se va en ingredientes. Es el indicador más importante de tu carta: hasta 30% es sano, de 30% a 38% hay que revisarlo y arriba de 38% el platillo casi no deja utilidad.",
+    "Costo por porción ÷ precio de venta × 100"
+  ],
+  "precio": [
+    "Precio de venta",
+    "Lo que le cobras al cliente por el platillo. Debe cubrir ingredientes, gastos fijos y tu utilidad, no solo el insumo.",
+    "Costo por porción ÷ food cost objetivo"
+  ],
+  "utilidad": [
+    "Utilidad bruta",
+    "Lo que te queda de cada platillo después de pagar sus ingredientes. Todavía no descuenta renta, nómina ni luz.",
+    "Precio de venta − costo por porción"
+  ],
+  "margen": [
+    "Margen bruto",
+    "La utilidad bruta expresada en porcentaje del precio. Es el complemento del food cost y alimenta tu punto de equilibrio.",
+    "(Precio − costo) ÷ precio × 100"
+  ],
+  "semaforo": [
+    "Semáforo de rentabilidad",
+    "Traduce tu food cost a una señal simple: verde para conservar el platillo, amarillo para ajustarlo y rojo para subir precio, reducir porción o quitarlo de la carta.",
+    "Verde ≤ 30% · Amarillo 30–38% · Rojo > 38%"
+  ],
+  "sugerido": [
+    "Precio sugerido",
+    "El precio que necesitarías para alcanzar tu food cost objetivo con el costo actual de ingredientes. Úsalo como piso, luego compáralo con el mercado.",
+    "Costo por porción ÷ food cost objetivo"
+  ],
+  "unitario": [
+    "Precio unitario",
+    "Cuánto te cuesta UNA unidad del insumo: un gramo, un mililitro o una pieza. Si compras un kilo en $90, tu precio unitario es $0.09 por gramo.",
+    "Precio de compra ÷ unidades compradas"
+  ]
+};
 
-export interface DemoSupplier {
-  id: string;
+// ── Adaptador al dominio ───────────────────────────────────────────────────
+
+import type { Dish, Subrecipe, Ingredient } from '@/domain/types';
+import type { UnitCode } from '@/domain/units';
+
+type ProtoIng = {
   name: string;
-  item: string;
-  contact: string;
-  terms: string;
-  delivery: string;
-}
+  qty: number;
+  u: string;
+  uc?: number;
+  bu?: string;
+  buyPrice?: number;
+  buyQty?: number;
+  merma?: number;
+  sub?: string;
+};
 
-export const DEMO_SUPPLIERS: readonly DemoSupplier[] = [
-  {
-    "id": "s1",
-    "name": "Carnes El Rancho",
-    "item": "Carne de res y cerdo",
-    "contact": "55 1234 5678",
-    "terms": "Crédito 8 días",
-    "delivery": "Martes y viernes"
-  },
-  {
-    "id": "s2",
-    "name": "Verduras Don Beto",
-    "item": "Frutas y verduras",
-    "contact": "55 8765 4321",
-    "terms": "Contado",
-    "delivery": "Lunes, miércoles y sábado"
-  },
-  {
-    "id": "s3",
-    "name": "Distribuidora Central",
-    "item": "Abarrotes y desechables",
-    "contact": "55 2468 1357",
-    "terms": "Crédito 15 días",
-    "delivery": "Jueves"
-  }
-];
+const toIngredient = (ing: ProtoIng, id: string): Ingredient => ({
+  id,
+  name: ing.name,
+  qty: ing.qty,
+  unit: ing.u as UnitCode,
+  ...(ing.uc !== undefined ? { unitPrice: ing.uc } : {}),
+  ...(ing.buyPrice !== undefined ? { buyPrice: ing.buyPrice } : {}),
+  ...(ing.buyQty !== undefined ? { buyQty: ing.buyQty } : {}),
+  ...(ing.bu !== undefined ? { buyUnit: ing.bu as UnitCode } : {}),
+  ...(ing.merma !== undefined ? { waste: ing.merma } : {}),
+  ...(ing.sub !== undefined ? { subrecipeId: ing.sub } : {}),
+});
+
+export const DEMO_DISHES: readonly Dish[] = DISHES.map((d) => ({
+  id: d.id,
+  name: d.name,
+  price: d.price,
+  ingredients: (d.ing as ProtoIng[]).map((ing, i) => toIngredient(ing, d.id + 'i' + i)),
+}));
+
+export const DEMO_SUBRECIPES: readonly Subrecipe[] = SUBRECIPES.map((s) => ({
+  id: s.id,
+  name: s.name,
+  yieldQty: s.yieldQty,
+  unit: s.u as UnitCode,
+  ingredients: (s.ing as ProtoIng[]).map((ing, i) => toIngredient(ing, s.id + 'i' + i)),
+}));

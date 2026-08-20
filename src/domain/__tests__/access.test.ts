@@ -55,12 +55,12 @@ describe('prueba, bloqueo y activación (README § 1.12)', () => {
 describe('alcance de la prueba', () => {
   const prueba = capabilities('prueba');
 
-  it('abre Concepto y Local, y deja los otros 8 módulos detrás del pago', () => {
+  it('abre Concepto y Local, y deja los otros 12 módulos detrás del pago', () => {
     expect(canOpenRouteModule('prueba', 'concepto')).toBe(true);
     expect(canOpenRouteModule('prueba', 'local')).toBe(true);
 
     const cerrados = ROUTE_MODULES.filter((m) => !canOpenRouteModule('prueba', m.id));
-    expect(cerrados).toHaveLength(8);
+    expect(cerrados).toHaveLength(12);
   });
 
   it('permite costear hasta 3 platillos', () => {

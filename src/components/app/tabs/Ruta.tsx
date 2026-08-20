@@ -259,6 +259,7 @@ function TaskCard({
             if (!locked) onToggle();
           }}
           aria-label={done ? 'Marcar como pendiente' : 'Marcar como completada'}
+          className="mrl-inline mrl-hit"
           style={{
             width: 28,
             height: 28,

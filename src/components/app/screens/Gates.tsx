@@ -8,7 +8,7 @@ import type { Entitlement } from '@/state/store';
 import { Button, Card, H, Muted, RADIUS, Row, text } from '@/components/ui';
 
 const BENEFITS = [
-  'Tu ruta completa: 10 módulos y 43 tareas en orden',
+  'Tu ruta completa: 14 módulos y 90 tareas en orden',
   'Costeador ilimitado con sub-recetas y merma',
   'Mi Menú con food cost ponderado y clasificación',
   'Presupuesto de apertura con subconceptos',
@@ -59,8 +59,8 @@ export function Paywall({
           onClick={onClose}
           aria-label="Cerrar"
           style={{
-            width: 34,
-            height: 34,
+            width: 44,
+            height: 44,
             borderRadius: RADIUS.pill,
             border: 'none',
             background: 'var(--color-neutral-200)',

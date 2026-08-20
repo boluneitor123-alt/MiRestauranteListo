@@ -24,12 +24,26 @@ const modules: RouteModule[] = [
 ];
 
 describe('contenido de Mi Ruta (README § 1.6)', () => {
-  it('trae 10 módulos y 43 tareas de seed', () => {
-    expect(ROUTE_MODULES).toHaveLength(10);
-    expect(TOTAL_ROUTE_TASKS).toBe(43);
+  it('trae 14 módulos y 90 tareas de seed', () => {
+    expect(ROUTE_MODULES).toHaveLength(14);
+    expect(TOTAL_ROUTE_TASKS).toBe(90);
   });
 
-  it('reparte las tareas como documenta el README', () => {
+  it('separa los 10 módulos de ruta de los 4 mini cursos', () => {
+    expect(ROUTE_MODULES.filter((m) => !m.course)).toHaveLength(10);
+    expect(ROUTE_MODULES.filter((m) => m.course).map((m) => m.id)).toEqual([
+      'ventas',
+      'maps',
+      'delivery',
+      'contratar',
+    ]);
+  });
+
+  it('le da a cada módulo un color propio', () => {
+    for (const m of ROUTE_MODULES) expect(m.col).toBeTruthy();
+  });
+
+  it('reparte las tareas como el prototipo', () => {
     const porModulo = Object.fromEntries(ROUTE_MODULES.map((m) => [m.id, m.tasks.length]));
     expect(porModulo).toEqual({
       concepto: 6,
@@ -42,6 +56,10 @@ describe('contenido de Mi Ruta (README § 1.6)', () => {
       permisos: 4,
       marketing: 4,
       apertura: 4,
+      ventas: 9,
+      maps: 12,
+      delivery: 14,
+      contratar: 12,
     });
   });
 
@@ -149,9 +167,9 @@ describe('avance del proyecto (README § 4 · "Avance del proyecto")', () => {
       });
     }
     const p = projectProgress({ modules: ROUTE_MODULES, done });
-    expect(p.total).toBe(43);
-    expect(p.done).toBe(12);
-    expect(p.pct).toBe(28);
-    expect(p.level).toBe('En planeación');
+    expect(p.total).toBe(90);
+    expect(p.done).toBe(50);
+    expect(p.pct).toBe(56);
+    expect(p.level).toBe('Casi listo');
   });
 });

@@ -87,14 +87,18 @@ export interface ProjectState {
   settings: AppSettings;
 }
 
+/** Los seis acentos de Ajustes (const ACCENTS del prototipo). El primero es la marca. */
 export const ACCENT_OPTIONS = [
+  { name: 'Naranja', value: '#e07a2b' },
   { name: 'Terracota', value: '#c67139' },
-  { name: 'Rojo', value: '#d63a26' },
   { name: 'Ámbar', value: '#e0891c' },
   { name: 'Verde', value: '#1f8a5a' },
   { name: 'Azul', value: '#2f6fd0' },
   { name: 'Ciruela', value: '#8d3f6d' },
 ] as const;
+
+/** El naranja de marca. Con él manda la rampa escrita a mano en globals.css. */
+export const BRAND_ACCENT = ACCENT_OPTIONS[0].value;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   alerts: true,

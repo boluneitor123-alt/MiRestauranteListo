@@ -11,6 +11,7 @@ import {
   OBJECTIONS,
   TOOLS,
   TOTAL_STEPS,
+  TOTAL_MODULES,
   TYPICAL_INVESTMENT,
   STARTING_POINTS,
 } from '@/content/landing';
@@ -183,7 +184,7 @@ export default function LandingPage() {
               <div className="lp-ticket">
                 <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 6 }}>{panel.title}</div>
                 <div className="lp-num" style={{ fontSize: 15, marginTop: 8 }}>
-                  {TOTAL_STEPS} pasos, 10 etapas. Estás en el paso {panel.step}.
+                  {TOTAL_STEPS} pasos, {TOTAL_MODULES} módulos. Estás en el paso {panel.step}.
                 </div>
                 <div style={{ height: 7, borderRadius: 999, background: 'rgb(255 255 255 / .18)', marginTop: 10 }}>
                   <div
@@ -321,7 +322,7 @@ export default function LandingPage() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: 14, marginTop: 16 }}>
             {[
-              ['43 tareas', 'Tu ruta completa, en orden, con el porqué de cada paso.'],
+              ['90 tareas', 'Tu ruta completa, en orden, con el porqué de cada paso.'],
               ['Costo real', 'Lo que cuesta cada platillo con merma, empaque y mano de obra.'],
               ['3 equipos', 'Un solo pago, tu licencia en hasta 3 equipos.'],
             ].map(([title, body]) => (

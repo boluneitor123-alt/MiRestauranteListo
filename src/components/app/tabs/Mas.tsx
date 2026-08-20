@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Download, Lock } from 'lucide-react';
-import { FAQ, GIROS } from '@/content/catalog';
+import { FAQ_ITEMS as FAQ, GIROS } from '@/content/catalog';
 import { ROUTE_MODULES } from '@/content/route';
 import { TOUR_STEPS } from '@/content/onboarding';
 import { DEMO_DISHES, DEMO_SUBRECIPES } from '@/content/demo';
@@ -86,7 +86,7 @@ const RESOURCES = [
 ] as const;
 
 const CHANGELOG = [
-  ['v1.0 · Hoy', 'Ruta de 43 tareas, costeador con sub-recetas, presupuesto con subconceptos y punto de equilibrio.'],
+  ['v1.0 · Hoy', 'Ruta de 90 tareas en 14 módulos, costeador con sub-recetas, presupuesto con subconceptos y punto de equilibrio.'],
   ['Próximo', 'Exportar tu carta a PDF con el diseño ya acomodado.'],
   ['Próximo', 'Comparador de proveedores dentro de la app.'],
   ['Próximo', 'Control de inventario inicial y mermas del mes.'],
@@ -760,7 +760,7 @@ function SubScreenView(props: {
       ));
 
     case 'mapa':
-      return wrap('Vista general de mi ruta', '10 módulos', (
+      return wrap('Vista general de mi ruta', `${ROUTE_MODULES.length} módulos`, (
         <>
           {props.diagnosis.progress.modules.map((module) => (
             <Card key={module.id} radius={RADIUS.block} style={{ padding: 14 }}>

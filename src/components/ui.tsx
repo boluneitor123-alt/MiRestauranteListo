@@ -106,11 +106,13 @@ export function Button({
   return (
     <button
       type={type}
+      className="mrl-cta"
       onClick={onClick}
       disabled={disabled}
       style={{
         width: '100%',
-        height,
+        // Ningún botón principal baja de 48px, aunque le pasen una altura menor.
+        height: Math.max(48, height),
         borderRadius: RADIUS.pill,
         border: 'none',
         fontFamily: 'var(--font-body)',
@@ -326,8 +328,8 @@ export function Sheet({
             onClick={onClose}
             aria-label="Cerrar"
             style={{
-              width: 34,
-              height: 34,
+              width: 44,
+              height: 44,
               borderRadius: RADIUS.pill,
               border: 'none',
               background: 'var(--color-neutral-200)',
@@ -372,8 +374,8 @@ export function ScreenHeader({
             onClick={onBack}
             aria-label="Atrás"
             style={{
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               borderRadius: RADIUS.pill,
               border: 'none',
               background: tone === 'default' ? 'var(--color-neutral-200)' : 'rgba(255,255,255,.2)',

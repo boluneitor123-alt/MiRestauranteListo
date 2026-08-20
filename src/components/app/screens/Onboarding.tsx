@@ -31,8 +31,8 @@ export function Onboarding({
             onClick={onBack}
             aria-label="Atrás"
             style={{
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               borderRadius: RADIUS.pill,
               border: 'none',
               background: 'var(--color-neutral-200)',

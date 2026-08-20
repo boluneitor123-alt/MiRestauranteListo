@@ -75,7 +75,7 @@ describe('panel de ruta del diagnóstico (README § 12.3)', () => {
 
   it('escribe la franja de CTA con el paso del diagnóstico', () => {
     expect(routePanel('Taquería', 'Ya tengo el local')?.ctaLine).toBe(
-      'Vas en el paso 6 de 43. Los otros 37 ya están armados y en orden, esperándote.',
+      'Vas en el paso 6 de 90. Los otros 84 ya están armados y en orden, esperándote.',
     );
   });
 

@@ -5,7 +5,7 @@
  * desaparece sola en las cuatro superficies donde aparece.
  */
 
-import { ROUTE_MODULES } from './route';
+import { ROUTE_MODULES, TOTAL_ROUTE_TASKS } from './route';
 
 export interface Launch {
   deadline: string;
@@ -62,8 +62,10 @@ export const LANDING_ROUTE: readonly LandingStep[] = ROUTE_MODULES.flatMap((modu
   module.tasks.map((task) => ({ title: task.title, instruction: task.next, why: task.why })),
 ).slice(0, 8);
 
-/** Total de pasos de la ruta completa del producto. */
-export const TOTAL_STEPS = 43;
+/** Total de pasos de la ruta completa del producto. Sale del contenido, no de una constante suelta. */
+export const TOTAL_STEPS = TOTAL_ROUTE_TASKS;
+/** Módulos de la ruta, cursos incluidos. */
+export const TOTAL_MODULES = ROUTE_MODULES.length;
 
 export interface StartingPoint {
   label: string;
@@ -125,7 +127,7 @@ export const OBJECTIONS = [
 ] as const;
 
 export const INCLUDED = [
-  'Tu ruta de 43 pasos, en orden y con fechas',
+  'Tu ruta de 90 pasos, en orden y con fechas',
   'Costeador de platillos con sub-recetas y merma',
   'Precio sugerido y precio para apps de delivery',
   'Presupuesto de apertura con subconceptos',
@@ -137,7 +139,7 @@ export const TOOLS = [
   {
     slot: 'shot-ruta',
     title: 'Mi Ruta',
-    body: '43 pasos en 10 etapas. Cada uno te dice por qué importa y qué hacer exactamente.',
+    body: '90 pasos en 14 módulos, cuatro de ellos mini cursos. Cada uno te dice por qué importa y qué hacer exactamente.',
   },
   {
     slot: 'shot-costeador',

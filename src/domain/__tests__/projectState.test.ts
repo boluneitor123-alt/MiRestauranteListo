@@ -83,7 +83,7 @@ describe('importador del respaldo del prototipo (README § 13, paso 2)', () => {
   it('conserva los módulos omitidos con su motivo', () => {
     expect(state.skipped.permisos).toBe('No aplica a mi tipo de negocio');
     const p = projectProgress({ modules: ROUTE_MODULES, done: state.done, skipped: state.skipped, extraTasks: state.extraTasks });
-    expect(p.total).toBe(43 - 4 + 1); // sin Permisos, más la tarea propia
+    expect(p.total).toBe(90 - 4 + 1); // sin Permisos, más la tarea propia
   });
 
   it('traduce las tareas propias del usuario', () => {

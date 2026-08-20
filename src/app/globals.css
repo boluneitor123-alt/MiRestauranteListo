@@ -1,17 +1,25 @@
 @import 'tailwindcss';
 
 /**
- * Design tokens de la app del emprendedor (README § 6).
+ * Design tokens de la app del emprendedor.
  *
- * El acento es una sola variable (`--accent`): las 9 rampas se derivan con
- * `color-mix`, así el selector de 6 colores de Ajustes cambia un valor y toda
- * la interfaz lo sigue. El modo noche redefine la base de la mezcla.
+ * Los valores salen del `:root` de entrega-claude-code/diseno/MiRestauranteListo.dc.html,
+ * que es la fuente de verdad. La rampa del naranja va escrita a mano con los
+ * hexadecimales del diseño; solo cuando el usuario elige otro acento en Ajustes
+ * se deriva con `color-mix` a partir de `--accent` (ver [data-accent='custom']).
  */
 
 :root {
-  /* Color de marca: terracota. */
-  --accent: #c67139;
+  /* Color de marca: naranja terracota. */
+  --accent: #e07a2b;
   --mix-base: #ffffff;
+
+  /*
+   * Único color de texto legible sobre relleno de acento CLARO (las rampas
+   * 100-300). Sobre el relleno sólido #e07a2b el diseño usa texto blanco a
+   * propósito: eso no se toca.
+   */
+  --on-accent: #33190a;
 
   --color-bg: #faf7f5;
   --color-text: #1d1b1a;
@@ -19,15 +27,15 @@
   --color-divider: rgb(29 27 26 / 0.1);
 
   --color-accent: var(--accent);
-  --color-accent-500: var(--accent);
-  --color-accent-100: color-mix(in srgb, var(--accent) 10%, var(--mix-base));
-  --color-accent-200: color-mix(in srgb, var(--accent) 22%, var(--mix-base));
-  --color-accent-300: color-mix(in srgb, var(--accent) 40%, var(--mix-base));
-  --color-accent-400: color-mix(in srgb, var(--accent) 65%, var(--mix-base));
-  --color-accent-600: color-mix(in srgb, var(--accent) 85%, #000);
-  --color-accent-700: color-mix(in srgb, var(--accent) 72%, #000);
-  --color-accent-800: color-mix(in srgb, var(--accent) 56%, #000);
-  --color-accent-900: color-mix(in srgb, var(--accent) 42%, #000);
+  --color-accent-100: #fdf1e6;
+  --color-accent-200: #fadfc4;
+  --color-accent-300: #f4c191;
+  --color-accent-400: #ea9a52;
+  --color-accent-500: #e07a2b;
+  --color-accent-600: #c26320;
+  --color-accent-700: #9e4e18;
+  --color-accent-800: #743812;
+  --color-accent-900: #4c250c;
 
   --color-accent-2: #22a05f;
   --color-accent-2-100: #e8f7ee;
@@ -61,12 +69,31 @@
   --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;
 }
 
+/*
+ * Acento personalizado: cuando el usuario elige uno de los otros cinco colores
+ * de Ajustes, la rampa se deriva de `--accent` con `color-mix`. Con el naranja
+ * de marca mandan los hexadecimales del diseño, que están escritos arriba.
+ */
+[data-accent='custom'] {
+  --color-accent-100: color-mix(in srgb, var(--accent) 10%, var(--mix-base));
+  --color-accent-200: color-mix(in srgb, var(--accent) 22%, var(--mix-base));
+  --color-accent-300: color-mix(in srgb, var(--accent) 40%, var(--mix-base));
+  --color-accent-400: color-mix(in srgb, var(--accent) 65%, var(--mix-base));
+  --color-accent-500: var(--accent);
+  --color-accent-600: color-mix(in srgb, var(--accent) 85%, #000);
+  --color-accent-700: color-mix(in srgb, var(--accent) 72%, #000);
+  --color-accent-800: color-mix(in srgb, var(--accent) 56%, #000);
+  --color-accent-900: color-mix(in srgb, var(--accent) 42%, #000);
+}
+
 /**
  * Modo noche. El contenedor raíz vuelve a declarar `color` para que el texto
  * heredado se re-resuelva (README § 6).
  */
 [data-theme='dark'] {
   --mix-base: #121110;
+  /* Sobre acento claro en modo noche el texto oscuro deja de servir. */
+  --on-accent: #1d1b1a;
 
   --color-bg: #121110;
   --color-surface: #1c1a19;
@@ -344,4 +371,89 @@ textarea {
   .mrl-measure {
     max-width: 840px;
   }
+}
+
+
+/*
+ * ─── Reglas de móvil ───────────────────────────────────────────────────────
+ *
+ * La app se diseña a 430px y escala. Estas reglas son el piso: ningún
+ * componente puede quedar por debajo.
+ */
+
+/* Nada tocable mide menos de 44px; los botones principales, 48px. */
+:where(button, a[role='button'], [role='tab'], summary, label[role='button']) {
+  min-height: 44px;
+}
+
+/* Los iconos cuadrados de 44px no deben estirarse a lo ancho. */
+:where(button).mrl-icon-btn {
+  min-width: 44px;
+}
+
+.mrl-cta,
+:where(button).mrl-cta {
+  min-height: 48px;
+}
+
+/*
+ * Control que conserva su tamaño visual pequeño pero estira el área de toque
+ * hasta 44px con un pseudo-elemento. Se usa en la palomita de una tarea.
+ */
+.mrl-hit {
+  position: relative;
+}
+
+.mrl-hit::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/*
+ * Excepción deliberada: controles que viven dentro de una línea de texto
+ * (el "(i)" que explica un término, la palomita de una tarea, un chip).
+ * Se quedan chicos a propósito y por eso llevan clase.
+ */
+:where(button).mrl-inline {
+  min-height: 0;
+}
+
+/* El cuerpo nunca baja de 15px en móvil. */
+@media (max-width: 759px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+/*
+ * Las líneas de párrafo topan entre 60 y 65 caracteres: más largas, el ojo
+ * pierde el renglón al regresar.
+ */
+.mrl-prose,
+.mrl-scroll p {
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+/*
+ * Fila de importe: concepto a la izquierda, cifra a la derecha. Si no caben
+ * juntos, la cifra baja de renglón en vez de estirar la pantalla.
+ */
+.mrl-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.mrl-amount > :last-child {
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
