@@ -9,6 +9,14 @@ import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
+import { BUDGET_CONCEPTS } from '@/content/catalog';
+
+/**
+ * El presupuesto que se enseña durante la prueba: los 13 conceptos de una
+ * cafetería real, con sus montos. Sale del prototipo, no está inventado.
+ */
+const EXAMPLE_BUDGET = BUDGET_CONCEPTS;
+const EXAMPLE_BUDGET_CAP = 250000;
 
 export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio';
 
@@ -35,13 +43,17 @@ export function Numeros({
   onFlash: (message: string) => void;
 }) {
   if (view === 'presupuesto') {
-    return can.budget ? (
-      <Budget state={state} formOpen={formOpen} onBack={() => onChangeView('home')} onPatch={onPatch} onFlash={onFlash} />
-    ) : (
-      <LockedModule
-        title="Presupuesto de apertura"
-        body="13 conceptos con subconceptos para saber exactamente cuánto necesitas para abrir y si cabe en tu presupuesto."
+    // Durante la prueba el presupuesto NO lleva candado: se ve completo, con
+    // los 13 conceptos de un caso real, y sólo no se puede editar. Es el
+    // bloqueo que mejor convierte y por eso se muestra en vez de esconderse.
+    return (
+      <Budget
+        state={state}
+        formOpen={formOpen}
+        readOnly={!can.budget}
         onBack={() => onChangeView('home')}
+        onPatch={onPatch}
+        onFlash={onFlash}
         onOpenPaywall={onOpenPaywall}
       />
     );
@@ -74,16 +86,20 @@ export function Numeros({
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <H size={25}>Números</H>
 
+      {/*
+        En prueba la tarjeta no lleva candado ni manda al pago: entra a la
+        vista de ejemplo, que se lee completa. Ese bloqueo convierte mejor
+        justo porque deja ver lo que hay dentro.
+      */}
       <ModuleCard
         title="Presupuesto de apertura"
-        value={can.showsInvestmentFigures ? money(invest.total) : 'Con el pago único'}
+        value={can.showsInvestmentFigures ? money(invest.total) : 'Ver ejemplo'}
         hint={
           can.showsInvestmentFigures
             ? '13 conceptos, con subconceptos y fondo de emergencia'
-            : '13 conceptos y subconceptos · se abre con el pago único'
+            : '13 conceptos con subconceptos · míralo completo antes de pagar'
         }
-        locked={!can.budget}
-        onClick={() => (can.budget ? onChangeView('presupuesto') : onOpenPaywall())}
+        onClick={() => onChangeView('presupuesto')}
       />
       <ModuleCard
         title="Gastos fijos mensuales"
@@ -159,61 +175,39 @@ function ModuleCard({
   );
 }
 
-function LockedModule({
-  title,
-  body,
-  onBack,
-  onOpenPaywall,
-}: {
-  title: string;
-  body: string;
-  onBack: () => void;
-  onOpenPaywall: () => void;
-}) {
-  return (
-    <div>
-      <ScreenHeader title={title} onBack={onBack} />
-      <div className="mrl-measure" style={{ padding: '10px 20px 30px' }}>
-        <Card style={{ background: 'var(--color-accent-100)' }}>
-          <Row gap={10} align="flex-start">
-            <Lock size={18} color="var(--color-accent-700)" strokeWidth={2.6} style={{ marginTop: 2 }} />
-            <Muted size={13.5} style={{ color: 'var(--color-accent-900)' }}>
-              {body}
-            </Muted>
-          </Row>
-          <div style={{ marginTop: 14 }}>
-            <Button height={46} onClick={onOpenPaywall}>
-              Desbloquear con un solo pago
-            </Button>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
 function Budget({
   state,
   formOpen,
   onBack,
   onPatch,
   onFlash,
+  readOnly = false,
+  onOpenPaywall,
 }: {
   state: ProjectState;
   formOpen: boolean;
   onBack: () => void;
   onPatch: (patch: Partial<ProjectState>) => void;
   onFlash: (message: string) => void;
+  /** En prueba: se ve el ejemplo completo pero no se puede capturar. */
+  readOnly?: boolean;
+  onOpenPaywall?: () => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(formOpen);
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
 
+  // En solo lectura se enseñan los 13 conceptos de la cafetería de ejemplo,
+  // no el presupuesto vacío del usuario: así se ve de qué se trata.
+  const concepts = readOnly ? EXAMPLE_BUDGET : state.budget;
+  const subconcepts = readOnly ? {} : state.budgetSub;
+  const budgetCap = readOnly ? EXAMPLE_BUDGET_CAP : state.project.budgetCap;
+
   const result = investment({
-    concepts: state.budget,
-    subconcepts: state.budgetSub,
-    budgetCap: state.project.budgetCap,
+    concepts,
+    subconcepts,
+    budgetCap,
   });
 
   const setAmountFor = (key: string, value: number) =>
@@ -258,9 +252,36 @@ function Budget({
           </div>
         </div>
 
+        {readOnly ? (
+          <div
+            style={{
+              padding: '13px 15px',
+              borderRadius: RADIUS.small,
+              background: 'var(--color-accent-100)',
+              color: 'var(--color-accent-900)',
+            }}
+          >
+            <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 800 }}>
+              Vista de ejemplo
+            </div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, marginTop: 3 }}>
+              Una cafetería de 45 m² en zona de oficinas
+            </div>
+            <p className="mrl-prose" style={{ margin: '6px 0 0', fontSize: 12.5, lineHeight: 1.5 }}>
+              Así se ve un presupuesto de apertura completo, con sus 13 conceptos. Con el pago único capturas los tuyos
+              y los desglosas por partes.
+            </p>
+            {onOpenPaywall ? (
+              <div style={{ marginTop: 12 }}>
+                <Button onClick={onOpenPaywall}>Capturar mis propios números</Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
-          {state.budget.map((concept) => {
-            const subs = state.budgetSub[concept.key] ?? [];
+          {concepts.map((concept) => {
+            const subs = subconcepts[concept.key] ?? [];
             const total = conceptTotal(concept.amount, subs);
             const isOpen = open === concept.key;
 
@@ -285,7 +306,7 @@ function Budget({
                   >
                     {concept.label}
                   </button>
-                  {subs.length ? (
+                  {subs.length || readOnly ? (
                     <span style={{ fontSize: 14, fontWeight: 700 }}>{money(total)}</span>
                   ) : (
                     <Row gap={4}>
@@ -379,18 +400,23 @@ function Budget({
                         </button>
                       </Row>
                     ))}
-                    <Button
-                      variant="secondary"
-                      height={42}
-                      onClick={() =>
-                        setSubconcepts(concept.key, [
-                          ...subs,
-                          { id: `s${Date.now()}`, label: 'Nueva parte', amount: 0 },
-                        ])
-                      }
-                    >
-                      Agregar subconcepto
-                    </Button>
+                    {readOnly ? (
+                      <Muted size={12.5}>
+                        Cada concepto se puede desglosar por partes. Con el pago único capturas las tuyas.
+                      </Muted>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          setSubconcepts(concept.key, [
+                            ...subs,
+                            { id: `s${Date.now()}`, label: 'Nueva parte', amount: 0 },
+                          ])
+                        }
+                      >
+                        Agregar subconcepto
+                      </Button>
+                    )}
                     {subs.length ? (
                       <Muted size={12}>
                         Con subconceptos, el monto del concepto se calcula sumándolos.
@@ -421,7 +447,7 @@ function Budget({
           })}
         </div>
 
-        {showForm ? (
+        {readOnly ? null : showForm ? (
           <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
             <H size={16}>Agregar otro concepto</H>
             <Field label="Nombre del concepto" value={label} onChange={setLabel} placeholder="Ej. Letrero luminoso" />
@@ -456,7 +482,7 @@ function Budget({
             </Row>
           </Card>
         ) : (
-          <Button variant="secondary" height={46} onClick={() => setShowForm(true)}>
+          <Button variant="secondary" onClick={() => setShowForm(true)}>
             Agregar otro concepto
           </Button>
         )}

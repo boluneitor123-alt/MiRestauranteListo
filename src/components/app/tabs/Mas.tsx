@@ -45,6 +45,47 @@ export type SubScreen =
   | 'delivery'
   | 'anuncios';
 
+/**
+ * Los seis entregables (const DOCS del prototipo). Durante la prueba se ven
+ * completos —qué contiene cada uno y para quién es— y al tocar cualquiera se
+ * va al pago. Verlos por dentro es la razón por la que esto no es una app de
+ * notas.
+ */
+const DELIVERABLES: Array<{ title: string; what: string; who: string; href?: string }> = [
+  {
+    title: 'Plan de apertura',
+    what: 'Concepto, inversión, punto de equilibrio, menú costeado y calendario de 30 días',
+    who: 'Para el banco, un socio o el arrendador',
+  },
+  {
+    title: 'Carta de menú',
+    what: 'Qué platillo va en cada cara, en orden de utilidad, con las instrucciones de doblez',
+    who: 'Para el impresor o el diseñador',
+  },
+  {
+    title: 'Ficha técnica de platillo',
+    what: 'Receta al gramo, merma, costo limpio y precio sugerido',
+    who: 'Para tu cocina, pegada en la pared',
+    href: '/print/ficha-tecnica',
+  },
+  {
+    title: 'Resumen financiero',
+    what: 'Presupuesto, gastos fijos, punto de equilibrio y cuatro escenarios',
+    who: 'Para tu contador o tu socio',
+    href: '/print/resumen-financiero',
+  },
+  {
+    title: 'Diagnóstico de anuncios',
+    what: 'Si tu anuncio de Meta deja dinero y qué cambiar primero',
+    who: 'Para ti, cada lunes',
+  },
+  {
+    title: 'Cuenta real de delivery',
+    what: 'Cuánto te queda por pedido después de la comisión y el precio que debes poner en la app',
+    who: 'Para negociar con Rappi y UberEats',
+  },
+];
+
 const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string; meta?: string }> }> = [
   {
     title: 'Mi proyecto',
@@ -228,6 +269,12 @@ export function Mas({
           {platform.installHint}
         </Muted>
       </Card>
+
+      <Deliverables
+        licensed={!!entitlement?.licensed}
+        onOpenPaywall={onOpenPaywall}
+        onOpen={(href) => window.open(href, '_blank', 'noopener')}
+      />
 
       {GROUPS.map((group) => (
         <div key={group.title}>
@@ -1175,6 +1222,131 @@ function ToolLocked({
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Los seis entregables. En prueba se despliegan y se leen enteros: es el
+ * bloqueo que mejor convierte, porque el usuario ve exactamente qué se lleva.
+ */
+function Deliverables({
+  licensed,
+  onOpenPaywall,
+  onOpen,
+}: {
+  licensed: boolean;
+  onOpenPaywall: () => void;
+  onOpen: (href: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <Muted size={11.5} style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+        {licensed ? 'Listos para descargar' : 'Los abres con el pago único'}
+      </Muted>
+      <Card style={{ marginTop: 8 }}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          style={{
+            width: '100%',
+            display: 'flex',
+            gap: 12,
+            alignItems: 'flex-start',
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            cursor: 'pointer',
+            textAlign: 'left',
+            fontFamily: 'var(--font-body)',
+            color: 'var(--color-text)',
+          }}
+        >
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>Entregables para ti</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-accent-700)' }}>
+                {DELIVERABLES.length}
+              </span>
+            </span>
+            <span className="mrl-prose" style={{ display: 'block', marginTop: 5, fontSize: 12.8, lineHeight: 1.5, color: text(65) }}>
+              {licensed
+                ? 'Documentos que salen de tus propios números y se actualizan solos cuando cambias un precio o un gasto.'
+                : 'Documentos que se generan con tus números. Míralos por dentro: son la razón por la que esto no es una app de notas.'}
+            </span>
+          </span>
+          <ChevronDown
+            size={18}
+            strokeWidth={2.6}
+            color={text(45)}
+            style={{ flex: 'none', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s ease' }}
+          />
+        </button>
+
+        {open ? (
+          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8, animation: 'mrlUp .2s ease both' }}>
+            {DELIVERABLES.map((doc, i) => (
+              <button
+                key={doc.title}
+                type="button"
+                className="mrl-row"
+                onClick={() => (licensed && doc.href ? onOpen(doc.href) : onOpenPaywall())}
+                style={{
+                  display: 'flex',
+                  gap: 11,
+                  alignItems: 'flex-start',
+                  width: '100%',
+                  padding: 12,
+                  borderRadius: RADIUS.small,
+                  border: 'none',
+                  background: 'var(--color-neutral-200)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: 'var(--font-body)',
+                  color: 'var(--color-text)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 24,
+                    height: 24,
+                    flex: 'none',
+                    borderRadius: '50%',
+                    background: 'var(--color-accent)',
+                    color: 'var(--color-bg)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {i + 1}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 13.8, fontWeight: 700 }}>{doc.title}</span>
+                  <span className="mrl-prose" style={{ display: 'block', marginTop: 2, fontSize: 12.3, lineHeight: 1.45, color: text(65) }}>
+                    {doc.what}
+                  </span>
+                  <span style={{ display: 'block', marginTop: 4, fontSize: 11.8, fontWeight: 700, color: 'var(--color-accent-700)' }}>
+                    {doc.who}
+                  </span>
+                </span>
+                {licensed ? null : (
+                  <span style={{ flex: 'none', fontSize: 11, fontWeight: 800, color: text(50) }}>Con el pago</span>
+                )}
+              </button>
+            ))}
+            <Muted size={12}>
+              {licensed
+                ? 'Se generan con tus datos en el momento de abrirlos.'
+                : 'Durante la prueba puedes ver de qué trata cada uno. Se generan con tus datos al activar el pago único.'}
+            </Muted>
+          </div>
+        ) : null}
+      </Card>
     </div>
   );
 }
