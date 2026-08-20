@@ -162,10 +162,42 @@ export function App() {
     return () => clearInterval(id);
   }, [claim, flash]);
 
-  // Con sesión abierta no se vuelve a pedir la bienvenida: la app arranca en el
-  // tablero, con el proyecto que ya está en el servidor.
+  /**
+   * La landing pide la pantalla de acceso con `?entrar` o `?crear`. Cuando lo
+   * pide, manda: aunque haya una sesión abierta en este equipo, se muestra el
+   * formulario. Es la única forma de entrar con otra cuenta sin cerrar la
+   * sesión anterior a mano.
+   */
+  const autoEntered = useRef(false);
   useEffect(() => {
-    if (authReady && user && screen === 'welcome') setScreen('app');
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const quiere = params.has('crear') ? 'registro' : params.has('entrar') ? 'entrar' : null;
+    if (!quiere) return;
+    autoEntered.current = true;
+    setAuthMode(quiere);
+    setScreen('auth');
+    // La petición ya se atendió: se borra de la barra de direcciones para que
+    // recargar la página no vuelva a sacar al usuario de su sesión.
+    params.delete('entrar');
+    params.delete('crear');
+    const resto = params.toString();
+    window.history.replaceState({}, '', resto ? `/app?${resto}` : '/app');
+  }, []);
+
+  /**
+   * Con sesión abierta no se vuelve a pedir la bienvenida: la app arranca en el
+   * tablero, con el proyecto que ya está en el servidor.
+   *
+   * Es una decisión de **arranque**, y por eso se toma una sola vez. Antes se
+   * volvía a tomar cada vez que la pantalla regresaba a la bienvenida, así que
+   * salir de "Entra a tu cuenta" con el botón de atrás metía al usuario a la
+   * sesión anterior sin que él hiciera nada.
+   */
+  useEffect(() => {
+    if (autoEntered.current || !authReady || !user || screen !== 'welcome') return;
+    autoEntered.current = true;
+    setScreen('app');
   }, [authReady, user, screen]);
 
   const diagnosis = useMemo(
@@ -279,7 +311,11 @@ export function App() {
         <Auth
           mode={authMode}
           onChangeMode={setAuthMode}
-          onBack={() => setScreen('welcome')}
+          // Atrás sale de la app y regresa a la página de venta, que es de
+          // donde vino. Quedarse en la bienvenida no sirve de nada aquí.
+          onBack={() => {
+            window.location.href = '/';
+          }}
           onRegister={register}
           onLogin={login}
           onDone={({ hasProject, redirectTo }) => {
