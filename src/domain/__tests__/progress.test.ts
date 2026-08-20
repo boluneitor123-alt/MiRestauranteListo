@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { moduleTasks, progressLevel, progressWithoutModule, projectProgress, taskKey, type RouteModule } from '../progress';
+import {
+  ASSUMED_PACE,
+  MIN_PACE,
+  moduleTasks,
+  paceProjection,
+  progressLevel,
+  progressWithoutModule,
+  projectProgress,
+  taskKey,
+  type RouteModule,
+} from '../progress';
 import { ROUTE_MODULES, TOTAL_ROUTE_TASKS, SKIP_REASONS } from '@/content/route';
 
 const modules: RouteModule[] = [
@@ -171,5 +181,41 @@ describe('avance del proyecto (README § 4 · "Avance del proyecto")', () => {
     expect(p.done).toBe(50);
     expect(p.pct).toBe(56);
     expect(p.level).toBe('Casi listo');
+  });
+});
+
+describe('proyección de fecha de apertura', () => {
+  const HOY = Date.UTC(2026, 8, 1, 12); // 1 de septiembre
+  const DIA = 86_400_000;
+
+  it('proyecta con el ritmo real: tareas hechas entre días de uso', () => {
+    // 10 hechas en 5 días son 2 al día; faltan 20 → 10 días → 11 de septiembre.
+    const texto = paceProjection({ pending: 20, done: 10, startedAt: HOY - 5 * DIA, now: HOY });
+    expect(texto).toBe('Te faltan 20 tareas. A tu ritmo actual, abres alrededor del 11 de septiembre.');
+  });
+
+  it('sin ninguna tarea hecha supone un ritmo de arranque', () => {
+    // 90 tareas al ritmo supuesto de 0.4 al día son 225 días.
+    const texto = paceProjection({ pending: 90, done: 0, startedAt: HOY, now: HOY });
+    const esperado = new Date(HOY + Math.ceil(90 / ASSUMED_PACE) * DIA);
+    expect(texto).toContain('Te faltan 90 tareas');
+    expect(texto).toContain(`del ${esperado.getDate()} de `);
+  });
+
+  it('nunca proyecta con un ritmo menor al mínimo', () => {
+    // Una tarea en 100 días es un ritmo de 0.01: se usa el piso de 0.15.
+    const lento = paceProjection({ pending: 10, done: 1, startedAt: HOY - 100 * DIA, now: HOY });
+    const piso = new Date(HOY + Math.ceil(10 / MIN_PACE) * DIA);
+    expect(lento).toContain(`del ${piso.getDate()} de ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][piso.getMonth()]}`);
+  });
+
+  it('cambia el plural cuando falta una sola tarea', () => {
+    expect(paceProjection({ pending: 1, done: 89, startedAt: HOY - 10 * DIA, now: HOY })).toContain('Te faltan 1 tarea.');
+  });
+
+  it('con la ruta terminada lo dice y no proyecta nada', () => {
+    expect(paceProjection({ pending: 0, done: 90, startedAt: HOY - 10 * DIA, now: HOY })).toBe(
+      'Terminaste tu ruta completa.',
+    );
   });
 });

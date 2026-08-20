@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Check, ChevronRight } from 'lucide-react';
+import { BarChart3, Bell, Check, ChevronRight, Clock, FileText } from 'lucide-react';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
 import type { Capabilities } from '@/domain/access';
 import { INVESTMENT_HIDDEN_LABEL } from '@/domain/access';
@@ -8,8 +8,15 @@ import { breakeven, fixedExpensesTotal, investment } from '@/domain/finance';
 import { dishMetrics } from '@/domain/costing';
 import { money, pct as pctLabel } from '@/domain/format';
 import { semaphoreLevel } from '@/domain/semaphore';
+import { paceProjection } from '@/domain/progress';
+import { getLesson } from '@/content/lessons';
+import { DEMO_DISHES } from '@/content/demo';
+import { PuntosExtra } from '@/components/app/inicio/PuntosExtra';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, H, Muted, ProgressBar, ProgressRing, RADIUS, Row, text } from '@/components/ui';
+
+/** Los platillos de la plantilla, para reconocer que el ejemplo sigue puesto. */
+const DEMO_DISH_IDS = new Set(DEMO_DISHES.map((d) => d.id));
 
 const SEVERITY_COLOR = {
   alta: 'var(--color-accent)',
@@ -29,22 +36,36 @@ export function Inicio({
   state,
   diagnosis,
   can,
-  trialLabel,
+  licensed,
+  trial,
+  startedAt,
   onGo,
   onOpenProfile,
   onOpenAlerts,
   onOpenPaywall,
+  onOpenDoc,
   onNewDish,
+  onKeepExample,
+  onClearExample,
 }: {
   state: ProjectState;
   diagnosis: Diagnosis;
   can: Capabilities;
-  trialLabel: string | null;
+  /** Pagó. Decide el documento y el texto del botón de los cursos. */
+  licensed: boolean;
+  /** Días que le quedan de prueba. `null` con licencia: el aviso desaparece. */
+  trial: { daysLeft: number; expired: boolean } | null;
+  /** Cuándo empezó a usar la app. Alimenta la proyección de fecha de apertura. */
+  startedAt: number | null;
   onGo: (target: Target) => void;
   onOpenProfile: () => void;
   onOpenAlerts: () => void;
   onOpenPaywall: () => void;
+  /** Abre el Plan de apertura imprimible. */
+  onOpenDoc: () => void;
   onNewDish: (id?: string) => void;
+  onKeepExample: () => void;
+  onClearExample: () => void;
 }) {
   const name = (state.profile.name || 'Tu proyecto').split(' ')[0];
   const invest = investment({
@@ -62,6 +83,21 @@ export function Inicio({
     closedOneDay: state.closedOneDay,
   });
   const recent = state.dishes.slice(-6).reverse();
+  const courses = diagnosis.progress.modules.filter((m) => m.course);
+  const nextLesson = getLesson(diagnosis.nextStep.title);
+  // El ejemplo de la plantilla sigue cargado y todavía no decide qué hacer con él.
+  const exampleOn =
+    !state.settings.exampleHidden && state.dishes.some((d) => DEMO_DISH_IDS.has(d.id));
+  // La proyección la ve todo el mundo, haya pagado o no: el prototipo no la
+  // condiciona a la licencia.
+  const pace = startedAt
+    ? paceProjection({
+        pending: diagnosis.progress.total - diagnosis.progress.done,
+        done: diagnosis.progress.done,
+        startedAt,
+        now: Date.now(),
+      })
+    : null;
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 }}>
@@ -96,7 +132,18 @@ export function Inicio({
           type="button"
           onClick={onOpenAlerts}
           aria-label="Alertas"
-          style={{ position: 'relative', border: 'none', background: 'transparent', cursor: 'pointer', padding: 4 }}
+          style={{
+            position: 'relative',
+            width: 44,
+            height: 44,
+            flex: 'none',
+            display: 'grid',
+            placeItems: 'center',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            padding: 0,
+          }}
         >
           <Bell size={22} strokeWidth={2.6} color="var(--color-text)" />
           {diagnosis.recommendations.some((r) => r.severity === 'alta') ? (
@@ -115,24 +162,40 @@ export function Inicio({
         </button>
       </Row>
 
-      {trialLabel ? (
+      {trial ? (
         <button
           type="button"
           onClick={onOpenPaywall}
           style={{
+            width: '100%',
             border: 'none',
             textAlign: 'left',
             background: 'var(--color-accent-100)',
-            color: 'var(--color-accent-900)',
-            borderRadius: RADIUS.inner,
-            padding: '12px 16px',
-            fontSize: 13,
-            fontWeight: 700,
+            borderRadius: RADIUS.block,
+            padding: '14px 16px',
             cursor: 'pointer',
             fontFamily: 'var(--font-body)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
           }}
         >
-          {trialLabel} · desbloquea con un solo pago →
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5, color: 'var(--color-accent-900)' }}>
+              Versión de prueba
+            </span>
+            <span
+              className="mrl-prose"
+              style={{ display: 'block', fontSize: 12, lineHeight: 1.45, color: 'var(--color-accent-800)', marginTop: 1 }}
+            >
+              {trial.expired
+                ? 'La app quedó bloqueada. Desbloquéala con un solo pago y recupera todo tu avance.'
+                : `Prueba gratis: ${
+                    trial.daysLeft === 1 ? 'te queda 1 día' : `te quedan ${trial.daysLeft} días`
+                  }. Trabajas Concepto y Local completos, abres la primera lección de los otros 12 módulos, costeas 3 platillos y ves tu punto de equilibrio.`}
+            </span>
+          </span>
+          <ChevronRight size={17} strokeWidth={2.75} color="var(--color-accent-800)" style={{ flex: 'none' }} />
         </button>
       ) : null}
 
@@ -140,8 +203,11 @@ export function Inicio({
         <Row gap={16}>
           <ProgressRing pct={diagnosis.progress.pct} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <H size={17}>{diagnosis.progress.level}</H>
-            <Muted size={12.5} style={{ marginTop: 3 }}>
+            <Muted size={12}>Tu proyecto está</Muted>
+            <H size={23} style={{ lineHeight: 1.1 }}>
+              {diagnosis.progress.pct}% listo
+            </H>
+            <Muted size={12.5} style={{ marginTop: 2 }}>
               {diagnosis.progress.done} de {diagnosis.progress.total} tareas completadas
             </Muted>
             <button
@@ -165,29 +231,115 @@ export function Inicio({
         </Row>
       </Card>
 
+      {/* El documento que se lleva al banco. Con licencia abre; sin ella, al pago. */}
+      <button
+        type="button"
+        onClick={licensed ? onOpenDoc : onOpenPaywall}
+        style={{
+          width: '100%',
+          textAlign: 'left',
+          padding: '17px 19px',
+          borderRadius: RADIUS.card,
+          border: '1.5px solid var(--color-accent-300)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-body)',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
+          boxShadow: 'var(--shadow-sm)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 13,
+        }}
+      >
+        <span
+          style={{
+            width: 42,
+            height: 42,
+            flex: 'none',
+            borderRadius: 14,
+            background: 'var(--color-accent-100)',
+            color: 'var(--color-accent-700)',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <FileText size={21} strokeWidth={2.6} />
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>
+            Plan de apertura
+          </span>
+          <span
+            className="mrl-prose"
+            style={{ display: 'block', fontSize: 12.3, lineHeight: 1.4, color: text(70), marginTop: 2 }}
+          >
+            {licensed
+              ? 'Tu documento para el banco, un socio o el arrendador · se actualiza con tus datos'
+              : 'Documento para el banco o un socio · se abre con el pago único'}
+          </span>
+        </span>
+        <ChevronRight size={18} strokeWidth={2.9} color="var(--color-accent-700)" style={{ flex: 'none' }} />
+      </button>
+
+      <PuntosExtra courses={courses} licensed={licensed} onOpen={(module) => onGo({ tab: 'ruta', module })} />
+
+      {/* Hoy toca: la lección de hoy, con sus minutos y la proyección de fecha. */}
       <div
         style={{
           background: 'var(--color-accent)',
-          color: '#fff',
+          color: 'var(--on-accent)',
           borderRadius: RADIUS.card,
-          padding: 20,
+          padding: 18,
           boxShadow: 'var(--shadow-md)',
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', opacity: 0.85 }}>
-          Tu siguiente paso
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', opacity: 0.85 }}>
+            Hoy toca
+          </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '3px 9px',
+              borderRadius: RADIUS.pill,
+              background: 'color-mix(in srgb, #fff 22%, transparent)',
+              fontSize: 10.5,
+              fontWeight: 700,
+            }}
+          >
+            <Clock size={11} strokeWidth={2.9} />
+            {nextLesson.m} min
+          </span>
         </div>
-        <H size={21} style={{ marginTop: 6, color: '#fff' }}>
+        <H size={21} style={{ lineHeight: 1.15, color: 'var(--on-accent)' }}>
           {diagnosis.nextStep.title}
         </H>
-        <div style={{ fontSize: 13, marginTop: 6, opacity: 0.92, lineHeight: 1.45 }}>{diagnosis.nextStep.body}</div>
-        <div style={{ marginTop: 14 }}>
-          <Button variant="light" height={44} onClick={() => onGo(diagnosis.nextStep.target)}>
-            Continuar
-          </Button>
-        </div>
+        <p className="mrl-prose" style={{ margin: '6px 0 12px', fontSize: 13, opacity: 0.92, lineHeight: 1.45 }}>
+          {diagnosis.nextStep.body}
+        </p>
+        <Button variant="light" height={44} onClick={() => onGo(diagnosis.nextStep.target)}>
+          Abrir la lección
+        </Button>
+        {pace ? (
+          <p
+            className="mrl-prose"
+            style={{
+              margin: '12px 0 0',
+              paddingTop: 11,
+              borderTop: '1px solid color-mix(in srgb, #fff 28%, transparent)',
+              fontSize: 12,
+              lineHeight: 1.45,
+              opacity: 0.92,
+            }}
+          >
+            {pace}
+          </p>
+        ) : null}
       </div>
 
+      {/* Las dos cifras de cabecera, como en el diseño: tarjetas claras. */}
       <div className="mrl-duo">
         <button
           type="button"
@@ -197,36 +349,55 @@ export function Inicio({
             border: 'none',
             cursor: 'pointer',
             fontFamily: 'var(--font-body)',
-            color: 'var(--color-bg)',
-            borderRadius: RADIUS.card,
-            padding: 18,
-            boxShadow: 'var(--shadow-md)',
-            background: invest.exceeded ? 'var(--color-accent-700)' : 'var(--color-accent-2-600)',
+            background: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            borderRadius: RADIUS.block,
+            padding: 16,
+            boxShadow: 'var(--shadow-sm)',
           }}
         >
-          <div style={{ fontSize: 11.5, fontWeight: 800, opacity: 0.9 }}>Inversión vs presupuesto</div>
+          <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: text(55) }}>
+            Inversión vs presupuesto
+          </div>
           <div
             style={{
               fontFamily: 'var(--font-heading)',
               fontSize: can.showsInvestmentFigures ? 22 : 15,
               marginTop: 6,
               lineHeight: 1.2,
+              color: can.showsInvestmentFigures ? 'var(--color-text)' : 'var(--color-accent-800)',
             }}
           >
             {can.showsInvestmentFigures ? money(invest.total) : INVESTMENT_HIDDEN_LABEL}
           </div>
-          <div style={{ height: 6, borderRadius: RADIUS.pill, background: 'rgba(255,255,255,.3)', marginTop: 10 }}>
+          <div style={{ fontSize: 11.5, color: text(58) }}>Inversión estimada</div>
+          <div
+            style={{
+              marginTop: 10,
+              height: 7,
+              borderRadius: RADIUS.pill,
+              background: 'var(--color-neutral-300)',
+              overflow: 'hidden',
+            }}
+          >
             <div
               style={{
                 width: `${can.showsInvestmentFigures ? invest.usedPct : 22}%`,
                 height: '100%',
                 borderRadius: RADIUS.pill,
-                background: 'var(--color-bg)',
+                background: invest.exceeded ? 'var(--color-accent-700)' : 'var(--color-accent-2-500)',
                 transition: 'width .3s ease',
               }}
             />
           </div>
-          <div style={{ marginTop: 6, fontSize: 11.5, fontWeight: 700, opacity: 0.95 }}>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 11.5,
+              fontWeight: 700,
+              color: invest.exceeded ? 'var(--color-accent-800)' : 'var(--color-accent-2-800)',
+            }}
+          >
             {can.showsInvestmentFigures
               ? invest.exceeded
                 ? `Te excedes ${money(Math.abs(invest.difference))}`
@@ -245,21 +416,70 @@ export function Inicio({
             fontFamily: 'var(--font-body)',
             background: 'var(--color-surface)',
             color: 'var(--color-text)',
-            borderRadius: RADIUS.card,
-            padding: 18,
+            borderRadius: RADIUS.block,
+            padding: 16,
             boxShadow: 'var(--shadow-sm)',
           }}
         >
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: text(60) }}>Punto de equilibrio</div>
+          <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: text(55) }}>
+            Punto de equilibrio
+          </div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 22, marginTop: 6 }}>{money(be.dailySales)}</div>
-          <Muted size={11.5} style={{ marginTop: 4 }}>
-            al día · {be.ticketsPerDay} tickets
-          </Muted>
-          <Muted size={11} style={{ marginTop: 8 }}>
-            {fixed > 0 ? `${money(fixed)} de gastos fijos` : 'Captura tus gastos fijos'}
-          </Muted>
+          <div style={{ fontSize: 11.5, color: text(58) }}>Ventas por día</div>
+          <div
+            style={{
+              marginTop: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--color-accent-700)',
+            }}
+          >
+            <BarChart3 size={15} strokeWidth={2.75} />
+            {fixed > 0 ? `${be.ticketsPerDay} tickets al día` : 'Captura tus gastos fijos'}
+          </div>
         </button>
       </div>
+
+      {/* La plantilla de ejemplo sigue cargada: se edita o se limpia. */}
+      {exampleOn ? (
+        <div style={{ padding: '16px 18px', borderRadius: RADIUS.card, background: 'var(--color-accent-2-100)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                padding: '3px 10px',
+                borderRadius: RADIUS.pill,
+                background: 'var(--color-accent-2-200)',
+                color: 'var(--color-accent-2-900)',
+                fontSize: 10,
+                fontWeight: 800,
+              }}
+            >
+              Ejemplo
+            </span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-accent-2-900)' }}>
+              Llenamos tu proyecto con un ejemplo
+            </span>
+          </div>
+          <p
+            className="mrl-prose"
+            style={{ margin: '7px 0 12px', fontSize: 12.8, lineHeight: 1.5, color: 'var(--color-accent-2-900)' }}
+          >
+            Hay 3 platillos costeados, un presupuesto de apertura y gastos fijos de una cafetería real. Sirven para que
+            veas cómo se ve todo funcionando. Edítalos con tus datos o empieza en blanco.
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button height={44} style={{ flex: 1, minWidth: 190, fontSize: 13.5 }} onClick={onKeepExample}>
+              Los edito con mis datos
+            </Button>
+            <Button variant="secondary" height={44} style={{ paddingInline: 16, fontSize: 13.5 }} onClick={onClearExample}>
+              Empezar en blanco
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div>
         <H size={18}>Pendientes críticos</H>

@@ -206,7 +206,6 @@ export function App() {
   );
 
   const blocked = entitlement?.level === 'bloqueado';
-  const trialLabel = entitlement && !entitlement.licensed ? entitlement.trial.label : null;
 
   const scrollTop = () => scrollRef.current?.scrollTo({ top: 0 });
 
@@ -479,7 +478,13 @@ export function App() {
             state={state}
             diagnosis={diagnosis}
             can={can}
-            trialLabel={trialLabel}
+            licensed={!!entitlement?.licensed}
+            trial={
+              entitlement && !entitlement.licensed
+                ? { daysLeft: entitlement.trial.daysLeft, expired: entitlement.trial.expired }
+                : null
+            }
+            startedAt={entitlement?.trial.startedAt ?? null}
             onGo={go}
             onOpenProfile={() => {
               setTab('mas');
@@ -490,7 +495,21 @@ export function App() {
               setSubScreen('alertas');
             }}
             onOpenPaywall={() => setScreen('paywall')}
+            onOpenDoc={() => window.open('/print/plan-de-apertura', '_blank', 'noopener')}
             onNewDish={openDish}
+            onKeepExample={() => {
+              patch({ settings: { ...state.settings, exampleHidden: true } });
+              flash('Puedes editar o borrar los ejemplos cuando quieras');
+            }}
+            onClearExample={() => {
+              update((s) => ({
+                ...s,
+                dishes: [],
+                subrecipes: [],
+                settings: { ...s.settings, exampleHidden: true },
+              }));
+              flash('Listo, empiezas en blanco');
+            }}
           />
         );
 

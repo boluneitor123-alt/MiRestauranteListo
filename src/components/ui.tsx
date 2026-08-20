@@ -245,6 +245,9 @@ export function ProgressRing({ pct, size = 78 }: { pct: number; size?: number })
   return (
     <div
       style={{
+        // El centro blanco va posicionado: sin este `relative` se cuelga del
+        // primer ancestro posicionado y se queda flotando al hacer scroll.
+        position: 'relative',
         width: size,
         height: size,
         borderRadius: '50%',

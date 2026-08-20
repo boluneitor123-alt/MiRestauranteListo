@@ -166,3 +166,56 @@ export function progressWithoutModule(input: ProgressInput, moduleId: string): {
   const module = current.modules.find((m) => m.id === moduleId);
   return { pct: simulated.pct, removedTasks: module ? module.total : 0 };
 }
+
+/* ────────────────────  A tu ritmo actual, abres el…  ──────────────────── */
+
+const DAY_MS = 86_400_000;
+
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+/** Ritmo mínimo con el que se proyecta: menos de esto se lee como "nunca". */
+export const MIN_PACE = 0.15;
+/** Ritmo que se supone mientras el dueño no ha completado su primera tarea. */
+export const ASSUMED_PACE = 0.4;
+
+/**
+ * "Te faltan 78 tareas. A tu ritmo actual, abres alrededor del 28 de septiembre."
+ *
+ * Portado del prototipo. El ritmo son las tareas hechas entre los días que
+ * lleva usando la app; mientras no completa ninguna se supone un ritmo de
+ * arranque para no proyectar al infinito.
+ */
+export function paceProjection(input: {
+  /** Tareas que le faltan. */
+  pending: number;
+  /** Tareas que ya hizo. */
+  done: number;
+  /** Cuándo empezó: la fecha en que arrancó su prueba. */
+  startedAt: number;
+  now: number;
+}): string {
+  if (input.pending <= 0) return 'Terminaste tu ruta completa.';
+
+  const daysIn = Math.max(1, Math.round((input.now - input.startedAt) / DAY_MS));
+  const pace = input.done > 0 ? input.done / daysIn : ASSUMED_PACE;
+  const daysLeft = Math.ceil(input.pending / Math.max(MIN_PACE, pace));
+  const day = new Date(input.now + daysLeft * DAY_MS);
+
+  return (
+    `Te faltan ${input.pending} ${input.pending === 1 ? 'tarea' : 'tareas'}. ` +
+    `A tu ritmo actual, abres alrededor del ${day.getDate()} de ${MESES[day.getMonth()]}.`
+  );
+}

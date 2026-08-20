@@ -85,6 +85,8 @@ export interface AppSettings {
   accent: string;
   dark: boolean;
   tourDone: boolean;
+  /** Ya decidió qué hacer con los platillos de ejemplo de la plantilla. */
+  exampleHidden: boolean;
 }
 
 export interface ProjectState {
@@ -153,6 +155,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accent: ACCENT_OPTIONS[0].value,
   dark: false,
   tourDone: false,
+  exampleHidden: false,
 };
 
 /** Estado inicial de un proyecto nuevo: sin tareas hechas y sin platillos. */
@@ -441,6 +444,7 @@ export function importBackup(input: unknown): ProjectState {
       accent: asString(settings.accent, DEFAULT_SETTINGS.accent),
       dark: asBoolean(settings.dark, DEFAULT_SETTINGS.dark),
       tourDone: asBoolean(settings.tourDone, DEFAULT_SETTINGS.tourDone),
+      exampleHidden: asBoolean(settings.exampleHidden, DEFAULT_SETTINGS.exampleHidden),
     },
   };
 
