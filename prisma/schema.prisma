@@ -102,6 +102,10 @@ model Project {
   stressSupplies Int  @default(0)
   stressRent     Int  @default(0)
   stressSales    Int  @default(0)
+  /// Lo último capturado en la calculadora de delivery y en el analizador de
+  /// anuncios, para poder volver a abrir cada análisis.
+  delivery       Json @default("{}")
+  ads            Json @default("{}")
   fcTarget    Int     @default(30)
   layout      String  @default("p2")
 

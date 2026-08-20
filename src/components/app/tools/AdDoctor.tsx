@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Megaphone } from 'lucide-react';
 import { adsBands, adsBudgetPlan, adsMetrics, adsVerdict, type AdsBand, type AdsInput } from '@/domain/ads';
 import { money } from '@/domain/format';
+import type { AdsCapture } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, RADIUS, ScreenHeader, text } from '@/components/ui';
 
 const soloNumero = (v: string) => v.replace(/[^0-9.]/g, '');
@@ -32,15 +33,45 @@ export function AdDoctor({
   ticket,
   marginPct,
   monthlyFixed,
+  saved,
   onBack,
+  onSave,
 }: {
   ticket: number;
   marginPct: number;
   /** Gastos fijos del mes: de ahí sale el plan de inversión sugerido. */
   monthlyFixed: number;
+  /** Los cinco números que capturó la última vez. */
+  saved: AdsCapture;
   onBack: () => void;
+  onSave: (capture: AdsCapture) => void;
 }) {
-  const [raw, setRaw] = useState({ spend: '', days: '', reach: '', results: '', visits: '' });
+  const inicial = (n: number) => (n ? String(n) : '');
+  const [raw, setRaw] = useState({
+    spend: inicial(saved.spend),
+    days: inicial(saved.days),
+    reach: inicial(saved.reach),
+    results: inicial(saved.results),
+    visits: inicial(saved.visits),
+  });
+
+  const capturar = (key: keyof typeof raw, valor: string) => {
+    const limpio = soloNumero(valor);
+    const siguiente = { ...raw, [key]: limpio };
+    setRaw(siguiente);
+    onSave({
+      spend: aNumero(siguiente.spend),
+      days: aNumero(siguiente.days),
+      reach: aNumero(siguiente.reach),
+      results: aNumero(siguiente.results),
+      visits: aNumero(siguiente.visits),
+    });
+  };
+
+  const limpiar = () => {
+    setRaw({ spend: '', days: '', reach: '', results: '', visits: '' });
+    onSave({ spend: 0, days: 0, reach: 0, results: 0, visits: 0 });
+  };
 
   const input: AdsInput = {
     spend: aNumero(raw.spend),
@@ -200,7 +231,7 @@ export function AdDoctor({
               <Field
                 label={campo.label}
                 value={raw[campo.key]}
-                onChange={(v) => setRaw((prev) => ({ ...prev, [campo.key]: soloNumero(v) }))}
+                onChange={(v) => capturar(campo.key, v)}
                 inputMode="decimal"
               />
               <Muted size={11.8} style={{ marginTop: 4 }}>
@@ -208,7 +239,7 @@ export function AdDoctor({
               </Muted>
             </div>
           ))}
-          <Button variant="secondary" onClick={() => setRaw({ spend: '', days: '', reach: '', results: '', visits: '' })}>
+          <Button variant="secondary" onClick={limpiar}>
             Empezar de nuevo
           </Button>
         </Card>

@@ -501,6 +501,10 @@ export function App() {
               setTab('mas');
               setSubScreen('mapa');
             }}
+            onOpenTool={(tool) => {
+              setTab('mas');
+              setSubScreen(tool);
+            }}
           />
         );
 

@@ -65,10 +65,11 @@ ellos desde la app.
       `anuncios`, y hay un grupo "Herramientas" en la lista de Más con las dos
       entradas. Verificado en el navegador.
 - [x] Entrada desde Más. Existe para las dos.
-- [ ] Entrada a la calculadora desde el módulo de delivery de Mi Ruta.
-- [ ] Entrada al diagnóstico de anuncios desde el curso de anuncios.
-- [ ] Que el resultado de cada una se pueda guardar y volver a abrir. Hoy el
-      estado vive en `useState` y se pierde al salir.
+- [x] Entrada a la calculadora desde el módulo de delivery de Mi Ruta.
+- [x] Entrada al diagnóstico de anuncios desde el curso de anuncios.
+- [x] Que el resultado de cada una se pueda guardar y volver a abrir. Lo
+      capturado se guarda con el proyecto: migración
+      `20260820170000_tool_captures`.
 
 ---
 

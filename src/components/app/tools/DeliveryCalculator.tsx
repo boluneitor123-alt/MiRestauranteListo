@@ -5,7 +5,6 @@ import { Bike } from 'lucide-react';
 import {
   calculateDelivery,
   deliveryActions,
-  DELIVERY_DEFAULTS,
   DELIVERY_VERDICTS,
   MAX_COMMISSION_PCT,
   type DeliveryInput,
@@ -34,14 +33,25 @@ const aNumero = (v: string) => {
  * Contesta la pregunta con la que más gente pierde dinero sin darse cuenta:
  * de lo que paga el cliente en Rappi o UberEats, cuánto te queda a ti.
  */
-export function DeliveryCalculator({ onBack }: { onBack: () => void }) {
+export function DeliveryCalculator({
+  saved,
+  onBack,
+  onSave,
+}: {
+  /** Lo último que capturó el usuario. Se guarda con su proyecto. */
+  saved: DeliveryInput;
+  onBack: () => void;
+  onSave: (input: DeliveryInput) => void;
+}) {
+  // Mientras escribe manda el texto crudo, para no reformatear el campo bajo
+  // los dedos; al salir del campo se guarda el número.
   const [raw, setRaw] = useState<Record<keyof DeliveryInput, string>>({
-    appPrice: String(DELIVERY_DEFAULTS.appPrice),
-    counterPrice: String(DELIVERY_DEFAULTS.counterPrice),
-    cost: String(DELIVERY_DEFAULTS.cost),
-    packaging: String(DELIVERY_DEFAULTS.packaging),
-    commissionPct: String(DELIVERY_DEFAULTS.commissionPct),
-    ordersPerDay: String(DELIVERY_DEFAULTS.ordersPerDay),
+    appPrice: String(saved.appPrice),
+    counterPrice: String(saved.counterPrice),
+    cost: String(saved.cost),
+    packaging: String(saved.packaging),
+    commissionPct: String(saved.commissionPct),
+    ordersPerDay: String(saved.ordersPerDay),
   });
 
   const input: DeliveryInput = {
@@ -53,6 +63,13 @@ export function DeliveryCalculator({ onBack }: { onBack: () => void }) {
     ordersPerDay: aNumero(raw.ordersPerDay),
   };
   const r = calculateDelivery(input);
+
+  const capturar = (key: keyof DeliveryInput, valor: string) => {
+    const limpio = soloNumero(valor);
+    const siguiente = { ...raw, [key]: limpio };
+    setRaw(siguiente);
+    onSave({ ...input, [key]: aNumero(limpio) });
+  };
   const verdict = DELIVERY_VERDICTS[r.level];
   const commission = Math.min(MAX_COMMISSION_PCT, input.commissionPct);
   const actions = deliveryActions(input, r, money, money2);
@@ -142,7 +159,7 @@ export function DeliveryCalculator({ onBack }: { onBack: () => void }) {
               <Field
                 label={campo.label}
                 value={raw[campo.key]}
-                onChange={(v) => setRaw((prev) => ({ ...prev, [campo.key]: soloNumero(v) }))}
+                onChange={(v) => capturar(campo.key, v)}
                 inputMode="decimal"
               />
               <Muted size={11.8} style={{ marginTop: 4 }}>

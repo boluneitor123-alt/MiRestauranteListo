@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Lock, Star, Target as TargetIcon } from 'lucide-react';
+import { Bike, Check, ChevronDown, Lock, Megaphone, Star, Target as TargetIcon } from 'lucide-react';
 import { ROUTE_MODULES, SKIP_REASONS } from '@/content/route';
 import { projectProgress, progressWithoutModule, type ModuleProgress, type RouteTask } from '@/domain/progress';
 import {
@@ -39,6 +39,7 @@ export function Ruta({
   onOpenTask,
   onOpenPaywall,
   onOpenOverview,
+  onOpenTool,
 }: {
   state: ProjectState;
   level: AccessLevel;
@@ -54,6 +55,8 @@ export function Ruta({
   onOpenTask: (key: string | null) => void;
   onOpenPaywall: () => void;
   onOpenOverview: () => void;
+  /** Abre la herramienta que acompaña a un curso. */
+  onOpenTool: (tool: 'delivery' | 'anuncios') => void;
 }) {
   const [skipFlow, setSkipFlow] = useState<SkipFlow>(null);
   const [showForm, setShowForm] = useState(formOpen);
@@ -126,6 +129,12 @@ export function Ruta({
 
       {/* Aviso de muestra: distinto para un módulo de ruta que para un curso. */}
       <SampleNotice level={level} module={current} onOpenPaywall={onOpenPaywall} />
+
+      {/*
+        Dos cursos traen su herramienta. Se ofrece aquí, junto a las lecciones
+        que la explican, no sólo enterrada en Más.
+      */}
+      <ModuleTool moduleId={current.id} onOpen={onOpenTool} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         {current.tasks.map((task, index) => {
@@ -284,6 +293,70 @@ function ModuleCard({
           No usaré este módulo
         </button>
       )}
+    </Card>
+  );
+}
+
+/** Los dos cursos que tienen herramienta, y cómo se anuncia cada una. */
+const MODULE_TOOLS: Record<string, { tool: 'delivery' | 'anuncios'; title: string; body: string; cta: string }> = {
+  delivery: {
+    tool: 'delivery',
+    title: 'Saca tus números de delivery',
+    body: 'Con lo que aprendes en este curso, la calculadora te dice cuánto te queda por pedido después de la comisión y a cuánto deberías vender en la app.',
+    cta: 'Abrir la calculadora de delivery',
+  },
+  ventas: {
+    tool: 'anuncios',
+    title: 'Revisa tu anuncio con números',
+    body: 'Cuando ya tengas un anuncio corriendo, captura aquí los cinco datos del Administrador de Meta y te digo si deja dinero y qué cambiar primero.',
+    cta: 'Abrir el analizador de anuncios',
+  },
+};
+
+/** La herramienta que acompaña al curso, ofrecida junto a sus lecciones. */
+function ModuleTool({
+  moduleId,
+  onOpen,
+}: {
+  moduleId: string;
+  onOpen: (tool: 'delivery' | 'anuncios') => void;
+}) {
+  const entry = MODULE_TOOLS[moduleId];
+  if (!entry) return null;
+
+  return (
+    <Card style={{ background: 'var(--color-neutral-200)' }}>
+      <Row gap={11} align="flex-start">
+        <span
+          style={{
+            width: 38,
+            height: 38,
+            flex: 'none',
+            borderRadius: 13,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'var(--color-accent)',
+            color: 'var(--color-bg)',
+          }}
+        >
+          {entry.tool === 'delivery' ? (
+            <Bike size={19} strokeWidth={2.6} />
+          ) : (
+            <Megaphone size={19} strokeWidth={2.6} />
+          )}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800 }}>{entry.title}</div>
+          <p className="mrl-prose" style={{ margin: '4px 0 0', fontSize: 12.6, lineHeight: 1.5, color: text(70) }}>
+            {entry.body}
+          </p>
+        </div>
+      </Row>
+      <div style={{ marginTop: 12 }}>
+        <Button variant="secondary" onClick={() => onOpen(entry.tool)}>
+          {entry.cta}
+        </Button>
+      </div>
     </Card>
   );
 }

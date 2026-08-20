@@ -354,7 +354,13 @@ function SubScreenView(props: {
     // Las dos herramientas viven detrás del pago único.
     case 'delivery':
       if (!props.can.printableDocuments) return <ToolLocked name="La calculadora de delivery" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
-      return <DeliveryCalculator onBack={onBack} />;
+      return (
+        <DeliveryCalculator
+          saved={state.delivery}
+          onBack={onBack}
+          onSave={(delivery) => onPatch({ delivery })}
+        />
+      );
 
     case 'anuncios':
       if (!props.can.printableDocuments) return <ToolLocked name="El analizador de anuncios" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
@@ -363,7 +369,9 @@ function SubScreenView(props: {
           ticket={state.ticket}
           marginPct={state.margin}
           monthlyFixed={fixedExpensesTotal(state.fixed)}
+          saved={state.ads}
           onBack={onBack}
+          onSave={(ads) => onPatch({ ads })}
         />
       );
 

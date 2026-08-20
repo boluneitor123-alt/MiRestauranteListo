@@ -12,6 +12,7 @@ import { taskKey, type ExtraTask } from './progress';
 import type { Concept, Subconcept } from './finance';
 import type { Dish, Ingredient, Subrecipe } from './types';
 import { SURVIVAL_DEFAULTS } from './survival';
+import { DELIVERY_DEFAULTS, type DeliveryInput } from './delivery';
 import { DEFAULT_FOOD_COST_TARGET } from './costing';
 import { BREAKEVEN_DEFAULTS } from './finance';
 import { DEFAULT_LAYOUT_ID } from './menu';
@@ -61,6 +62,20 @@ export interface StressTest {
 
 export const NO_STRESS: StressTest = { supplies: 0, rent: 0, sales: 0 };
 
+/**
+ * Los cinco números del Administrador de anuncios de Meta. Se guardan como el
+ * usuario los capturó para que pueda volver a abrir el análisis.
+ */
+export interface AdsCapture {
+  spend: number;
+  days: number;
+  reach: number;
+  results: number;
+  visits: number;
+}
+
+export const EMPTY_ADS: AdsCapture = { spend: 0, days: 0, reach: 0, results: 0, visits: 0 };
+
 export interface AppSettings {
   alerts: boolean;
   weekly: boolean;
@@ -103,6 +118,10 @@ export interface ProjectState {
   dailyMix: number;
   /** Prueba de estrés: cuánto suben los insumos, cuánto la renta, cuánto baja la venta. */
   stress: StressTest;
+  /** Lo último que capturó en la calculadora de delivery. */
+  delivery: DeliveryInput;
+  /** Lo último que capturó en el analizador de anuncios. */
+  ads: AdsCapture;
   fcTarget: number;
   layout: string;
   settings: AppSettings;
@@ -156,6 +175,8 @@ export function emptyProjectState(overrides: Partial<ProjectState> = {}): Projec
     prepMinutes: SURVIVAL_DEFAULTS.prepMinutes,
     dailyMix: SURVIVAL_DEFAULTS.dailyMix,
     stress: { ...NO_STRESS },
+    delivery: { ...DELIVERY_DEFAULTS },
+    ads: { ...EMPTY_ADS },
     fcTarget: DEFAULT_FOOD_COST_TARGET,
     layout: DEFAULT_LAYOUT_ID,
     settings: { ...DEFAULT_SETTINGS },
@@ -308,6 +329,8 @@ export function importBackup(input: unknown): ProjectState {
   const project = asRecord(raw.project);
   const settings = asRecord(raw.settings);
   const stress = asRecord(raw.stress);
+  const delivery = asRecord(raw.delivery);
+  const ads = asRecord(raw.ad ?? raw.ads);
 
   const state: ProjectState = {
     profile: {
@@ -380,6 +403,21 @@ export function importBackup(input: unknown): ProjectState {
       supplies: asNumber(stress.supplies ?? raw.stressIns, 0),
       rent: asNumber(stress.rent ?? raw.stressRent, 0),
       sales: asNumber(stress.sales ?? raw.stressSales, 0),
+    },
+    delivery: {
+      appPrice: asNumber(delivery.appPrice, DELIVERY_DEFAULTS.appPrice),
+      counterPrice: asNumber(delivery.counterPrice, DELIVERY_DEFAULTS.counterPrice),
+      cost: asNumber(delivery.cost, DELIVERY_DEFAULTS.cost),
+      packaging: asNumber(delivery.packaging, DELIVERY_DEFAULTS.packaging),
+      commissionPct: asNumber(delivery.commissionPct, DELIVERY_DEFAULTS.commissionPct),
+      ordersPerDay: asNumber(delivery.ordersPerDay, DELIVERY_DEFAULTS.ordersPerDay),
+    },
+    ads: {
+      spend: asNumber(ads.spend, 0),
+      days: asNumber(ads.days, 0),
+      reach: asNumber(ads.reach, 0),
+      results: asNumber(ads.results, 0),
+      visits: asNumber(ads.visits, 0),
     },
     fcTarget: asNumber(raw.fcTarget, base.fcTarget),
     layout: asString(raw.layout, base.layout),
