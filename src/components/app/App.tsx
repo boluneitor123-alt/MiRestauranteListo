@@ -6,7 +6,7 @@ import { ROUTE_MODULES } from '@/content/route';
 import { ONBOARDING_QUESTIONS, TOUR_STEPS } from '@/content/onboarding';
 import { diagnose, type Target } from '@/domain/diagnosis';
 import { DEFAULT_FOOD_COST_TARGET } from '@/domain/costing';
-import { taskKey } from '@/domain/progress';
+import { projectProgress, taskKey } from '@/domain/progress';
 import { BRAND_ACCENT } from '@/domain/projectState';
 import type { Dish, Subrecipe } from '@/domain/types';
 import { detectPlatform, type PlatformInfo } from '@/lib/device';
@@ -18,6 +18,7 @@ import { Onboarding } from './screens/Onboarding';
 import { Diagnostic } from './screens/Diagnostic';
 import { Blocked, OfflineGate, Paywall } from './screens/Gates';
 import { Tour } from './screens/Tour';
+import { Celebration, type CelebrationState } from './ruta/Celebration';
 import { Inicio } from './tabs/Inicio';
 import { Ruta } from './tabs/Ruta';
 import { Costeador, type CostView } from './tabs/Costeador';
@@ -74,6 +75,7 @@ export function App() {
   const [moduleId, setModuleId] = useState(ROUTE_MODULES[0].id);
   const [openTaskKey, setOpenTaskKey] = useState<string | null>(null);
   const [costView, setCostView] = useState<CostView>('platillos');
+  const [celebration, setCelebration] = useState<CelebrationState | null>(null);
   const [numbersView, setNumbersView] = useState<NumbersView>('home');
   const [subScreen, setSubScreen] = useState<SubScreen | null>(null);
   const [dishId, setDishId] = useState<string | null>(null);
@@ -94,6 +96,38 @@ export function App() {
       window.removeEventListener('orientationchange', update);
     };
   }, []);
+
+  /**
+   * Al completar una tarea hay celebración: confeti, el salto de porcentaje y
+   * el conteo del módulo. Se calcula con el avance de antes y el de después.
+   */
+  const celebrateTask = (key: string) => {
+    const antes = projectProgress({
+      modules: ROUTE_MODULES,
+      done: state.done,
+      skipped: state.skipped,
+      extraTasks: state.extraTasks,
+    });
+    const despues = projectProgress({
+      modules: ROUTE_MODULES,
+      done: { ...state.done, [key]: true },
+      skipped: state.skipped,
+      extraTasks: state.extraTasks,
+    });
+    const modulo = despues.modules.find((m) => m.tasks.some((t) => t.key === key));
+    const tarea = modulo?.tasks.find((t) => t.key === key);
+    if (!modulo || !tarea) return;
+    const completo = modulo.done >= modulo.total;
+    setCelebration({
+      task: tarea.title,
+      from: antes.pct,
+      to: despues.pct,
+      moduleDone: completo,
+      sub: completo
+        ? `Terminaste el módulo ${modulo.name} completo`
+        : `${modulo.done} de ${modulo.total} en ${modulo.name}`,
+    });
+  };
 
   // El tema y el acento se aplican al contenedor raíz de la app.
   useEffect(() => {
@@ -422,9 +456,11 @@ export function App() {
               setModuleId(id);
               setOpenTaskKey(null);
             }}
-            onToggleTask={(key) =>
-              update((s) => ({ ...s, done: { ...s.done, [key]: !s.done[key] } }))
-            }
+            onToggleTask={(key) => {
+              const marcando = !state.done[key];
+              update((s) => ({ ...s, done: { ...s.done, [key]: !s.done[key] } }));
+              if (marcando) celebrateTask(key);
+            }}
             onSkipModule={(id, reason) => {
               update((s) => ({ ...s, skipped: { ...s.skipped, [id]: reason } }));
               flash('Módulo omitido');
@@ -650,6 +686,8 @@ export function App() {
           {toast}
         </div>
       ) : null}
+
+      {celebration ? <Celebration state={celebration} onClose={() => setCelebration(null)} /> : null}
 
       {!online ? <OfflineGate onRetry={refreshEntitlement} /> : null}
     </div>

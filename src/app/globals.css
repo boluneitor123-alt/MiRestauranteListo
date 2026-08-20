@@ -457,3 +457,165 @@ textarea {
   font-variant-numeric: tabular-nums;
   margin-left: auto;
 }
+
+/*
+ * ─── Animaciones de los dos menús de Mi Ruta ───────────────────────────────
+ *
+ * Copiadas del prototipo. Todas se apagan solas: la de la ruta cuando el
+ * usuario la abre una vez, la de la estrella cuando completa su primera
+ * lección de curso. Una animación que insiste para siempre se vuelve ruido.
+ */
+
+@keyframes mrlHaloA {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-accent-300);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent-300) 40%, transparent);
+  }
+}
+
+@keyframes mrlHalo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-accent-2-300);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent-2-300) 45%, transparent);
+  }
+}
+
+@keyframes mrlSheen {
+  0% {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  55%,
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+
+@keyframes mrlBeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.13);
+  }
+  62% {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes mrlPeek {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  45% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@keyframes mrlTwinkle {
+  0%,
+  100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1) rotate(70deg);
+    opacity: 1;
+  }
+}
+
+@keyframes mrlSpinIn {
+  from {
+    transform: rotate(-140deg) scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mrlNudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mrlCount {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mrlConf {
+  0% {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(300px) rotate(520deg);
+    opacity: 0;
+  }
+}
+
+/* Se hunden al tocar: el botón 97%, las filas 98.5%. */
+.mrl-tap {
+  transition:
+    transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1),
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mrl-tap:active {
+  transform: scale(0.97);
+}
+
+.mrl-row {
+  transition:
+    background 0.14s ease,
+    transform 0.12s ease;
+}
+
+.mrl-row:active {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) {
+  .mrl-row:hover {
+    background: var(--color-neutral-200) !important;
+  }
+}
+
+/* La ilustración de una lección hereda el acento y trae el sage como segunda voz. */
+.mrl-illo {
+  color: var(--color-accent);
+  aspect-ratio: 800 / 460;
+  display: block;
+}
+
+.mrl-illo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

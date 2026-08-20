@@ -3,8 +3,10 @@ import {
   canCreateDish,
   canOpenRouteModule,
   capabilities,
+  courseState,
   dishLimitNotice,
   resolveAccess,
+  routeTaskAccess,
   TRIAL_DISH_LIMIT,
 } from '../access';
 import { activateLicense, DAY_MS, refundLicense, revokeLicense, type License } from '../license';
@@ -124,5 +126,46 @@ describe('acceso con licencia', () => {
     expect(licenciado.budget).toBe(true);
     expect(licenciado.resources).toBe(true);
     expect(licenciado.printableDocuments).toBe(true);
+  });
+});
+
+describe('muestra gratis (mensaje 1, § 3)', () => {
+  it('deja abierto todo Concepto y todo Local durante la prueba', () => {
+    for (const id of ['concepto', 'local']) {
+      expect(routeTaskAccess('prueba', id, 0)).toBe('abierta');
+      expect(routeTaskAccess('prueba', id, 4)).toBe('abierta');
+    }
+  });
+
+  it('abre la primera lección de los demás módulos como muestra', () => {
+    expect(routeTaskAccess('prueba', 'costeo', 0)).toBe('muestra');
+    expect(routeTaskAccess('prueba', 'costeo', 1)).toBe('bloqueada');
+    expect(routeTaskAccess('prueba', 'costeo', 3)).toBe('bloqueada');
+  });
+
+  it('aplica la misma regla a los cuatro mini cursos', () => {
+    for (const id of ['ventas', 'maps', 'delivery', 'contratar']) {
+      expect(routeTaskAccess('prueba', id, 0)).toBe('muestra');
+      expect(routeTaskAccess('prueba', id, 1)).toBe('bloqueada');
+    }
+  });
+
+  it('con la licencia activa abre todo', () => {
+    for (const m of ROUTE_MODULES) {
+      expect(routeTaskAccess('licencia', m.id, 0)).toBe('abierta');
+      expect(routeTaskAccess('licencia', m.id, m.tasks.length - 1)).toBe('abierta');
+    }
+  });
+
+  it('mantiene la muestra cuando la prueba ya venció', () => {
+    // El prototipo mira la licencia, no los días restantes.
+    expect(routeTaskAccess('bloqueado', 'permisos', 0)).toBe('muestra');
+    expect(routeTaskAccess('bloqueado', 'permisos', 1)).toBe('bloqueada');
+  });
+
+  it('escribe el estado de cada curso en su menú', () => {
+    expect(courseState('prueba', 0)).toBe('lección 1 abierta');
+    expect(courseState('licencia', 0)).toBe('sin empezar');
+    expect(courseState('licencia', 3)).toBe('3 completadas');
   });
 });

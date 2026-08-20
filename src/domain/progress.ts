@@ -27,6 +27,10 @@ export interface RouteModule {
   id: string;
   name: string;
   desc: string;
+  /** Token de color del módulo, sin el prefijo --color-. */
+  col?: string;
+  /** true en los cuatro mini cursos con estrella. */
+  course?: boolean;
   tasks: Array<Omit<RouteTask, 'key' | 'moduleId'>>;
 }
 
@@ -85,6 +89,10 @@ export interface ModuleProgress {
   id: string;
   name: string;
   desc: string;
+  /** Token de color del módulo, sin el prefijo --color-. */
+  col: string;
+  /** true en los cuatro mini cursos con estrella. */
+  course: boolean;
   skipped: boolean;
   /** Motivo declarado al omitir el módulo. */
   reason?: string;
@@ -124,6 +132,8 @@ export function projectProgress(input: ProgressInput): ProjectProgress {
       id: m.id,
       name: m.name,
       desc: m.desc,
+      col: m.col ?? 'accent-500',
+      course: !!m.course,
       skipped: isSkipped,
       reason: skipped[m.id],
       total: tasks.length,

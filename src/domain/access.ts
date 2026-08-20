@@ -136,3 +136,52 @@ export const PAYWALL_HINT = 'Se abre con el pago único';
 
 /** La tarjeta de inversión en prueba no revela montos. */
 export const INVESTMENT_HIDDEN_LABEL = 'Con el pago único';
+
+/**
+ * ─── Muestra gratis ─────────────────────────────────────────────────────────
+ *
+ * Regla del prototipo (línea 5549 de MiRestauranteListo.dc.html):
+ *
+ *   moduloLibre = id es 'concepto' o 'local'
+ *   bloqueada   = !licenciaActiva && !moduloLibre && indice > 0
+ *   esMuestra   = !licenciaActiva && !moduloLibre && indice === 0
+ *
+ * O sea: Concepto y Local van completos durante la prueba, y en todos los
+ * demás módulos la PRIMERA lección queda abierta como muestra. Aplica igual
+ * a los cuatro mini cursos.
+ */
+export type TaskAccess =
+  /** Abierta: es de un módulo libre o el usuario ya pagó. */
+  | 'abierta'
+  /** Muestra gratis: la lección 1 de un módulo que por lo demás está cerrado. */
+  | 'muestra'
+  /** Bloqueada: se abre con el pago único. */
+  | 'bloqueada';
+
+/** ¿Es un módulo que va completo durante la prueba? */
+export const isFreeModule = (moduleId: string): boolean =>
+  (TRIAL_OPEN_MODULES as readonly string[]).includes(moduleId);
+
+export function routeTaskAccess(level: AccessLevel, moduleId: string, index: number): TaskAccess {
+  if (level === 'licencia') return 'abierta';
+  if (isFreeModule(moduleId)) return 'abierta';
+  return index === 0 ? 'muestra' : 'bloqueada';
+}
+
+/** Etiqueta verde de la lección de muestra. */
+export const SAMPLE_LABEL = 'Muestra gratis';
+
+/** Aviso al pie de un módulo de ruta con la muestra abierta. */
+export const SAMPLE_MODULE_HINT =
+  'La lección 1 de este módulo está abierta. Las demás se abren con el pago único.';
+
+/** Aviso al pie de un mini curso con la muestra abierta. */
+export const SAMPLE_COURSE_TITLE = 'La lección 1 está abierta';
+export const SAMPLE_COURSE_HINT =
+  'Ábrela completa y hazla hoy mismo. Las demás lecciones de este curso se abren con el pago único.';
+
+/** Estado que muestra el menú de cursos junto a cada uno. */
+export function courseState(level: AccessLevel, done: number): string {
+  if (level !== 'licencia') return 'lección 1 abierta';
+  return done ? `${done} completadas` : 'sin empezar';
+}
