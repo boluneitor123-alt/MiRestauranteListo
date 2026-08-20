@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight, Download, Lock } from 'lucide-react';
 import { FAQ_ITEMS as FAQ, GIROS } from '@/content/catalog';
 import { ROUTE_MODULES } from '@/content/route';
+import { fixedExpensesTotal } from '@/domain/finance';
+import { DeliveryCalculator } from '../tools/DeliveryCalculator';
+import { AdDoctor } from '../tools/AdDoctor';
 import { TOUR_STEPS } from '@/content/onboarding';
 import { DEMO_DISHES, DEMO_SUBRECIPES } from '@/content/demo';
 import { exportBackup, importBackup, ACCENT_OPTIONS, type ProjectState } from '@/domain/projectState';
@@ -38,7 +41,9 @@ export type SubScreen =
   | 'terminos'
   | 'recuperar'
   | 'alertas'
-  | 'mapa';
+  | 'mapa'
+  | 'delivery'
+  | 'anuncios';
 
 const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string; meta?: string }> }> = [
   {
@@ -51,6 +56,13 @@ const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string
       { id: 'notas', label: 'Mis notas' },
       { id: 'proveedores', label: 'Mis proveedores' },
       { id: 'diagnostico', label: 'Repetir mi diagnóstico' },
+    ],
+  },
+  {
+    title: 'Herramientas',
+    items: [
+      { id: 'delivery', label: 'Calculadora de delivery' },
+      { id: 'anuncios', label: 'Analizador de anuncios' },
     ],
   },
   {
@@ -292,6 +304,22 @@ function SubScreenView(props: {
   );
 
   switch (sub) {
+    // Las dos herramientas viven detrás del pago único.
+    case 'delivery':
+      if (!props.can.printableDocuments) return <ToolLocked name="La calculadora de delivery" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
+      return <DeliveryCalculator onBack={onBack} />;
+
+    case 'anuncios':
+      if (!props.can.printableDocuments) return <ToolLocked name="El analizador de anuncios" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
+      return (
+        <AdDoctor
+          ticket={state.ticket}
+          marginPct={state.margin}
+          monthlyFixed={fixedExpensesTotal(state.fixed)}
+          onBack={onBack}
+        />
+      );
+
     case 'perfil': {
       const progress = projectProgress({
         modules: ROUTE_MODULES,
@@ -1107,6 +1135,45 @@ function Recover({
             Tu código llega por correo como comprobante de compra. Sólo lo necesitas al cambiar de equipo.
           </Muted>
         </Row>
+      </div>
+    </div>
+  );
+}
+
+/** Las dos herramientas se ven en la lista pero se abren con el pago único. */
+function ToolLocked({
+  name,
+  onBack,
+  onOpenPaywall,
+}: {
+  name: string;
+  onBack: () => void;
+  onOpenPaywall: () => void;
+}) {
+  return (
+    <div>
+      <ScreenHeader title={name} subtitle="Se abre con el pago único" onBack={onBack} />
+      <div className="mrl-measure" style={{ padding: '10px 20px 30px' }}>
+        <Card style={{ background: 'var(--color-accent-100)' }}>
+          <Row gap={10} align="flex-start">
+            <Lock size={18} color="var(--color-accent-700)" strokeWidth={2.6} style={{ flex: 'none', marginTop: 2 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--color-accent-900)' }}>
+                {name} es parte del pago único
+              </div>
+              <p
+                className="mrl-prose"
+                style={{ margin: '5px 0 0', fontSize: 12.8, lineHeight: 1.5, color: 'var(--color-accent-900)' }}
+              >
+                Un pago, acceso de por vida y garantía de 14 días. Durante la prueba puedes seguir usando tu ruta y el
+                Costeador.
+              </p>
+            </div>
+          </Row>
+          <div style={{ marginTop: 12 }}>
+            <Button onClick={onOpenPaywall}>Ver el pago único</Button>
+          </div>
+        </Card>
       </div>
     </div>
   );
