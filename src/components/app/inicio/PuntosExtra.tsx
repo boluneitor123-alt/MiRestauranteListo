@@ -38,7 +38,7 @@ export function PuntosExtra({
           color: 'color-mix(in srgb, var(--color-text) 60%, transparent)',
         }}
       >
-        Dos mini cursos aparte de tu ruta, para cuando ya estés vendiendo. A estos vas a volver cada semana.
+        Cuatro mini cursos aparte de tu ruta, para cuando ya estés vendiendo. A estos vas a volver cada semana.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 11 }}>

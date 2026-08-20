@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#c67139',
+  // El mismo azul que el manifest: es el color de la barra del sistema.
+  themeColor: '#2f6fd0',
   width: 'device-width',
   initialScale: 1,
   // Los inputs van a 16px; no hace falta bloquear el zoom del usuario.

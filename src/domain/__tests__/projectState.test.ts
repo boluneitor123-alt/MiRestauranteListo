@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { BACKUP_VERSION, emptyProjectState, exportBackup, importBackup } from '../projectState';
+import {
+  ACCENT_OPTIONS,
+  BACKUP_VERSION,
+  BRAND_ACCENT,
+  DEFAULT_ACCENT,
+  emptyProjectState,
+  exportBackup,
+  importBackup,
+  safeAccent,
+} from '../projectState';
 import { dishMetrics, subrecipeBatchCost } from '../costing';
 import { investment } from '../finance';
 import { projectProgress } from '../progress';
@@ -163,5 +172,29 @@ describe('importador del respaldo del prototipo (README § 13, paso 2)', () => {
     expect(backup.version).toBe(BACKUP_VERSION);
     expect(importBackup(backup)).toEqual(state);
     expect(importBackup(JSON.parse(JSON.stringify(backup)))).toEqual(state);
+  });
+});
+
+describe('color de la app', () => {
+  it('una cuenta nueva arranca en el azul', () => {
+    expect(emptyProjectState().settings.accent).toBe('#2f6fd0');
+    expect(DEFAULT_ACCENT).toBe('#2f6fd0');
+  });
+
+  it('el naranja de la rampa escrita a mano sigue siendo otro color', () => {
+    // BRAND_ACCENT no es el color por defecto: es el dueño de la rampa.
+    expect(BRAND_ACCENT).toBe('#e07a2b');
+    expect(BRAND_ACCENT).not.toBe(DEFAULT_ACCENT);
+  });
+
+  it('respeta el color que el usuario ya eligió', () => {
+    for (const opcion of ACCENT_OPTIONS) expect(safeAccent(opcion.value)).toBe(opcion.value);
+    expect(safeAccent('#1F8A5A')).toBe('#1F8A5A');
+  });
+
+  it('repone el acento cuando lo guardado no es un color', () => {
+    for (const basura of ['', 'azul', '#12', '#gggggg', null, undefined, 42, {}]) {
+      expect(safeAccent(basura)).toBe(DEFAULT_ACCENT);
+    }
   });
 });

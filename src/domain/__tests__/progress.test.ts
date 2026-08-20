@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ASSUMED_PACE,
+  PACE_MIN_TASKS,
   MIN_PACE,
   moduleTasks,
   paceProjection,
@@ -194,17 +194,21 @@ describe('proyección de fecha de apertura', () => {
     expect(texto).toBe('Te faltan 20 tareas. A tu ritmo actual, abres alrededor del 11 de septiembre.');
   });
 
-  it('sin ninguna tarea hecha supone un ritmo de arranque', () => {
-    // 90 tareas al ritmo supuesto de 0.4 al día son 225 días.
-    const texto = paceProjection({ pending: 90, done: 0, startedAt: HOY, now: HOY });
-    const esperado = new Date(HOY + Math.ceil(90 / ASSUMED_PACE) * DIA);
-    expect(texto).toContain('Te faltan 90 tareas');
-    expect(texto).toContain(`del ${esperado.getDate()} de `);
+  it('con poco avance anima en lugar de estimar una fecha', () => {
+    const arranque = paceProjection({ pending: 90, done: 0, startedAt: HOY, now: HOY });
+    expect(arranque).toBe('Vas muy bien. Con 10 tareas hechas te digo, a tu ritmo, para cuándo abres.');
+    expect(arranque).not.toContain('abres alrededor');
+
+    // El umbral son 10 tareas: con 9 anima, con 10 ya proyecta.
+    const nueve = paceProjection({ pending: 81, done: PACE_MIN_TASKS - 1, startedAt: HOY - 3 * DIA, now: HOY });
+    expect(nueve).not.toContain('abres alrededor');
+    const diez = paceProjection({ pending: 80, done: PACE_MIN_TASKS, startedAt: HOY - 3 * DIA, now: HOY });
+    expect(diez).toContain('abres alrededor');
   });
 
   it('nunca proyecta con un ritmo menor al mínimo', () => {
-    // Una tarea en 100 días es un ritmo de 0.01: se usa el piso de 0.15.
-    const lento = paceProjection({ pending: 10, done: 1, startedAt: HOY - 100 * DIA, now: HOY });
+    // 10 tareas en 1000 días es un ritmo de 0.01: se usa el piso de 0.15.
+    const lento = paceProjection({ pending: 10, done: 10, startedAt: HOY - 1000 * DIA, now: HOY });
     const piso = new Date(HOY + Math.ceil(10 / MIN_PACE) * DIA);
     expect(lento).toContain(`del ${piso.getDate()} de ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][piso.getMonth()]}`);
   });

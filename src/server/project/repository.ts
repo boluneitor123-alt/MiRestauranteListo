@@ -9,7 +9,7 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { getPrisma } from '../licensing/prismaStore';
-import { emptyProjectState, type ProjectState } from '@/domain/projectState';
+import { emptyProjectState, safeAccent, type ProjectState } from '@/domain/projectState';
 import type { Ingredient } from '@/domain/types';
 import type { UnitCode } from '@/domain/units';
 import { BUDGET_CONCEPTS, FIXED_CONCEPTS } from '@/content/catalog';
@@ -194,7 +194,11 @@ export class PrismaProjectRepository implements ProjectRepository {
       },
       fcTarget: project.fcTarget,
       layout: project.layout,
-      settings: { ...base.settings, ...((project.settings as Record<string, unknown>) ?? {}) } as ProjectState['settings'],
+      settings: (() => {
+        const guardados = { ...base.settings, ...((project.settings as Record<string, unknown>) ?? {}) };
+        // El acento se repone si lo guardado no es un color.
+        return { ...guardados, accent: safeAccent(guardados.accent) } as ProjectState['settings'];
+      })(),
     };
   }
 

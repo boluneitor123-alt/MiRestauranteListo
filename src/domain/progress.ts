@@ -188,15 +188,20 @@ const MESES = [
 
 /** Ritmo mínimo con el que se proyecta: menos de esto se lee como "nunca". */
 export const MIN_PACE = 0.15;
-/** Ritmo que se supone mientras el dueño no ha completado su primera tarea. */
-export const ASSUMED_PACE = 0.4;
+/**
+ * Tareas hechas antes de atreverse a proyectar una fecha. Con menos, el ritmo
+ * todavía no dice nada: una tarea el primer día proyectaría tres meses y otra
+ * el segundo, seis. Hasta llegar aquí se anima, no se estima.
+ */
+export const PACE_MIN_TASKS = 10;
 
 /**
  * "Te faltan 78 tareas. A tu ritmo actual, abres alrededor del 28 de septiembre."
  *
  * Portado del prototipo. El ritmo son las tareas hechas entre los días que
- * lleva usando la app; mientras no completa ninguna se supone un ritmo de
- * arranque para no proyectar al infinito.
+ * lleva usando la app. Con menos de `PACE_MIN_TASKS` hechas no se estima nada:
+ * el ritmo todavía no es un ritmo, y una fecha inventada a esas alturas
+ * desanima en vez de ayudar.
  */
 export function paceProjection(input: {
   /** Tareas que le faltan. */
@@ -208,9 +213,12 @@ export function paceProjection(input: {
   now: number;
 }): string {
   if (input.pending <= 0) return 'Terminaste tu ruta completa.';
+  if (input.done < PACE_MIN_TASKS) {
+    return `Vas muy bien. Con ${PACE_MIN_TASKS} tareas hechas te digo, a tu ritmo, para cuándo abres.`;
+  }
 
   const daysIn = Math.max(1, Math.round((input.now - input.startedAt) / DAY_MS));
-  const pace = input.done > 0 ? input.done / daysIn : ASSUMED_PACE;
+  const pace = input.done / daysIn;
   const daysLeft = Math.ceil(input.pending / Math.max(MIN_PACE, pace));
   const day = new Date(input.now + daysLeft * DAY_MS);
 

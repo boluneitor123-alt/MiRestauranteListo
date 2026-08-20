@@ -134,7 +134,7 @@ export interface ProjectState {
   settings: AppSettings;
 }
 
-/** Los seis acentos de Ajustes (const ACCENTS del prototipo). El primero es la marca. */
+/** Los seis acentos de Ajustes (const ACCENTS del prototipo). */
 export const ACCENT_OPTIONS = [
   { name: 'Naranja', value: '#e07a2b' },
   { name: 'Terracota', value: '#c67139' },
@@ -144,15 +144,38 @@ export const ACCENT_OPTIONS = [
   { name: 'Ciruela', value: '#8d3f6d' },
 ] as const;
 
-/** El naranja de marca. Con él manda la rampa escrita a mano en globals.css. */
+/**
+ * El naranja con el que está escrita a mano la rampa de `globals.css`. No es
+ * el color por defecto de la app: es el único acento cuyos tonos 100–900 no se
+ * derivan, sino que vienen hexadecimal por hexadecimal del diseño.
+ */
 export const BRAND_ACCENT = ACCENT_OPTIONS[0].value;
+
+/** Un acento válido es un hexadecimal de 6 dígitos. */
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/**
+ * Repone el acento cuando lo guardado no es un color: un respaldo editado a
+ * mano, un valor viejo o basura. Nunca deja la app sin color.
+ */
+export function safeAccent(value: unknown): string {
+  return typeof value === 'string' && HEX.test(value.trim()) ? value.trim() : DEFAULT_ACCENT;
+}
+
+/**
+ * El color con el que arranca una cuenta nueva: el azul de la lista.
+ *
+ * Quien ya eligió el suyo se queda con el suyo — esto sólo decide con cuál
+ * empiezan las cuentas nuevas y con cuál se repone un color guardado inválido.
+ */
+export const DEFAULT_ACCENT = ACCENT_OPTIONS[4].value;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   alerts: true,
   weekly: true,
   saveOnDevice: true,
   currency: 'MXN',
-  accent: ACCENT_OPTIONS[0].value,
+  accent: DEFAULT_ACCENT,
   dark: false,
   tourDone: false,
   exampleHidden: false,
@@ -441,7 +464,7 @@ export function importBackup(input: unknown): ProjectState {
       // El prototipo llamaba `offline` a "guardar en el teléfono".
       saveOnDevice: asBoolean(settings.saveOnDevice ?? settings.offline, DEFAULT_SETTINGS.saveOnDevice),
       currency: settings.currency === 'USD' ? 'USD' : 'MXN',
-      accent: asString(settings.accent, DEFAULT_SETTINGS.accent),
+      accent: safeAccent(settings.accent),
       dark: asBoolean(settings.dark, DEFAULT_SETTINGS.dark),
       tourDone: asBoolean(settings.tourDone, DEFAULT_SETTINGS.tourDone),
       exampleHidden: asBoolean(settings.exampleHidden, DEFAULT_SETTINGS.exampleHidden),
