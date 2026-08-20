@@ -33,6 +33,11 @@ export class MemoryAuthStore implements AuthStore {
     if (user) this.users.set(userId, { ...user, passwordHash });
   }
 
+  async updateRole(userId: string, role: UserRole): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) this.users.set(userId, { ...user, role });
+  }
+
   async createSession(session: AuthSession): Promise<AuthSession> {
     this.sessions.set(session.token, session);
     return session;

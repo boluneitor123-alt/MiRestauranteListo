@@ -65,7 +65,7 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | --- | --- | --- |
 | `DATABASE_URL` | Tu base de Neon. | Sí |
 | `APP_URL` | URL pública del sitio (`https://…`). Stripe regresa aquí. | Sí |
-| `OWNER_EMAIL` | Tu correo. La cuenta que se registre con él entra al panel. | Sí |
+| `OWNER_EMAIL` | Tu correo. La cuenta con ese correo entra al panel. | Sí |
 | `ADMIN_TOKEN` | Respaldo para operar la API sin sesión. Invéntalo largo. | Sí |
 | `STRIPE_SECRET_KEY` | Llave secreta de Stripe (`sk_live_…`). | Sí, para cobrar |
 | `STRIPE_WEBHOOK_SECRET` | Firma del webhook (`whsec_…`). | Sí, para cobrar |
@@ -73,11 +73,21 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | `META_PIXEL_ID` | Medición de la landing. | No |
 | `META_CAPI_TOKEN` | API de Conversiones de Meta. | No |
 
-**Cómo se entra al panel.** Captura tu correo en `OWNER_EMAIL` y crea tu cuenta
-en la app con ese mismo correo. Al iniciar sesión, el servidor ve que tu cuenta
-tiene permiso de administrador y te lleva a `/admin` en vez de al tablero. No
-hay una lista de correos dentro del código del navegador: quién es
+**Cómo se entra al panel.** Captura tu correo en `OWNER_EMAIL` y entra a la app
+con ese mismo correo. Al iniciar sesión, el servidor compara tu correo contra
+la variable, guarda el permiso en tu cuenta y te lleva a `/admin` en vez de al
+tablero. No hay una lista de correos dentro del código del navegador: quién es
 administrador se guarda en la base de datos y sólo lo lee el servidor.
+
+El permiso se revisa **en cada entrada**, no sólo al crear la cuenta. Así que
+si tu cuenta ya existía desde antes de capturar la variable, no hay que hacer
+nada especial: entras otra vez y el permiso queda. Si cambias `OWNER_EMAIL` a
+otro correo, el anterior pierde el panel la próxima vez que entre.
+
+Con `OWNER_EMAIL` **sin capturar**, nadie gana ni pierde el permiso: se queda
+como estaba. Es a propósito — un despliegue al que se le olvidó la variable no
+debe dejarte fuera de tu propio panel, porque no hay pantalla para devolverte
+el acceso.
 
 `ADMIN_TOKEN` lo inventas tú. Para generarlo:
 
@@ -96,8 +106,9 @@ este sitio.
 1. Entra a `https://TU-DOMINIO/app`, crea una cuenta y contesta el diagnóstico.
 2. Cierra sesión y vuelve a entrar: debe llevarte directo a tu tablero con tu
    avance. Si eso pasa, la base está bien conectada.
-3. Crea tu cuenta con el correo de `OWNER_EMAIL` y entra: debe llevarte a
-   `https://TU-DOMINIO/admin`. Revisa Ajustes.
+3. Entra con el correo de `OWNER_EMAIL`: debe llevarte a
+   `https://TU-DOMINIO/admin`. Revisa Ajustes. Si tu cuenta ya existía, basta
+   con volver a iniciar sesión.
 4. Haz una compra real de prueba desde el paywall de la app. Al volver, la app
    debe desbloquearse sola, sin que escribas ningún código. En `/admin` →
    Licencias debe aparecer el código con estado "Activada".

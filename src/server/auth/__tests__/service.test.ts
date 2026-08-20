@@ -175,3 +175,62 @@ describe('rol de la cuenta (LEEME: nunca una lista en el cliente)', () => {
     expect(await conDueño('', 'jefa@mirestaurantelisto.com')).toBe('owner');
   });
 });
+
+describe('el rol se revisa en cada entrada, no sólo al registrarse', () => {
+  const CUENTA = { name: 'Jefa', email: 'jefa@mirestaurantelisto.com', password: 'contrasena-larga' };
+
+  /** Registra con un OWNER_EMAIL y entra con otro. */
+  const registrarYEntrar = async (alRegistrar: string | undefined, alEntrar: string | undefined) => {
+    const previo = process.env.OWNER_EMAIL;
+    const poner = (v: string | undefined) => {
+      if (v === undefined) delete process.env.OWNER_EMAIL;
+      else process.env.OWNER_EMAIL = v;
+    };
+    try {
+      const store = new MemoryAuthStore();
+      const service = new AuthService(store);
+      poner(alRegistrar);
+      const registro = await service.register(CUENTA);
+      if (!registro.ok) throw new Error('registro falló');
+      poner(alEntrar);
+      const entrada = await service.login({ email: CUENTA.email, password: CUENTA.password });
+      if (!entrada.ok) throw new Error('entrada falló');
+      const guardado = await store.findUserByEmail(CUENTA.email);
+      return { registro: registro.user.role, sesion: entrada.user.role, guardado: guardado?.role };
+    } finally {
+      poner(previo);
+    }
+  };
+
+  it('promueve la cuenta que se registró antes de configurar OWNER_EMAIL', async () => {
+    // Es el caso real: la cuenta existía desde antes y quedó congelada.
+    const r = await registrarYEntrar(undefined, CUENTA.email);
+    expect(r.registro).toBe('owner');
+    expect(r.sesion).toBe('admin');
+    expect(r.guardado).toBe('admin');
+  });
+
+  it('degrada al que dejó de ser el dueño cuando la variable cambia', async () => {
+    const r = await registrarYEntrar(CUENTA.email, 'otra@mirestaurantelisto.com');
+    expect(r.registro).toBe('admin');
+    expect(r.sesion).toBe('owner');
+    expect(r.guardado).toBe('owner');
+  });
+
+  it('con OWNER_EMAIL sin configurar no toca el rol guardado', async () => {
+    // Un despliegue al que se le olvidó la variable no debe dejar sin panel al
+    // dueño: no hay pantalla para devolverle el acceso.
+    const r = await registrarYEntrar(CUENTA.email, undefined);
+    expect(r.registro).toBe('admin');
+    expect(r.sesion).toBe('admin');
+    expect(r.guardado).toBe('admin');
+
+    const vacia = await registrarYEntrar(CUENTA.email, '');
+    expect(vacia.guardado).toBe('admin');
+  });
+
+  it('deja en paz a quien ya tiene el rol correcto', async () => {
+    expect((await registrarYEntrar(CUENTA.email, CUENTA.email)).guardado).toBe('admin');
+    expect((await registrarYEntrar('otra@x.mx', 'otra@x.mx')).guardado).toBe('owner');
+  });
+});

@@ -43,6 +43,10 @@ export class PrismaAuthStore implements AuthStore {
     await this.db.user.update({ where: { id: userId }, data: { passwordHash } });
   }
 
+  async updateRole(userId: string, role: UserRole): Promise<void> {
+    await this.db.user.update({ where: { id: userId }, data: { role } });
+  }
+
   async createSession(session: AuthSession): Promise<AuthSession> {
     await this.db.session.create({
       data: {

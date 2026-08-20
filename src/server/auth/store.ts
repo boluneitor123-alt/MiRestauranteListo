@@ -26,6 +26,7 @@ export interface AuthStore {
   findUserById(id: string): Promise<AuthUser | undefined>;
   createUser(data: { email: string; name: string; passwordHash: string; role?: UserRole }): Promise<AuthUser>;
   updatePassword(userId: string, passwordHash: string): Promise<void>;
+  updateRole(userId: string, role: UserRole): Promise<void>;
 
   createSession(session: AuthSession): Promise<AuthSession>;
   findSession(token: string): Promise<AuthSession | undefined>;

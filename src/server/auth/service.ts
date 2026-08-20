@@ -56,11 +56,29 @@ const publicUser = (user: AuthUser): PublicUser => ({
 
 /**
  * El correo del dueño va por variable de entorno, nunca en una lista dentro
- * del código del cliente: esa cuenta se crea directamente como admin.
+ * del código del cliente: esa cuenta entra al panel de control.
  */
 export function roleForEmail(email: string): UserRole {
   const owner = normalizeEmail(process.env.OWNER_EMAIL ?? '');
   return owner && normalizeEmail(email) === owner ? 'admin' : 'owner';
+}
+
+/**
+ * Qué rol debe quedar guardado al entrar, o `undefined` si no hay que tocarlo.
+ *
+ * El rol se decidía sólo al crear la cuenta, así que una cuenta registrada
+ * antes de configurar `OWNER_EMAIL` se quedaba de emprendedor para siempre y
+ * el panel era inalcanzable. Ahora la variable de entorno manda en cada
+ * entrada: promueve al correo del dueño y degrada al que dejó de serlo.
+ *
+ * Con `OWNER_EMAIL` sin configurar no se toca nada. Si no, un despliegue al
+ * que se le olvidó la variable degradaría al dueño sin querer, y no hay
+ * pantalla para devolverle el acceso.
+ */
+export function roleSync(email: string, stored: UserRole): UserRole | undefined {
+  if (!normalizeEmail(process.env.OWNER_EMAIL ?? '')) return undefined;
+  const esperado = roleForEmail(email);
+  return esperado === stored ? undefined : esperado;
 }
 
 export class AuthService {
@@ -96,6 +114,14 @@ export class AuthService {
     const stored = user?.passwordHash ?? '';
     const valid = await verifyPassword(input.password || '', stored);
     if (!user || !valid) return this.fail('credenciales-invalidas');
+
+    // El rol se revisa contra OWNER_EMAIL en cada entrada, no sólo al crear la
+    // cuenta: si no, cambiar la variable no sirve de nada.
+    const role = roleSync(email, user.role);
+    if (role) {
+      await this.store.updateRole(user.id, role);
+      return this.startSession({ ...user, role }, input.deviceId);
+    }
 
     return this.startSession(user, input.deviceId);
   }
