@@ -104,6 +104,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         deliveryCommission: dish.deliveryCommission,
         section: dish.section as ProjectState['dishes'][number]['section'],
         popularity: dish.popularity as ProjectState['dishes'][number]['popularity'],
+        star: dish.star,
         ingredients: dish.ingredients.map((ingredient) => ({
           id: ingredient.id,
           name: ingredient.name,
@@ -188,6 +189,9 @@ export class PrismaProjectRepository implements ProjectRepository {
       },
       delivery: { ...base.delivery, ...((project.delivery as Record<string, unknown>) ?? {}) } as ProjectState['delivery'],
       ads: { ...base.ads, ...((project.ads as Record<string, unknown>) ?? {}) } as ProjectState['ads'],
+      ignoredActions: {
+        ...((project.ignoredActions as Record<string, boolean>) ?? {}),
+      },
       fcTarget: project.fcTarget,
       layout: project.layout,
       settings: { ...base.settings, ...((project.settings as Record<string, unknown>) ?? {}) } as ProjectState['settings'],
@@ -219,6 +223,7 @@ export class PrismaProjectRepository implements ProjectRepository {
           stressSales: Math.round(state.stress.sales),
           delivery: { ...state.delivery },
           ads: { ...state.ads },
+          ignoredActions: { ...state.ignoredActions },
           fcTarget: Math.round(state.fcTarget),
           layout: state.layout,
         },
@@ -244,6 +249,7 @@ export class PrismaProjectRepository implements ProjectRepository {
           stressSales: Math.round(state.stress.sales),
           delivery: { ...state.delivery },
           ads: { ...state.ads },
+          ignoredActions: { ...state.ignoredActions },
           fcTarget: Math.round(state.fcTarget),
           layout: state.layout,
         },
@@ -307,6 +313,7 @@ export class PrismaProjectRepository implements ProjectRepository {
             deliveryCommission: dish.deliveryCommission ?? 28,
             section: dish.section ?? 'Fuertes',
             popularity: dish.popularity ?? 'media',
+            star: dish.star ?? false,
             position,
           },
         });

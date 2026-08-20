@@ -3,6 +3,7 @@
  */
 
 import { dishMetrics, type CostingContext, EMPTY_CONTEXT } from './costing';
+import { money } from './format';
 import { semaphoreLevel } from './semaphore';
 import { MENU_SECTIONS, type Dish, type MenuSection, type Popularity, resolveDish } from './types';
 
@@ -239,3 +240,220 @@ export const MENU_LAYOUT_RULES = [
 ] as const;
 
 export { MENU_SECTIONS };
+
+/* ───────────────────────────  Tu plan de acción  ──────────────────────────── */
+
+/**
+ * El plan de acción de Mi Menú (`menuMoney()` del prototipo).
+ *
+ * Toma la carta capturada, la proyecta sobre los platillos que esperas vender
+ * al día y saca los cambios que mueven dinero, ordenados por cuánto mueve cada
+ * uno. Cada cambio se puede aplicar de verdad sobre el platillo.
+ */
+
+/** Cuánto pesa cada popularidad al repartir los platillos del día. */
+export const POPULARITY_WEIGHT: Record<Popularity, number> = { alta: 5, media: 3, baja: 1 };
+
+/** Platillos al día sobre los que se proyecta, cuando el usuario no eligió. */
+export const DEFAULT_DAILY_MIX = 100;
+
+/** Las cuatro opciones de "Proyectado sobre" del prototipo. */
+export const DAILY_MIX_OPTIONS = [60, 100, 150, 220] as const;
+
+/** Días al mes con los que el prototipo proyecta la utilidad de la carta. */
+export const DAYS_PER_MONTH = 30;
+
+/** Arriba de este food cost, el platillo pide subir de precio. */
+export const RAISE_PRICE_FC = 33;
+/** Food cost al que queda después de subirle. */
+export const RAISE_PRICE_TARGET_FC = 0.32;
+/** El precio propuesto se redondea a múltiplos de esto. */
+export const PRICE_STEP = 5;
+/** Hasta este food cost el platillo es lo bastante rentable para empujarlo. */
+export const PUSH_FC = 30;
+/** Arriba de este food cost, y vendiéndose poco, el platillo estorba. */
+export const DROP_FC = 40;
+/** Una sugerencia se muestra sólo si mueve al menos esto al mes. */
+export const MIN_ACTION_IMPACT = 100;
+/** Cuántas sugerencias se muestran a la vez. */
+export const MAX_ACTIONS = 5;
+
+export type MenuActionKind = 'Subir precio' | 'Empujar en la carta' | 'Sacar de la carta';
+
+export interface MenuAction {
+  /** Identidad estable de la sugerencia: es la que se archiva. */
+  key: string;
+  kind: MenuActionKind;
+  dishId: string;
+  dishName: string;
+  /** Cuánto dinero mueve al mes. */
+  impact: number;
+  title: string;
+  body: string;
+  /** Texto del botón que lo aplica. */
+  cta: string;
+  /** Precio propuesto. Sólo en "Subir precio". */
+  targetPrice?: number;
+}
+
+export interface MenuMoney {
+  /** Hay al menos un platillo con precio: sin eso no hay nada que proyectar. */
+  ready: boolean;
+  /** Platillos al día sobre los que se proyectó. */
+  daily: number;
+  /** Utilidad bruta al mes con la carta de hoy. */
+  monthly: number;
+  /** La misma utilidad si aplicas las sugerencias que se muestran. */
+  monthlyAfter: number;
+  /** La diferencia entre las dos. */
+  upside: number;
+  /**
+   * Food cost de toda la carta, ponderado por lo que se vende (no promedio
+   * simple): un platillo caro de producir importa poco si nadie lo pide.
+   */
+  weightedFoodCost: number;
+  /** Las sugerencias vivas, de la que más mueve a la que menos. */
+  actions: MenuAction[];
+  /** Las que el usuario archivó con "No, gracias". */
+  archived: MenuAction[];
+}
+
+/** Clave de una sugerencia: el tipo y el platillo. */
+export const menuActionKey = (kind: MenuActionKind, dishId: string): string => `${kind}|${dishId}`;
+
+export function menuMoney(
+  dishes: readonly Dish[],
+  ctx: CostingContext = EMPTY_CONTEXT,
+  options: { daily?: number; ignored?: Record<string, boolean> } = {},
+): MenuMoney {
+  const daily = options.daily && options.daily > 0 ? options.daily : DEFAULT_DAILY_MIX;
+  const ignored = options.ignored ?? {};
+
+  const priced = dishes
+    .map((dish) => ({ dish: resolveDish(dish), m: dishMetrics(dish, ctx) }))
+    .filter((d) => d.m.hasPrice);
+
+  if (!priced.length) {
+    return {
+      ready: false,
+      daily,
+      monthly: 0,
+      monthlyAfter: 0,
+      upside: 0,
+      weightedFoodCost: 0,
+      actions: [],
+      archived: [],
+    };
+  }
+
+  const weightSum = priced.reduce((a, d) => a + POPULARITY_WEIGHT[d.dish.popularity], 0) || 1;
+  /** Piezas al día de un platillo, repartiendo el mix por popularidad. */
+  const units = (popularity: Popularity) =>
+    Math.max(1, Math.round((POPULARITY_WEIGHT[popularity] / weightSum) * daily));
+
+  const perDay = priced.reduce((a, d) => a + units(d.dish.popularity) * (d.m.grossProfit ?? 0), 0);
+  const monthly = perDay * DAYS_PER_MONTH;
+  const soldCost = priced.reduce((a, d) => a + units(d.dish.popularity) * d.m.costPerPortion, 0);
+  const soldNet = priced.reduce((a, d) => a + units(d.dish.popularity) * d.m.netPrice, 0);
+  const weightedFoodCost = soldNet ? Math.round((soldCost / soldNet) * 100) : 0;
+  const averageProfit = daily ? perDay / daily : 0;
+
+  const all: MenuAction[] = [];
+  for (const { dish, m } of priced) {
+    const fc = m.foodCost ?? 0;
+    const u = units(dish.popularity);
+    const profit = m.grossProfit ?? 0;
+    // Cuánto del precio de lista queda después del IVA: el precio propuesto se
+    // captura como precio de lista, pero el food cost se mide sobre el neto.
+    const netShare = m.netPrice / m.price;
+
+    if (fc > RAISE_PRICE_FC) {
+      const target =
+        Math.ceil(m.costPerPortion / RAISE_PRICE_TARGET_FC / netShare / PRICE_STEP) * PRICE_STEP;
+      if (target > m.price) {
+        all.push({
+          key: menuActionKey('Subir precio', dish.id),
+          kind: 'Subir precio',
+          dishId: dish.id,
+          dishName: dish.name,
+          impact: (target - m.price) * netShare * u * DAYS_PER_MONTH,
+          targetPrice: target,
+          title: `Sube ${dish.name} a ${money(target)}`,
+          body:
+            `Su insumo se lleva ${Math.round(fc)}% de lo que cobras. A ${money(target)} baja a 32% ` +
+            `y sigue dentro de lo que cobra el mercado. Vende ${u} al día.`,
+          cta: `Aplicar ${money(target)}`,
+        });
+      }
+    }
+
+    if (fc <= PUSH_FC && dish.popularity !== 'alta') {
+      const starUnits = Math.round((POPULARITY_WEIGHT.alta / weightSum) * daily);
+      const impact = (starUnits - u) * profit * DAYS_PER_MONTH;
+      if (impact > 0) {
+        all.push({
+          key: menuActionKey('Empujar en la carta', dish.id),
+          kind: 'Empujar en la carta',
+          dishId: dish.id,
+          dishName: dish.name,
+          impact,
+          title: `Destaca ${dish.name}`,
+          body:
+            `Deja ${money(profit)} por pieza y casi nadie lo pide. Súbelo al primer renglón de su ` +
+            'sección y ponle recuadro: es tu platillo más rentable desaprovechado.',
+          cta: 'Marcar como destacado',
+        });
+      }
+    }
+
+    if (fc > DROP_FC && dish.popularity === 'baja') {
+      all.push({
+        key: menuActionKey('Sacar de la carta', dish.id),
+        kind: 'Sacar de la carta',
+        dishId: dish.id,
+        dishName: dish.name,
+        impact: u * DAYS_PER_MONTH * Math.max(0, averageProfit - profit),
+        title: `Saca ${dish.name}`,
+        body:
+          `Food cost de ${Math.round(fc)}% y casi no se vende: te obliga a comprar insumos que solo ` +
+          'usa él, y lo que no se vende se convierte en merma. Si esas ventas se van a tus otros ' +
+          'platillos, ganas más.',
+        cta: 'Quitar del menú',
+      });
+    }
+  }
+
+  all.sort((a, b) => b.impact - a.impact);
+  const worth = all.filter((a) => a.impact >= MIN_ACTION_IMPACT);
+  const actions = worth.filter((a) => !ignored[a.key]).slice(0, MAX_ACTIONS);
+  const archived = worth.filter((a) => ignored[a.key]);
+  const upside = actions.reduce((a, x) => a + x.impact, 0);
+
+  return {
+    ready: true,
+    daily,
+    monthly,
+    monthlyAfter: monthly + upside,
+    upside,
+    weightedFoodCost,
+    actions,
+    archived,
+  };
+}
+
+/** Cómo queda la carta después de aplicar una sugerencia. */
+export function applyMenuAction(dishes: readonly Dish[], action: MenuAction): Dish[] {
+  if (action.kind === 'Sacar de la carta') return dishes.filter((d) => d.id !== action.dishId);
+  return dishes.map((d) => {
+    if (d.id !== action.dishId) return d;
+    if (action.kind === 'Subir precio') return { ...d, price: action.targetPrice ?? d.price };
+    return { ...d, star: true };
+  });
+}
+
+/** El aviso que se muestra al aplicar una sugerencia. */
+export function menuActionFlash(action: MenuAction): string {
+  if (action.kind === 'Subir precio') return `${action.dishName} ahora cuesta ${money(action.targetPrice ?? 0)}`;
+  if (action.kind === 'Empujar en la carta') return `${action.dishName} marcado para destacar en la carta`;
+  return `${action.dishName} salió de tu carta`;
+}

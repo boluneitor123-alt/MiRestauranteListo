@@ -74,6 +74,8 @@ export interface Dish {
   deliveryCommission?: number;
   section?: MenuSection;
   popularity?: Popularity;
+  /** Destacado en la carta: va al primer renglón de su sección, con recuadro. */
+  star?: boolean;
 }
 
 /** Valores por defecto de un platillo, iguales a los del prototipo. */

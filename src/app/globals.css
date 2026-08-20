@@ -619,3 +619,22 @@ textarea {
   height: 100%;
   display: block;
 }
+
+/*
+ * La lectura del food cost de la carta va a la derecha del porcentaje, como en
+ * el prototipo. En pantallas angostas no cabe en esa columna: baja al renglón
+ * de abajo y se alinea a la izquierda, que es donde el ojo la busca.
+ */
+.mrl-fc-read {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .mrl-fc-read {
+    flex-basis: 100%;
+    text-align: left;
+    margin-top: 8px;
+  }
+}

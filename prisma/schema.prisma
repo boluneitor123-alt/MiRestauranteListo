@@ -106,6 +106,8 @@ model Project {
   /// anuncios, para poder volver a abrir cada análisis.
   delivery       Json @default("{}")
   ads            Json @default("{}")
+  /// Sugerencias del plan de acción de Mi Menú que el dueño archivó.
+  ignoredActions Json @default("{}")
   fcTarget    Int     @default(30)
   layout      String  @default("p2")
 
@@ -180,6 +182,8 @@ model Dish {
   deliveryCommission Float @default(28)
   section          String  @default("Fuertes")
   popularity       String  @default("media")
+  /// Destacado en la carta desde el plan de acción de Mi Menú.
+  star             Boolean @default(false)
   position         Int     @default(0)
 
   createdAt DateTime @default(now())

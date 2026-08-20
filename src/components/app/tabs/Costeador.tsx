@@ -11,6 +11,7 @@ import { dishLimitNotice, type AccessLevel } from '@/domain/access';
 import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, EmptyState, H, Muted, Pill, RADIUS, Row, text } from '@/components/ui';
+import { PlanDeAccion, PlanTeaser } from '@/components/app/costeador/PlanDeAccion';
 
 export type CostView = 'platillos' | 'menu' | 'subrecetas';
 
@@ -33,6 +34,8 @@ export function Costeador({
   onOpenSubrecipe,
   onNewSubrecipe,
   onOpenPaywall,
+  onUpdate,
+  onFlash,
 }: {
   state: ProjectState;
   view: CostView;
@@ -44,6 +47,8 @@ export function Costeador({
   onOpenSubrecipe: (id: string) => void;
   onNewSubrecipe: () => void;
   onOpenPaywall: () => void;
+  onUpdate: (fn: (s: ProjectState) => ProjectState) => void;
+  onFlash: (message: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -178,6 +183,11 @@ export function Costeador({
             ))}
           </div>
 
+          {/* El potencial de la carta se anuncia aquí y se abre en Mi Menú. */}
+          {can.menu && typeFilter !== 'subrecetas' ? (
+            <PlanTeaser state={state} onOpen={() => onChangeView('menu')} />
+          ) : null}
+
           {typeFilter === 'subrecetas' ? (
             <SubrecipeList state={state} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} />
           ) : rows.length ? (
@@ -258,7 +268,13 @@ export function Costeador({
 
       {view === 'menu' ? (
         can.menu ? (
-          <MenuKpis state={state} />
+          <>
+            <PlanDeAccion state={state} onUpdate={onUpdate} onFlash={onFlash} />
+            <H size={19} style={{ marginTop: 8 }}>
+              Tu carta al detalle
+            </H>
+            <MenuKpis state={state} />
+          </>
         ) : (
           <LockedView
             title="Mi Menú se abre con el pago único"

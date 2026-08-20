@@ -95,11 +95,13 @@ ellos desde la app.
 
 ## 4. Mi Menú, entregables y landing
 
-- [ ] Plan de acción de Mi Menú: la lista de cambios ordenada por cuánto dinero
-      mueve cada uno, con su explicación y un botón que lo aplica de verdad
-      (subir precio, sacar de la carta, ajustar porción). En el prototipo busca
-      "Tu plan de acción" y los objetos con `kind`, `imp`, `title`, `body`,
-      `cta`, `run`. Dominio: `src/domain/menu.ts`.
+- [x] Plan de acción de Mi Menú. `menuMoney()` en `src/domain/menu.ts` y la
+      pantalla en `src/components/app/costeador/PlanDeAccion.tsx`. Trae los
+      tres tipos de cambio del prototipo — subir precio, empujar en la carta y
+      sacar de la carta —, ordenados por cuánto dinero mueve cada uno, con el
+      botón que lo aplica de verdad, "No, gracias" para archivarlo y la caja de
+      archivadas con "Reactivar" y "Restaurar todas". El prototipo no tiene un
+      cambio de "ajustar porción": no lo inventé.
 - [ ] Los seis entregables generan su documento con los datos del usuario, listo
       para imprimir. Ya existen `print/FichaTecnica.tsx` y
       `print/ResumenFinanciero.tsx`; faltan Plan de apertura, Carta menú,

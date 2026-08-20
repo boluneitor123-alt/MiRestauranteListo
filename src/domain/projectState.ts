@@ -122,6 +122,11 @@ export interface ProjectState {
   delivery: DeliveryInput;
   /** Lo último que capturó en el analizador de anuncios. */
   ads: AdsCapture;
+  /**
+   * Sugerencias del plan de acción de Mi Menú archivadas con "No, gracias",
+   * por clave de sugerencia (`tipo|platillo`).
+   */
+  ignoredActions: Record<string, boolean>;
   fcTarget: number;
   layout: string;
   settings: AppSettings;
@@ -177,6 +182,7 @@ export function emptyProjectState(overrides: Partial<ProjectState> = {}): Projec
     stress: { ...NO_STRESS },
     delivery: { ...DELIVERY_DEFAULTS },
     ads: { ...EMPTY_ADS },
+    ignoredActions: {},
     fcTarget: DEFAULT_FOOD_COST_TARGET,
     layout: DEFAULT_LAYOUT_ID,
     settings: { ...DEFAULT_SETTINGS },
@@ -243,6 +249,7 @@ function importDish(raw: unknown, index: number): Dish {
     deliveryCommission: asNumber(r.deliveryCommission ?? r.commission, 28),
     section: (asString(r.section ?? r.cat, 'Fuertes') as Dish['section']) ?? 'Fuertes',
     popularity: (asString(r.popularity ?? r.pop, 'media') as Dish['popularity']) ?? 'media',
+    star: asBoolean(r.star, false),
   };
 }
 
@@ -419,6 +426,10 @@ export function importBackup(input: unknown): ProjectState {
       results: asNumber(ads.results, 0),
       visits: asNumber(ads.visits, 0),
     },
+    // El prototipo lo guardaba como `ignoredActions`.
+    ignoredActions: Object.fromEntries(
+      Object.entries(asRecord(raw.ignoredActions)).filter(([, v]) => v === true).map(([k]) => [k, true]),
+    ),
     fcTarget: asNumber(raw.fcTarget, base.fcTarget),
     layout: asString(raw.layout, base.layout),
     settings: {

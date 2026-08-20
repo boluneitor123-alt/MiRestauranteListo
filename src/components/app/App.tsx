@@ -521,6 +521,8 @@ export function App() {
             onOpenSubrecipe={openSubrecipe}
             onNewSubrecipe={() => openSubrecipe()}
             onOpenPaywall={() => setScreen('paywall')}
+            onUpdate={update}
+            onFlash={flash}
           />
         );
 
