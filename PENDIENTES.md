@@ -86,8 +86,10 @@ ellos desde la app.
 - [x] Las 26 lecciones sin ilustración se pintan sin ella.
 - [x] Respeta la muestra gratis.
 - [x] Probado en módulo libre, módulo de ruta y curso con estrella.
-- [ ] Falta el hueco de imagen con su instrucción visible mientras no haya
-      ilustración: hoy simplemente no se pinta nada.
+- [x] El hueco de imagen ya se pinta: cuando la lección no trae ilustración,
+      se muestra el encargo de la foto (el campo `img`) en un recuadro de
+      línea punteada con su icono de cámara, para que se lea como espacio
+      intencional y no como imagen rota.
 
 ---
 

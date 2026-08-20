@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Lock } from 'lucide-react';
+import { Camera, Check, Lock } from 'lucide-react';
 import { getLesson } from '@/content/lessons';
 import { lessonArt } from '@/content/illustrations';
 import { SAMPLE_LABEL, type TaskAccess } from '@/domain/access';
@@ -11,6 +11,50 @@ function Kicker({ children }: { children: string }) {
   return (
     <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 800, color: text(55) }}>
       {children}
+    </div>
+  );
+}
+
+/**
+ * El hueco de imagen de una lección que todavía no trae ilustración.
+ *
+ * No se deja vacío ni se pinta una imagen rota: se muestra el encargo de la
+ * foto, tal cual viene del campo `img` de la lección. Ese texto le dice al
+ * dueño qué retratar, así que vale por sí solo.
+ */
+function PhotoSlot({ hint }: { hint: string }) {
+  return (
+    <div
+      style={{
+        borderRadius: RADIUS.small,
+        background: 'var(--color-accent-100)',
+        border: '2px dashed var(--color-accent-300)',
+        padding: 14,
+        display: 'flex',
+        gap: 11,
+        alignItems: 'flex-start',
+      }}
+    >
+      <Camera size={18} color="var(--color-accent-700)" strokeWidth={2.4} style={{ flex: 'none', marginTop: 2 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 11,
+            letterSpacing: '.08em',
+            textTransform: 'uppercase',
+            fontWeight: 800,
+            color: 'var(--color-accent-800)',
+          }}
+        >
+          La foto de esta lección
+        </div>
+        <p
+          className="mrl-prose"
+          style={{ margin: '5px 0 0', fontSize: 13.2, lineHeight: 1.5, color: 'var(--color-accent-900)' }}
+        >
+          {hint}
+        </p>
+      </div>
     </div>
   );
 }
@@ -121,6 +165,8 @@ export function Lesson({
           aria-label={lesson.img ?? title}
           dangerouslySetInnerHTML={{ __html: art }}
         />
+      ) : lesson.img ? (
+        <PhotoSlot hint={lesson.img} />
       ) : null}
 
       <section style={{ background: 'var(--color-neutral-200)', borderRadius: RADIUS.small, padding: 13 }}>
