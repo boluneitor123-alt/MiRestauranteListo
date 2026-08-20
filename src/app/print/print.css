@@ -84,6 +84,19 @@
   margin-top: 1mm;
 }
 
+/* El reset global quita las viñetas; en papel los pasos van numerados. */
+.doc ol {
+  list-style: decimal;
+}
+
+.doc ul {
+  list-style: disc;
+}
+
+.doc li::marker {
+  color: #6f6963;
+}
+
 .doc .note {
   background: var(--soft);
   border-radius: 3mm;

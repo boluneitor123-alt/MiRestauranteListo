@@ -56,11 +56,13 @@ const DELIVERABLES: Array<{ title: string; what: string; who: string; href?: str
     title: 'Plan de apertura',
     what: 'Concepto, inversión, punto de equilibrio, menú costeado y calendario de 30 días',
     who: 'Para el banco, un socio o el arrendador',
+    href: '/print/plan-de-apertura',
   },
   {
     title: 'Carta de menú',
     what: 'Qué platillo va en cada cara, en orden de utilidad, con las instrucciones de doblez',
     who: 'Para el impresor o el diseñador',
+    href: '/print/carta-menu',
   },
   {
     title: 'Ficha técnica de platillo',
@@ -78,11 +80,13 @@ const DELIVERABLES: Array<{ title: string; what: string; who: string; href?: str
     title: 'Diagnóstico de anuncios',
     what: 'Si tu anuncio de Meta deja dinero y qué cambiar primero',
     who: 'Para ti, cada lunes',
+    href: '/print/diagnostico-anuncios',
   },
   {
     title: 'Cuenta real de delivery',
     what: 'Cuánto te queda por pedido después de la comisión y el precio que debes poner en la app',
     who: 'Para negociar con Rappi y UberEats',
+    href: '/print/cuenta-delivery',
   },
 ];
 

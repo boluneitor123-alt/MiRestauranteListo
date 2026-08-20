@@ -11,6 +11,8 @@ import {
   menuActionKey,
   menuMoney,
   MAX_ACTIONS,
+  LAYOUT_PRINT_GUIDES,
+  menuPrintTag,
   MIN_ACTION_IMPACT,
   type MenuClass,
 } from '../menu';
@@ -276,5 +278,24 @@ describe('plan de acción de Mi Menú (menuMoney del prototipo)', () => {
     const empujar = m.actions.find((a) => a.kind === 'Empujar en la carta')!;
     expect(applyMenuAction(carta, empujar).find((d) => d.id === 'rentable')?.star).toBe(true);
     expect(menuActionFlash(empujar)).toBe('rentable marcado para destacar en la carta');
+  });
+});
+
+describe('documento de la carta de menú', () => {
+  it('trae guía de armado para los cuatro formatos', () => {
+    for (const format of LAYOUT_FORMATS) {
+      const guide = LAYOUT_PRINT_GUIDES[format.id];
+      expect(guide, format.id).toBeDefined();
+      expect(guide.steps.length).toBeGreaterThan(2);
+      expect(guide.cols).toBeGreaterThan(0);
+    }
+  });
+
+  it('etiqueta el primer platillo de cada sección y los que piden atención', () => {
+    expect(menuPrintTag('estrella', true)).toBe('Destácalo con recuadro');
+    expect(menuPrintTag('estrella', false)).toBe('Estrella');
+    expect(menuPrintTag('vaca', false)).toBe('Revisa su costo');
+    expect(menuPrintTag('rompecabezas', false)).toBe('Empújalo');
+    expect(menuPrintTag('margen justo', false)).toBe('');
   });
 });

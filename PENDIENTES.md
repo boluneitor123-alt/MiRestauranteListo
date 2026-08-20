@@ -102,11 +102,14 @@ ellos desde la app.
       botón que lo aplica de verdad, "No, gracias" para archivarlo y la caja de
       archivadas con "Reactivar" y "Restaurar todas". El prototipo no tiene un
       cambio de "ajustar porción": no lo inventé.
-- [ ] Los seis entregables generan su documento con los datos del usuario, listo
-      para imprimir. Ya existen `print/FichaTecnica.tsx` y
-      `print/ResumenFinanciero.tsx`; faltan Plan de apertura, Carta menú,
-      Diagnóstico de anuncios y Cuenta real de delivery. Referencia:
-      `PlanDeApertura.dc.html` y `CartaMenu.dc.html` en la carpeta de diseño.
+- [x] Los seis entregables ya generan su documento. Los cuatro nuevos:
+      `print/PlanDeApertura.tsx` (`/print/plan-de-apertura`),
+      `print/CartaMenu.tsx` (`/print/carta-menu`),
+      `print/DiagnosticoAnuncios.tsx` (`/print/diagnostico-anuncios`) y
+      `print/CuentaDelivery.tsx` (`/print/cuenta-delivery`). Los seis se abren
+      desde Más › Entregables. Los dos últimos no tienen archivo de diseño:
+      siguen la hoja de estilo de los otros y repiten, palabra por palabra, las
+      lecturas de sus herramientas en la app.
 - [ ] Landing: portar la del prototipo
       (`LandingMiRestauranteListo.dc.html`) — cuaderno de contabilidad,
       calculadora viva, antes y después, tres maquetas de la app, entrada de

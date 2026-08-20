@@ -239,6 +239,80 @@ export const MENU_LAYOUT_RULES = [
   'Un platillo por sección con recuadro o foto: dirige la venta al de mejor margen.',
 ] as const;
 
+/* ──────────────────  Cómo se arma la hoja (documento Carta menú)  ────────── */
+
+export interface LayoutPrintGuide {
+  /** Pie del diagrama del armado. */
+  caption: string;
+  /** Columnas del diagrama: cuántos paneles caben de ancho. */
+  cols: number;
+  /** Instrucciones para el impresor, en orden. */
+  steps: readonly string[];
+}
+
+/** Copiado de `CartaMenu.dc.html`: cada formato se arma distinto. */
+export const LAYOUT_PRINT_GUIDES: Record<string, LayoutPrintGuide> = {
+  p1: {
+    caption: 'Una sola cara impresa',
+    cols: 1,
+    steps: [
+      'Imprime en una sola cara, tamaño carta u oficio.',
+      'Mándala plastificar: con salsa y manos grasosas el papel simple dura dos días.',
+      'Imprime 6 más de las que crees necesitar; siempre se maltrata alguna.',
+    ],
+  },
+  p2: {
+    caption: 'Frente y vuelta de la misma hoja',
+    cols: 2,
+    steps: [
+      'Imprime a doble cara, volteando por el lado largo.',
+      'Verifica que la vuelta no quede de cabeza: es el error más común del impresor.',
+      'Plastifica las dos caras juntas para que no se despeguen.',
+    ],
+  },
+  tri: {
+    caption: 'Una hoja doblada en tres',
+    cols: 3,
+    steps: [
+      'Imprime en hoja carta horizontal y pide dobleces en tercios (doblez tipo carta).',
+      'El panel 1 es el primero que ve el cliente al abrir: ahí van tus estrellas.',
+      'Pide una muestra doblada antes del tiraje completo, para verificar que los dobleces caen entre secciones y no a media lista.',
+      'Deja 8 mm de margen interior en cada doblez o el texto se pierde en el pliegue.',
+    ],
+  },
+  book: {
+    caption: 'Dos hojas grapadas al centro',
+    cols: 2,
+    steps: [
+      'Imprime dos hojas a doble cara y grápalas al centro (encuadernado a caballo).',
+      'Las páginas 2 y 3 se ven juntas cuando está abierta: trátalas como una sola composición.',
+      'La página 4 es la última que se ve: ahí van bebidas y postres, que se piden al final.',
+      'Pide papel de 200 g o más: con menos, la carta se dobla sola en la mesa.',
+    ],
+  },
+};
+
+/** Las ocho reglas que van impresas en el documento de la carta. */
+export const MENU_PRINT_RULES = [
+  'Máximo 7 u 8 platillos por cara. Más opciones confunden y bajan el ticket.',
+  'El precio va junto al nombre, no en columna alineada a la derecha: la columna invita a comparar y a elegir lo más barato.',
+  'Quita el signo de pesos si tu formato lo permite. Se lee más como carta y menos como lista de precios.',
+  'Los dos primeros de cada sección llevan recuadro o fondo distinto. Son los que quieres vender.',
+  'Un solo tipo de letra, dos tamaños: nombre y descripción. Tres tipografías se ven a mano.',
+  'Deja aire: márgenes de 12 mm mínimo y espacio entre secciones. La carta apretada se siente barata.',
+  'Nada de fotos chicas de cada platillo. Si vas a poner foto, que sea una grande y bien iluminada.',
+  'Imprime una prueba y léela a un metro de distancia, sentado. Así la va a leer tu cliente.',
+] as const;
+
+/** La etiqueta que lleva un platillo en la carta, según cómo quedó clasificado. */
+export function menuPrintTag(klass: MenuClass, first: boolean): string {
+  if (first) return 'Destácalo con recuadro';
+  if (klass === 'estrella') return 'Estrella';
+  if (klass === 'vaca') return 'Revisa su costo';
+  if (klass === 'rompecabezas') return 'Empújalo';
+  return '';
+}
+
 export { MENU_SECTIONS };
 
 /* ───────────────────────────  Tu plan de acción  ──────────────────────────── */

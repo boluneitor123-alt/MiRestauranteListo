@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import { Megaphone } from 'lucide-react';
-import { adsBands, adsBudgetPlan, adsMetrics, adsVerdict, type AdsBand, type AdsInput } from '@/domain/ads';
+import {
+  adsBudgetPlan,
+  adsHeadline,
+  adsMetrics,
+  adsReadings,
+  adsVerdict,
+  type AdsBand,
+  type AdsInput,
+  type AdsVerdictKind,
+} from '@/domain/ads';
 import { money } from '@/domain/format';
 import type { AdsCapture } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, RADIUS, ScreenHeader, text } from '@/components/ui';
@@ -83,36 +92,17 @@ export function AdDoctor({
     marginPct,
   };
   const m = adsMetrics(input);
-  const bands = adsBands(m);
   const verdict = adsVerdict(input, m);
   const plan = adsBudgetPlan(monthlyFixed);
 
-  const cabecera = {
-    'sin-datos': {
-      head: 'Captura tus números',
-      sub: 'Con lo que ves en el Administrador de anuncios de Meta te digo en un minuto si tu anuncio sirve.',
-      bg: 'var(--color-neutral-200)',
-      fg: 'var(--color-text)',
-    },
-    'falta-visitas': {
-      head: 'Falta el dato que decide',
-      sub: 'Ya tengo tu costo por mensaje. Captura cuántos llegaron al negocio y te digo si el anuncio deja dinero.',
-      bg: 'var(--color-accent-2-500)',
-      fg: 'var(--color-bg)',
-    },
-    sirve: {
-      head: 'Este anuncio sirve',
-      sub: `Invertiste ${money(input.spend)} y trajiste ${input.visits} clientes que dejan ${money(m.income * (marginPct / 100))} de utilidad. Ganas ${money(m.profit)}. Súbele presupuesto 20% y déjalo correr 3 días más.`,
-      bg: 'var(--color-accent-2-600)',
-      fg: 'var(--color-bg)',
-    },
-    'no-sirve': {
-      head: 'Este anuncio todavía no sirve',
-      sub: `Invertiste ${money(input.spend)} y la utilidad de los ${input.visits} clientes que llegaron suma ${money(m.income * (marginPct / 100))}. Te falta ${money(-m.profit)}. Abajo está qué cambiar, en orden.`,
-      bg: 'var(--color-accent-600)',
-      fg: 'var(--color-bg)',
-    },
-  }[verdict];
+  // El texto vive en el dominio: el documento imprimible dice lo mismo.
+  const COLORES: Record<AdsVerdictKind, { bg: string; fg: string }> = {
+    'sin-datos': { bg: 'var(--color-neutral-200)', fg: 'var(--color-text)' },
+    'falta-visitas': { bg: 'var(--color-accent-2-500)', fg: 'var(--color-bg)' },
+    sirve: { bg: 'var(--color-accent-2-600)', fg: 'var(--color-bg)' },
+    'no-sirve': { bg: 'var(--color-accent-600)', fg: 'var(--color-bg)' },
+  };
+  const cabecera = { ...adsHeadline(input, m, verdict, money), ...COLORES[verdict] };
 
   const campos: { key: keyof typeof raw; label: string; hint: string }[] = [
     { key: 'spend', label: 'Lo que llevas invertido', hint: 'El total gastado en este anuncio, no el diario.' },
@@ -122,71 +112,7 @@ export function AdDoctor({
     { key: 'visits', label: 'De esos, cuántos llegaron', hint: 'Este es el dato que decide. Cuéntalos en tu negocio.' },
   ];
 
-  const filas = m.hasData
-    ? [
-        {
-          label: 'Costo por mensaje o clic',
-          value: money(m.costPerResult),
-          band: bands.costPerResult,
-          read:
-            bands.costPerResult === 'bien'
-              ? 'Está en el rango sano de comida local ($8 a $25). Tu foto y tu texto están haciendo su trabajo.'
-              : bands.costPerResult === 'medio'
-                ? 'Un poco arriba del rango sano. Suele arreglarse cambiando la foto antes que subiendo presupuesto.'
-                : 'Arriba de $40 por mensaje. En comida local eso indica que la foto no detiene o que el radio está muy abierto.',
-          fix:
-            bands.costPerResult === 'bien'
-              ? ''
-              : 'Cambia la foto por una con manos, vapor o movimiento. Si sigue igual, cierra el radio a 3 km.',
-        },
-        {
-          label: 'De los que lo vieron, cuántos respondieron',
-          value: `${m.showRate.toFixed(1)}%`,
-          band: bands.showRate,
-          read:
-            bands.showRate === 'bien'
-              ? `Buena respuesta: de cada 100 que lo ven, ${m.showRate.toFixed(1)} te escriben.`
-              : bands.showRate === 'medio'
-                ? 'Respuesta tibia. El anuncio se ve, pero no convence de dar el paso.'
-                : 'Casi nadie responde. El anuncio llega a la gente pero no le está diciendo por qué venir hoy.',
-          fix:
-            bands.showRate === 'bien'
-              ? ''
-              : 'Revisa la línea 2 de tu texto: necesita una razón con fecha (promoción, día especial, algo que solo tú tienes).',
-        },
-        {
-          label: 'De los que escribieron, cuántos llegaron',
-          value: `${Math.round(m.closeRate)}%`,
-          band: bands.closeRate,
-          read:
-            bands.closeRate === 'bien'
-              ? 'Estás cerrando bien: contestas rápido y das la información que hace falta.'
-              : bands.closeRate === 'medio'
-                ? 'Se te va gente entre el mensaje y la visita. Casi siempre es tiempo de respuesta.'
-                : 'La mayoría escribe y no llega. El problema ya no es el anuncio, es la conversación.',
-          fix:
-            bands.closeRate === 'bien'
-              ? ''
-              : 'Contesta en menos de 10 minutos en horas de venta y deja listas tus 3 respuestas rápidas: menú con precios, ubicación con liga y horario.',
-        },
-        {
-          label: 'Costo real por cliente que llegó',
-          value: input.visits ? money(m.costPerVisit) : 'Sin datos',
-          band: bands.costPerVisit,
-          read: !input.visits
-            ? 'Captura cuántos de los que escribieron llegaron al negocio y aquí verás el número que de verdad importa.'
-            : bands.costPerVisit === 'bien'
-              ? `Te cuesta ${money(m.costPerVisit)} traer a alguien que te deja ${money(m.profitPerCustomer)} de utilidad. Este anuncio se paga solo.`
-              : bands.costPerVisit === 'medio'
-                ? `Te cuesta ${money(m.costPerVisit)} y cada cliente deja ${money(m.profitPerCustomer)}. Todavía ganas, pero el margen es corto.`
-                : `Te cuesta ${money(m.costPerVisit)} traer a alguien que deja ${money(m.profitPerCustomer)}. Con estos números el anuncio te cuesta dinero.`,
-          fix:
-            bands.costPerVisit === 'mal' && input.visits
-              ? `Tu tope para seguir ganando es ${money(m.maxCostPerVisit)} por cliente. Sube el ticket promedio o baja el costo por mensaje antes de subir presupuesto.`
-              : '',
-        },
-      ]
-    : [];
+  const filas = adsReadings(input, m, money);
 
   return (
     <div>
