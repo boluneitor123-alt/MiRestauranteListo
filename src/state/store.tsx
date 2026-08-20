@@ -284,6 +284,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         const fromServer = await loadProject();
         await refreshEntitlement();
+        // El perfil del proyecto hereda nombre y correo de la cuenta: si no,
+        // el tablero saluda con el marcador de posición en vez del nombre.
+        const cuenta = data.user;
+        dispatch({
+          type: 'update',
+          update: (current) => ({
+            ...current,
+            profile: {
+              ...current.profile,
+              name: current.profile.name || cuenta.name,
+              email: current.profile.email || cuenta.email,
+            },
+          }),
+        });
         // Si el servidor todavía no tiene proyecto pero este equipo ya venía
         // capturando, no se manda al usuario a repetir el diagnóstico: su
         // avance local se sube en el siguiente guardado.

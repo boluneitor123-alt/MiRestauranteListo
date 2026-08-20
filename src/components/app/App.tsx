@@ -19,6 +19,7 @@ import { Diagnostic } from './screens/Diagnostic';
 import { Blocked, OfflineGate, Paywall } from './screens/Gates';
 import { Tour } from './screens/Tour';
 import { Celebration, type CelebrationState } from './ruta/Celebration';
+import { InstallSheet, shouldShowInstallSheet } from './screens/InstallSheet';
 import { Inicio } from './tabs/Inicio';
 import { Ruta } from './tabs/Ruta';
 import { Costeador, type CostView } from './tabs/Costeador';
@@ -76,6 +77,11 @@ export function App() {
   const [openTaskKey, setOpenTaskKey] = useState<string | null>(null);
   const [costView, setCostView] = useState<CostView>('platillos');
   const [celebration, setCelebration] = useState<CelebrationState | null>(null);
+  /**
+   * La hoja de instalación se MARCA al terminar de crear la cuenta pero se
+   * MUESTRA cuando el usuario llega al tablero, no en medio del onboarding.
+   */
+  const [installPending, setInstallPending] = useState(false);
   const [numbersView, setNumbersView] = useState<NumbersView>('home');
   const [subScreen, setSubScreen] = useState<SubScreen | null>(null);
   const [dishId, setDishId] = useState<string | null>(null);
@@ -282,6 +288,9 @@ export function App() {
               setTab('inicio');
               return;
             }
+            // Cuenta recién creada: la hoja de instalación queda marcada y
+            // saldrá al llegar al tablero, después del diagnóstico.
+            if (authMode === 'registro') setInstallPending(true);
             setObStep(0);
             setScreen('onboarding');
           }}
@@ -685,6 +694,10 @@ export function App() {
         >
           {toast}
         </div>
+      ) : null}
+
+      {screen === 'app' && shouldShowInstallSheet(platform, installPending) ? (
+        <InstallSheet platform={platform} onClose={() => setInstallPending(false)} onFlash={flash} />
       ) : null}
 
       {celebration ? <Celebration state={celebration} onClose={() => setCelebration(null)} /> : null}

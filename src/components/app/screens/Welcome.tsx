@@ -37,7 +37,7 @@ export function Welcome({ onStart, onSignIn }: { onStart: () => void; onSignIn: 
 
       <p style={{ fontSize: 16, lineHeight: 1.5, maxWidth: 300, color: text(70), marginTop: 14 }}>
         MiRestauranteListo te dice en qué etapa estás, qué te falta, cuánto invertir, cuánto cobrar y cuánto vender
-        para no fracasar.
+        para que te vaya bien.
       </p>
 
       <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
