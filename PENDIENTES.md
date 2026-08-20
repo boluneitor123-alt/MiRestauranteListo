@@ -110,10 +110,19 @@ ellos desde la app.
       desde Más › Entregables. Los dos últimos no tienen archivo de diseño:
       siguen la hoja de estilo de los otros y repiten, palabra por palabra, las
       lecturas de sus herramientas en la app.
-- [ ] Landing: portar la del prototipo
-      (`LandingMiRestauranteListo.dc.html`) — cuaderno de contabilidad,
-      calculadora viva, antes y después, tres maquetas de la app, entrada de
-      doce números. Hoy `src/app/page.tsx` tiene la estructura anterior.
+- [x] Landing portada entera: hoja de contabilidad, calculadora viva,
+      marquesina tachada, las cifras en modo noche, las cuatro herramientas,
+      las tres maquetas de la app, el antes y después, la confesión, el temario
+      de los 14 módulos, la cuenta clara, la hoja de pedido con la calculadora
+      de vuelta, las ocho preguntas, el cierre y la barra fija.
+      `src/app/page.tsx`, `src/app/landing.css` y la copia en
+      `src/content/landing.ts`. Dos diferencias, a propósito:
+      la hoja de acceso del prototipo (correo y contraseña dentro de la landing,
+      con su lista `ADMIN_EMAILS` del lado del cliente) no se portó: los dos
+      botones llevan a `/app`, que ya tiene el registro de tres pasos y decide
+      el destino por el rol del servidor. Y el diagnóstico de giro y etapa que
+      tenía la landing anterior desaparece, porque la landing del diseño no lo
+      trae.
 
 ---
 
