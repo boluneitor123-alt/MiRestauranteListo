@@ -46,7 +46,7 @@ export function PlanDeAccion({
 
   const archivar = (action: MenuAction) => {
     onUpdate((s) => ({ ...s, ignoredActions: { ...s.ignoredActions, [action.key]: true } }));
-    onFlash('Sugerencia archivada · la encuentras abajo');
+    onFlash('Sugerencia archivada');
   };
 
   const reactivar = (action: MenuAction) => {

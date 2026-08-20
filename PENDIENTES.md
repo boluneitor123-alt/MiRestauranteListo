@@ -102,6 +102,10 @@ ellos desde la app.
       botón que lo aplica de verdad, "No, gracias" para archivarlo y la caja de
       archivadas con "Reactivar" y "Restaurar todas". El prototipo no tiene un
       cambio de "ajustar porción": no lo inventé.
+      Un platillo trae una sola recomendación: cuando dos reglas se disparan
+      sobre el mismo —subirle el precio y sacarlo son consejos opuestos—, gana
+      la que mueve más dinero y la otra no se pinta. Así el potencial de arriba
+      tampoco cuenta dos veces al mismo platillo.
 - [x] Los seis entregables ya generan su documento. Los cuatro nuevos:
       `print/PlanDeApertura.tsx` (`/print/plan-de-apertura`),
       `print/CartaMenu.tsx` (`/print/carta-menu`),

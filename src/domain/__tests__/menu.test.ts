@@ -219,12 +219,28 @@ describe('plan de acción de Mi Menú (menuMoney del prototipo)', () => {
   });
 
   it('propone sacar el platillo caro que casi no se vende', () => {
-    const m = menuMoney([dish('perro', 55, 'baja'), dish('bueno', 25, 'alta')], EMPTY_CONTEXT, {
-      daily: 100,
-    });
+    // Sacarlo gana sobre subirle el precio cuando el resto de la carta deja
+    // mucho más por pieza: esas ventas se van a los otros platillos.
+    const carta = [dish('perro', 41, 'baja'), dish('estrella', 10, 'alta', 'Fuertes', 300)];
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
     const accion = m.actions.find((a) => a.kind === 'Sacar de la carta');
     expect(accion?.title).toBe('Saca perro');
     expect(accion?.cta).toBe('Quitar del menú');
+  });
+
+  it('un platillo, una sola recomendación: gana la que mueve más dinero', () => {
+    // "perro" cumple las dos reglas a la vez —food cost de 55% y venta baja—,
+    // así que subirle el precio y sacarlo se disparan sobre el mismo platillo.
+    const carta = [dish('perro', 55, 'baja'), dish('bueno', 25, 'alta')];
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
+
+    const delPerro = m.actions.filter((a) => a.dishId === 'perro');
+    expect(delPerro.length).toBe(1);
+    expect(delPerro[0].kind).toBe('Subir precio');
+
+    // Y el potencial no cuenta dos veces al mismo platillo.
+    expect(m.upside).toBeCloseTo(m.actions.reduce((a, x) => a + x.impact, 0), 6);
+    expect(new Set(m.actions.map((a) => a.dishId)).size).toBe(m.actions.length);
   });
 
   it('ordena por dinero, corta en cinco y suma el potencial', () => {
@@ -264,7 +280,12 @@ describe('plan de acción de Mi Menú (menuMoney del prototipo)', () => {
   });
 
   it('aplicar el cambio deja la carta como el botón promete', () => {
-    const carta = [dish('caro', 45, 'alta'), dish('perro', 55, 'baja'), dish('rentable', 25, 'baja')];
+    const carta = [
+      dish('caro', 45, 'alta'),
+      dish('perro', 41, 'baja'),
+      dish('rentable', 25, 'baja'),
+      dish('estrella', 10, 'alta', 'Fuertes', 300),
+    ];
     const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
 
     const subir = m.actions.find((a) => a.kind === 'Subir precio')!;
@@ -272,7 +293,7 @@ describe('plan de acción de Mi Menú (menuMoney del prototipo)', () => {
     expect(menuActionFlash(subir)).toBe(`caro ahora cuesta ${money(subir.targetPrice!)}`);
 
     const sacar = m.actions.find((a) => a.kind === 'Sacar de la carta')!;
-    expect(applyMenuAction(carta, sacar).map((d) => d.id)).toEqual(['caro', 'rentable']);
+    expect(applyMenuAction(carta, sacar).map((d) => d.id)).toEqual(['caro', 'rentable', 'estrella']);
     expect(menuActionFlash(sacar)).toBe('perro salió de tu carta');
 
     const empujar = m.actions.find((a) => a.kind === 'Empujar en la carta')!;

@@ -498,9 +498,20 @@ export function menuMoney(
   }
 
   all.sort((a, b) => b.impact - a.impact);
-  const worth = all.filter((a) => a.impact >= MIN_ACTION_IMPACT);
-  const actions = worth.filter((a) => !ignored[a.key]).slice(0, MAX_ACTIONS);
-  const archived = worth.filter((a) => ignored[a.key]);
+
+  // Un platillo, una sola recomendación. Dos reglas se pueden disparar sobre el
+  // mismo platillo —subirle el precio y sacarlo, por ejemplo— y son consejos
+  // opuestos: gana la que mueve más dinero y la otra no se pinta. Así el
+  // potencial de arriba tampoco cuenta dos veces al mismo platillo.
+  const perDish = new Set<string>();
+  const winners = all.filter((action) => {
+    if (action.impact < MIN_ACTION_IMPACT || perDish.has(action.dishId)) return false;
+    perDish.add(action.dishId);
+    return true;
+  });
+
+  const actions = winners.filter((a) => !ignored[a.key]).slice(0, MAX_ACTIONS);
+  const archived = winners.filter((a) => ignored[a.key]);
   const upside = actions.reduce((a, x) => a + x.impact, 0);
 
   return {
