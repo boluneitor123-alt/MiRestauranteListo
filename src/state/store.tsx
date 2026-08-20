@@ -70,6 +70,8 @@ export interface AuthOutcome {
   message?: string;
   /** El usuario ya tenía proyecto guardado: se salta el onboarding. */
   hasProject?: boolean;
+  /** A dónde mandarlo. Lo decide el servidor según el role de la cuenta. */
+  redirectTo?: string;
 }
 
 interface StoreValue {
@@ -278,7 +280,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...body, deviceId: getDeviceId() }),
         });
-        const data = (await response.json()) as { ok: boolean; user?: SessionUser; message?: string };
+        const data = (await response.json()) as {
+          ok: boolean;
+          user?: SessionUser;
+          message?: string;
+          redirectTo?: string;
+        };
         if (!data.ok || !data.user) return { ok: false, message: data.message ?? 'No pudimos entrar.' };
 
         setUser(data.user);
@@ -302,7 +309,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // capturando, no se manda al usuario a repetir el diagnóstico: su
         // avance local se sube en el siguiente guardado.
         const localAnswers = Object.keys(latestState.current.answers).length;
-        return { ok: true, hasProject: fromServer || localAnswers >= 12 };
+        return { ok: true, hasProject: fromServer || localAnswers >= 12, redirectTo: data.redirectTo };
       } catch {
         setOnline(false);
         return { ok: false, message: 'Necesitas conexión para entrar a tu cuenta.' };

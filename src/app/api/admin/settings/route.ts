@@ -5,14 +5,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
   const store = await getLicenseStore();
   return json({ ok: true, settings: await store.getSettings() });
 }
 
 /** `PATCH /api/admin/settings` — precio, días de prueba, equipos, garantía… */
 export async function PATCH(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const body = await readJson(request);
   const store = await getLicenseStore();

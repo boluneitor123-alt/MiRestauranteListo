@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 /** `GET /api/admin/summary?period=mes&from=&to=` — KPIs del panel. */
 export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const url = new URL(request.url);
   const requested = url.searchParams.get('period') as PeriodId | null;

@@ -4,15 +4,16 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { getPrisma } from '../licensing/prismaStore';
-import type { AuthSession, AuthStore, AuthUser } from './store';
+import type { AuthSession, AuthStore, AuthUser, UserRole } from './store';
 
-type DbUser = { id: string; email: string; name: string; passwordHash: string; createdAt: Date };
+type DbUser = { id: string; email: string; name: string; passwordHash: string; role: string; createdAt: Date };
 
 const toUser = (row: DbUser): AuthUser => ({
   id: row.id,
   email: row.email,
   name: row.name,
   passwordHash: row.passwordHash,
+  role: row.role === 'admin' ? 'admin' : 'owner',
   createdAt: row.createdAt.getTime(),
 });
 
@@ -29,8 +30,13 @@ export class PrismaAuthStore implements AuthStore {
     return row ? toUser(row) : undefined;
   }
 
-  async createUser(data: { email: string; name: string; passwordHash: string }): Promise<AuthUser> {
-    return toUser(await this.db.user.create({ data }));
+  async createUser(data: {
+    email: string;
+    name: string;
+    passwordHash: string;
+    role?: UserRole;
+  }): Promise<AuthUser> {
+    return toUser(await this.db.user.create({ data: { ...data, role: data.role ?? 'owner' } }));
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {

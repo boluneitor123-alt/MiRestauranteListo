@@ -142,3 +142,36 @@ describe('sesiones', () => {
     expect((await service.sessionFromToken(result.token))?.deviceId).toBe('eq-1');
   });
 });
+
+describe('rol de la cuenta (LEEME: nunca una lista en el cliente)', () => {
+  const conDueño = async (ownerEmail: string | undefined, email: string) => {
+    const previo = process.env.OWNER_EMAIL;
+    if (ownerEmail === undefined) delete process.env.OWNER_EMAIL;
+    else process.env.OWNER_EMAIL = ownerEmail;
+    try {
+      const service = new AuthService(new MemoryAuthStore());
+      const result = await service.register({ name: 'Quien sea', email, password: 'contrasena-larga' });
+      return result.ok ? result.user.role : null;
+    } finally {
+      if (previo === undefined) delete process.env.OWNER_EMAIL;
+      else process.env.OWNER_EMAIL = previo;
+    }
+  };
+
+  it('crea toda cuenta nueva como owner', async () => {
+    expect(await conDueño(undefined, 'ana@tacosana.mx')).toBe('owner');
+  });
+
+  it('marca como admin sólo el correo del dueño de la variable de entorno', async () => {
+    expect(await conDueño('jefa@mirestaurantelisto.com', 'jefa@mirestaurantelisto.com')).toBe('admin');
+    expect(await conDueño('jefa@mirestaurantelisto.com', 'ana@tacosana.mx')).toBe('owner');
+  });
+
+  it('no distingue mayúsculas ni espacios en el correo del dueño', async () => {
+    expect(await conDueño('  Jefa@MiRestauranteListo.com ', 'jefa@mirestaurantelisto.com')).toBe('admin');
+  });
+
+  it('sin OWNER_EMAIL no hay admins automáticos', async () => {
+    expect(await conDueño('', 'jefa@mirestaurantelisto.com')).toBe('owner');
+  });
+});

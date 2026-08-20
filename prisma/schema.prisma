@@ -13,11 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Quién es el usuario. 'owner' es el emprendedor que compró la app;
+/// 'admin' es quien puede entrar al panel de control. Nunca se decide en el
+/// cliente: el servidor lee esta columna.
+enum UserRole {
+  owner
+  admin
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
   passwordHash String
+  role         UserRole @default(owner)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -282,7 +282,12 @@ export function App() {
           onBack={() => setScreen('welcome')}
           onRegister={register}
           onLogin={login}
-          onDone={({ hasProject }) => {
+          onDone={({ hasProject, redirectTo }) => {
+            // El servidor decide: una cuenta admin va al panel, no a la app.
+            if (redirectTo && redirectTo !== '/app') {
+              window.location.href = redirectTo;
+              return;
+            }
             if (hasProject) {
               setScreen('app');
               setTab('inicio');

@@ -2,11 +2,15 @@
  * Contrato de persistencia de cuentas y sesiones.
  */
 
+/** 'owner' es el emprendedor; 'admin' entra al panel de control. */
+export type UserRole = 'owner' | 'admin';
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   passwordHash: string;
+  role: UserRole;
   createdAt: number;
 }
 
@@ -20,7 +24,7 @@ export interface AuthSession {
 export interface AuthStore {
   findUserByEmail(email: string): Promise<AuthUser | undefined>;
   findUserById(id: string): Promise<AuthUser | undefined>;
-  createUser(data: { email: string; name: string; passwordHash: string }): Promise<AuthUser>;
+  createUser(data: { email: string; name: string; passwordHash: string; role?: UserRole }): Promise<AuthUser>;
   updatePassword(userId: string, passwordHash: string): Promise<void>;
 
   createSession(session: AuthSession): Promise<AuthSession>;

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 /** `GET /api/admin/events` — bitácora del panel. */
 export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const limit = Number(new URL(request.url).searchParams.get('limit')) || 100;
   const store = await getLicenseStore();
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
 /** `DELETE /api/admin/events` — zona de riesgo: borra la bitácora. */
 export async function DELETE(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const store = await getLicenseStore();
   await store.deleteAllEvents();

@@ -43,12 +43,33 @@ export default function AdminPage() {
   const [form, setForm] = useState({ name: '', email: '', source: 'manual', amount: '' });
   const [message, setMessage] = useState<string | null>(null);
 
+  /**
+   * El acceso al panel lo decide el servidor con el `role` de la cuenta.
+   * El token sólo queda como respaldo de operación, para automatizar sin
+   * abrir sesión.
+   */
   useEffect(() => {
-    const stored = window.localStorage.getItem(TOKEN_KEY);
-    if (stored) {
-      setToken(stored);
-      setAuthed(true);
-    }
+    let vivo = true;
+    (async () => {
+      try {
+        const r = await fetch('/api/auth/me');
+        const data = (await r.json()) as { user?: { role?: string } | null };
+        if (vivo && data.user?.role === 'admin') {
+          setAuthed(true);
+          return;
+        }
+      } catch {
+        // Sin red se cae al respaldo del token.
+      }
+      const stored = window.localStorage.getItem(TOKEN_KEY);
+      if (vivo && stored) {
+        setToken(stored);
+        setAuthed(true);
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
   }, []);
 
   const call = useCallback(
@@ -58,7 +79,8 @@ export default function AdminPage() {
         headers: {
           ...(init.headers ?? {}),
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          // Va vacío cuando la sesión ya es de admin: el servidor la lee de la cookie.
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
       if (response.status === 401) {
@@ -119,7 +141,8 @@ export default function AdminPage() {
             Panel de MiRestauranteListo
           </h1>
           <p style={{ fontSize: 13.5, color: 'var(--color-neutral-600)' }}>
-            Escribe el token de administración (variable <code>ADMIN_TOKEN</code>).
+            Entra con tu cuenta desde la app: si tiene permiso de administrador, el servidor te trae aquí solo. El
+            token de <code>ADMIN_TOKEN</code> es el respaldo para operar sin sesión.
           </p>
           <input
             type="password"

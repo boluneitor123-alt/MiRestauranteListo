@@ -13,9 +13,9 @@ import {
   normalizeEmail,
   verifyPassword,
 } from './passwords';
-import type { AuthStore, AuthUser } from './store';
+import type { AuthStore, AuthUser, UserRole } from './store';
 
-export const SESSION_COOKIE = 'mrl_session';
+export { SESSION_COOKIE } from './names';
 export const SESSION_DAYS = 30;
 const DAY_MS = 86_400_000;
 
@@ -40,13 +40,28 @@ export interface PublicUser {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
 }
 
 export type AuthResult =
   | { ok: true; user: PublicUser; token: string; expiresAt: number }
   | { ok: false; error: AuthError; message: string };
 
-const publicUser = (user: AuthUser): PublicUser => ({ id: user.id, email: user.email, name: user.name });
+const publicUser = (user: AuthUser): PublicUser => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  role: user.role,
+});
+
+/**
+ * El correo del dueño va por variable de entorno, nunca en una lista dentro
+ * del código del cliente: esa cuenta se crea directamente como admin.
+ */
+export function roleForEmail(email: string): UserRole {
+  const owner = normalizeEmail(process.env.OWNER_EMAIL ?? '');
+  return owner && normalizeEmail(email) === owner ? 'admin' : 'owner';
+}
 
 export class AuthService {
   constructor(
@@ -67,6 +82,7 @@ export class AuthService {
       email,
       name,
       passwordHash: await hashPassword(input.password),
+      role: roleForEmail(email),
     });
     return this.startSession(user, input.deviceId);
   }

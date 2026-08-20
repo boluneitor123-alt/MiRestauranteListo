@@ -1,0 +1,25 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { SESSION_COOKIE } from '@/server/auth/names';
+
+/**
+ * Puerta del panel de control.
+ *
+ * El middleware corre en el Edge y no puede consultar la base de datos, así
+ * que aquí sólo se rechaza a quien ni siquiera trae sesión. Quién es admin lo
+ * decide el servidor con el `role` de la cuenta: la página del panel lo
+ * verifica contra `/api/auth/me` y cada ruta de API lo verifica de nuevo con
+ * `isAdmin`. Ninguna de esas dos comprobaciones depende del cliente.
+ */
+export function middleware(request: NextRequest) {
+  const hasSession = !!request.cookies.get(SESSION_COOKIE)?.value;
+  if (hasSession) return NextResponse.next();
+
+  const url = request.nextUrl.clone();
+  url.pathname = '/';
+  url.searchParams.set('entrar', 'panel');
+  return NextResponse.redirect(url);
+}
+
+export const config = {
+  matcher: ['/admin/:path*'],
+};

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  * `revoke` · `reactivate` · `refund` · `free-devices` · `resend`.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ code: string; action: string }> }) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const { code, action } = await params;
   const service = await getLicenseService();

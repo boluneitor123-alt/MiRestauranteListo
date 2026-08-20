@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   if (!result.ok) return json({ ok: false, error: result.error, message: result.message }, 400);
 
-  const response = json({ ok: true, user: result.user }, 201);
+  const response = json({ ok: true, user: result.user, redirectTo: result.user.role === 'admin' ? '/admin' : '/app' }, 201);
   response.headers.append('Set-Cookie', sessionCookie(SESSION_COOKIE, result.token, result.expiresAt));
   return response;
 }

@@ -65,12 +65,19 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | --- | --- | --- |
 | `DATABASE_URL` | Tu base de Neon. | Sí |
 | `APP_URL` | URL pública del sitio (`https://…`). Stripe regresa aquí. | Sí |
-| `ADMIN_TOKEN` | Contraseña para entrar a `/admin`. Invéntala larga. | Sí |
+| `OWNER_EMAIL` | Tu correo. La cuenta que se registre con él entra al panel. | Sí |
+| `ADMIN_TOKEN` | Respaldo para operar la API sin sesión. Invéntalo largo. | Sí |
 | `STRIPE_SECRET_KEY` | Llave secreta de Stripe (`sk_live_…`). | Sí, para cobrar |
 | `STRIPE_WEBHOOK_SECRET` | Firma del webhook (`whsec_…`). | Sí, para cobrar |
 | `RESEND_API_KEY` | Correos de compra y de acceso. Sin ella, no se manda correo pero todo lo demás funciona. | No |
 | `META_PIXEL_ID` | Medición de la landing. | No |
 | `META_CAPI_TOKEN` | API de Conversiones de Meta. | No |
+
+**Cómo se entra al panel.** Captura tu correo en `OWNER_EMAIL` y crea tu cuenta
+en la app con ese mismo correo. Al iniciar sesión, el servidor ve que tu cuenta
+tiene permiso de administrador y te lleva a `/admin` en vez de al tablero. No
+hay una lista de correos dentro del código del navegador: quién es
+administrador se guarda en la base de datos y sólo lo lee el servidor.
 
 `ADMIN_TOKEN` lo inventas tú. Para generarlo:
 
@@ -89,7 +96,8 @@ este sitio.
 1. Entra a `https://TU-DOMINIO/app`, crea una cuenta y contesta el diagnóstico.
 2. Cierra sesión y vuelve a entrar: debe llevarte directo a tu tablero con tu
    avance. Si eso pasa, la base está bien conectada.
-3. Entra a `https://TU-DOMINIO/admin` con tu `ADMIN_TOKEN` y revisa Ajustes.
+3. Crea tu cuenta con el correo de `OWNER_EMAIL` y entra: debe llevarte a
+   `https://TU-DOMINIO/admin`. Revisa Ajustes.
 4. Haz una compra real de prueba desde el paywall de la app. Al volver, la app
    debe desbloquearse sola, sin que escribas ningún código. En `/admin` →
    Licencias debe aparecer el código con estado "Activada".
@@ -102,7 +110,10 @@ este sitio.
 
 - Rota cualquier llave que hayas pegado en un chat, correo o mensaje. En Stripe:
   **Developers → API keys → Roll key**. En Neon: **Settings → Reset password**.
-- El panel `/admin` sólo responde si `ADMIN_TOKEN` está configurado. Sin esa
-  variable, ninguna operación de administración funciona (a propósito).
+- Quién entra al panel se decide en el servidor, con el campo `role` de la
+  cuenta. El navegador nunca lo decide, y editar cualquier cosa en el cliente no
+  abre el panel.
+- `ADMIN_TOKEN` es el respaldo para operar la API sin sesión. Sin esa variable y
+  sin una cuenta administradora, ninguna operación de administración funciona.
 - La validación del pago siempre ocurre en el servidor. El navegador nunca decide
   si alguien tiene licencia.

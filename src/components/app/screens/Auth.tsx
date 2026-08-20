@@ -54,8 +54,8 @@ export function Auth({
   mode: AuthMode;
   onChangeMode: (mode: AuthMode) => void;
   onBack: () => void;
-  /** `hasProject` decide si se salta el onboarding. */
-  onDone: (result: { hasProject: boolean }) => void;
+  /** `hasProject` decide si se salta el onboarding; `redirectTo` lo manda al panel. */
+  onDone: (result: { hasProject: boolean; redirectTo?: string }) => void;
   onRegister: (input: { name: string; email: string; password: string }) => Promise<AuthOutcome>;
   onLogin: (input: { email: string; password: string }) => Promise<AuthOutcome>;
 }) {
@@ -459,7 +459,7 @@ function Login({
 }: {
   onBack: () => void;
   onChangeMode: (mode: AuthMode) => void;
-  onDone: (result: { hasProject: boolean }) => void;
+  onDone: (result: { hasProject: boolean; redirectTo?: string }) => void;
   onLogin: (input: { email: string; password: string }) => Promise<AuthOutcome>;
 }) {
   const [email, setEmail] = useState('');
@@ -474,7 +474,7 @@ function Login({
     setError(null);
     const result = await onLogin({ email: email.trim(), password });
     setBusy(false);
-    if (result.ok) onDone({ hasProject: !!result.hasProject });
+    if (result.ok) onDone({ hasProject: !!result.hasProject, redirectTo: result.redirectTo });
     else setError(result.message ?? 'No pudimos entrar.');
   };
 

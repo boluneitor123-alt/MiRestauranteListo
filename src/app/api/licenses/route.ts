@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * webhook de cobro tiene su propia ruta con verificación de firma.
  */
 export async function POST(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const body = await readJson(request);
   const email = str(body.email);
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
 /** `GET /licenses` — listado para el panel. */
 export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const url = new URL(request.url);
   const service = await getLicenseService();

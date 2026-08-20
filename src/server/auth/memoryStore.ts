@@ -2,7 +2,7 @@
  * Almacén de cuentas en memoria: pruebas y desarrollo sin base de datos.
  */
 
-import type { AuthSession, AuthStore, AuthUser } from './store';
+import type { AuthSession, AuthStore, AuthUser, UserRole } from './store';
 
 export class MemoryAuthStore implements AuthStore {
   private users = new Map<string, AuthUser>();
@@ -17,8 +17,13 @@ export class MemoryAuthStore implements AuthStore {
     return this.users.get(id);
   }
 
-  async createUser(data: { email: string; name: string; passwordHash: string }): Promise<AuthUser> {
-    const user: AuthUser = { id: `u${++this.sequence}`, createdAt: Date.now(), ...data };
+  async createUser(data: {
+    email: string;
+    name: string;
+    passwordHash: string;
+    role?: UserRole;
+  }): Promise<AuthUser> {
+    const user: AuthUser = { id: `u${++this.sequence}`, createdAt: Date.now(), role: 'owner', ...data };
     this.users.set(user.id, user);
     return user;
   }

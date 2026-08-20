@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 /** `GET /licenses/:code` — detalle para el panel del dueño. */
 export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
-  if (!isAdmin(request)) return unauthorized();
+  if (!(await isAdmin(request))) return unauthorized();
 
   const { code } = await params;
   const store = await getLicenseStore();

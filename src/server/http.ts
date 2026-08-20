@@ -4,6 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { getAuthService, SESSION_COOKIE } from './auth';
 
 export function json(data: unknown, status = 200): NextResponse {
   return NextResponse.json(data, { status });
@@ -44,7 +45,11 @@ export function num(value: unknown): number | undefined {
  * ninguna operación de administración: es preferible un panel inaccesible a uno
  * abierto a internet.
  */
-export function isAdmin(request: Request): boolean {
+/**
+ * Token de operación: sirve para automatizar (scripts, respaldos) sin abrir
+ * sesión. No es el camino normal al panel — ese es la sesión con role admin.
+ */
+function hasOperatorToken(request: Request): boolean {
   const expected = process.env.ADMIN_TOKEN;
   if (!expected) return false;
 
@@ -59,6 +64,29 @@ export function isAdmin(request: Request): boolean {
   const provided = header || (cookie ? decodeURIComponent(cookie) : '');
   if (!provided || provided.length !== expected.length) return false;
   return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+}
+
+/**
+ * ¿Puede esta petición tocar el panel?
+ *
+ * Lo decide el servidor leyendo el `role` de la sesión. La lista de correos
+ * del prototipo vivía en el cliente y por eso no sirve en producción:
+ * cualquiera podía editarla.
+ */
+export async function isAdmin(request: Request): Promise<boolean> {
+  if (hasOperatorToken(request)) return true;
+
+  const token = request.headers
+    .get('cookie')
+    ?.split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
+    ?.slice(SESSION_COOKIE.length + 1);
+  if (!token) return false;
+
+  const auth = await getAuthService();
+  const user = await auth.userFromToken(decodeURIComponent(token));
+  return user?.role === 'admin';
 }
 
 /**
