@@ -83,7 +83,8 @@ ellos desde la app.
       está abierta. Verificado en el navegador.
 - [x] Al abrir una tarea muestra todo lo pedido. Verificado.
 - [x] La tabla de ejemplo es condicional y sale sólo cuando la lección la trae.
-- [x] Las 26 lecciones sin ilustración se pintan sin ella.
+- [x] Las 26 lecciones que no traían ilustración ya la tienen: las 90 lecciones
+      se pintan con la suya.
 - [x] Respeta la muestra gratis.
 - [x] Probado en módulo libre, módulo de ruta y curso con estrella.
 - [x] El hueco de imagen ya se pinta: cuando la lección no trae ilustración,
@@ -147,7 +148,8 @@ ellos desde la app.
 
 No es trabajo de código. Anotado para que no se pierda.
 
-- Las 26 ilustraciones de los cursos de Delivery y Contratar.
+- ~~Las 26 ilustraciones de los cursos de Delivery y Contratar.~~ Entregadas y
+  dentro: `src/content/illustrations.ts` ya trae las 90.
 - Los textos marcados `[EDITAR]` en las advertencias.
 - Los videos del curso de anuncios de Meta.
 - El quinto mini curso: control de merma y robo interno.

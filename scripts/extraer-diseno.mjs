@@ -10,6 +10,9 @@ import { createContext, runInContext } from 'node:vm';
 
 const APP = 'entrega-claude-code/diseno/MiRestauranteListo.dc.html';
 const ART = 'entrega-claude-code/diseno/art/illustrations.js';
+// Las 26 de los cursos de Delivery y Contratar llegaron después, en su propio
+// archivo y bajo otro nombre de variable. El sistema visual es el mismo.
+const ART_CURSOS = 'entrega-claude-code/diseno/art/illustrations-cursos.js';
 const OUT = 'src/content';
 
 const src = readFileSync(APP, 'utf8');
@@ -23,7 +26,11 @@ const g = (n) => runInContext(n, ctx);
 
 const art = createContext({ window: {} });
 runInContext(readFileSync(ART, 'utf8'), art);
-const MRL_ART = runInContext('window.MRL_ART', art);
+runInContext(readFileSync(ART_CURSOS, 'utf8'), art);
+const MRL_ART = {
+  ...runInContext('window.MRL_ART', art),
+  ...runInContext('window.MRL_ART_CURSOS', art),
+};
 
 const cabecera = (que) =>
   `// Generado por scripts/extraer-diseno.mjs desde el prototipo de diseño.\n` +
@@ -369,8 +376,7 @@ const conIlustracion = tareas.filter((t) => ilustraciones[slug(t.t)]).length;
 writeFileSync(`${OUT}/illustrations.ts`, cabecera(
   `Las ${Object.keys(ilustraciones).length} ilustraciones SVG (window.MRL_ART), indexadas por el título de la lección\n` +
   `// en minúsculas, sin acentos y con guiones. Los id internos van prefijados para que no\n` +
-  `// se pisen entre sí. Cubren ${conIlustracion} de las ${tareas.length} tareas: los cursos de Delivery y\n` +
-  `// Contratar todavía no tienen ilustración y se pintan sin ella.`) +
+  `// se pisen entre sí. Cubren ${conIlustracion} de las ${tareas.length} tareas.`) +
 `export const MRL_ART: Record<string, string> = ${json(ilustraciones)};
 
 /** Slug de una lección: minúsculas, sin acentos, con guiones. */
