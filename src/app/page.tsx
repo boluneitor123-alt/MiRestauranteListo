@@ -41,7 +41,6 @@ import { Arrow, Check, Chip, Kick, Phone, ShotCaption } from '@/components/landi
 /** Solo dígitos: la calculadora acepta lo que el dueño teclee. */
 const digits = (value: string) => value.replace(/[^0-9]/g, '');
 const num = (value: string) => Number(digits(value)) || 0;
-const pad = (n: number) => String(n).padStart(2, '0');
 
 const MARGIN_PCT = 68;
 
@@ -57,15 +56,7 @@ export default function LandingPage() {
   const [ticket, setTicket] = useState(CALC_DEFAULTS.ticket);
   const [openModule, setOpenModule] = useState<number | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [now, setNow] = useState<number | null>(null);
   const calculatorUsed = useRef(false);
-
-  // El reloj arranca en el cliente: así el servidor no manda una cuenta vencida.
-  useEffect(() => {
-    setNow(Date.now());
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // `Purchase` al volver del checkout.
   useEffect(() => {
@@ -128,15 +119,6 @@ export default function LandingPage() {
     window.location.href = `/app?${pantalla}=1`;
   };
 
-  // Cuenta regresiva del precio de lanzamiento.
-  const left = now === null ? 0 : Math.max(0, new Date(`${LAUNCH.deadline}T23:59:59`).getTime() - now);
-  const onSale = left > 0;
-  const countdown = onSale
-    ? `${Math.floor(left / 864e5)}d ${pad(Math.floor(left / 36e5) % 24)}:${pad(Math.floor(left / 6e4) % 60)}:${pad(
-        Math.floor(left / 1e3) % 60,
-      )}`
-    : '—';
-
   const ticketValue = Math.max(20, num(ticket) || 200);
   const profitPerTicket = Math.max(1, ticketValue * (MARGIN_PCT / 100));
   const customersToPayBack = Math.max(1, Math.ceil(LAUNCH.price / profitPerTicket));
@@ -175,38 +157,24 @@ export default function LandingPage() {
 
   return (
     <div className="lp lp-sheet">
-      {/* ═══ AVISO SUPERIOR ═══ */}
+      {/*
+        ═══ AVISO SUPERIOR ═══
+        Sin contador de lugares ni cuenta regresiva: ninguno de los dos salía
+        de licencias vendidas de verdad.
+      */}
       <div style={{ background: 'var(--amber)', borderBottom: '2.5px solid var(--ink)' }}>
         <div
           className="lp-wrap lp-alertbar"
           style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', paddingBlock: 9 }}
         >
-          <span className="lp-blink" style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--ink)' }} />
-          <Kick style={{ fontSize: 10.5 }}>
-            {onSale
-              ? `PRECIO DE LANZAMIENTO · QUEDAN ${LAUNCH.spotsLeft} DE ${LAUNCH.spotsTotal} LUGARES`
-              : 'PRECIO REGULAR VIGENTE'}
-          </Kick>
-          <span
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: '.07em',
-              background: 'var(--ink)',
-              color: 'var(--amber)',
-              padding: '4px 9px',
-            }}
-          >
-            {countdown}
-          </span>
+          <Kick style={{ fontSize: 10.5 }}>{GUARANTEE_SHORT.toUpperCase()}</Kick>
           <button
             type="button"
             className="lp-cta lp-hidesm"
             style={{ height: 28, paddingInline: 12, fontSize: 11.5, boxShadow: '2px 2px 0 var(--ink)', background: 'var(--paper-2)' }}
             onClick={() => jump('precio')}
           >
-            entra hoy →
+            ver el precio →
           </button>
         </div>
       </div>
@@ -1334,33 +1302,6 @@ export default function LandingPage() {
         <h2 className="lp-disp" style={{ marginTop: 14, fontSize: 'clamp(30px,5vw,54px)' }}>
           Se paga una vez. <span className="lp-it" style={{ fontSize: '1.06em' }}>Se queda para siempre.</span>
         </h2>
-
-        {onSale ? (
-          <>
-            <div
-              style={{
-                marginTop: 18,
-                display: 'inline-flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                gap: 12,
-                padding: '11px 15px',
-                background: 'var(--amber)',
-                border: '2.5px solid var(--ink)',
-              }}
-            >
-              <Kick style={{ fontSize: 10.5 }}>PRECIO DE LANZAMIENTO · SE CIERRA EL 15 DE SEPTIEMBRE</Kick>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, background: 'var(--ink)', color: 'var(--amber)', padding: '4px 10px' }}>
-                {countdown}
-              </span>
-            </div>
-            <p style={{ margin: '12px 0 0', fontSize: 14, lineHeight: 1.6, maxWidth: '60ch', color: 'var(--ink-soft)', textWrap: 'pretty' }}>
-              Existe porque estamos abriendo con cupo: los primeros {LAUNCH.spotsTotal} entran a este precio y conservan
-              las actualizaciones gratis de por vida. Cuando se cierra la ventana, el precio sube a{' '}
-              {money(LAUNCH.listPrice)}.
-            </p>
-          </>
-        ) : null}
 
         {/* La calculadora vuelve, ya con sus cifras */}
         <div className="lp-box lp-lift" style={{ position: 'relative', marginTop: 26, padding: '22px 24px', background: 'var(--paper-2)' }}>

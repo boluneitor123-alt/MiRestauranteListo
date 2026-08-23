@@ -1,39 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calculate, routePanel, urgency } from '../landing';
-import { LANDING_ROUTE, LAUNCH, STARTING_POINTS, TOTAL_STEPS } from '@/content/landing';
+import { calculate, routePanel } from '../landing';
+import { LANDING_ROUTE, STARTING_POINTS, TOTAL_STEPS } from '@/content/landing';
 import { ROUTE_MODULES } from '@/content/route';
-
-const BEFORE = new Date('2026-09-01T10:00:00').getTime();
-const AFTER = new Date('2026-10-01T10:00:00').getTime();
-
-describe('barra de urgencia (README § 12.1)', () => {
-  it('se muestra mientras haya fecha y cupo', () => {
-    const u = urgency(BEFORE);
-    expect(u.visible).toBe(true);
-    expect(u.daysLeft).toBeGreaterThan(0);
-    expect(u.spotsLabel).toBe('23 de 100 lugares');
-  });
-
-  it('desaparece sola cuando vence la fecha', () => {
-    expect(urgency(AFTER).visible).toBe(false);
-    expect(urgency(AFTER).daysLeft).toBe(0);
-  });
-
-  it('desaparece sola cuando se agota el cupo', () => {
-    expect(urgency(BEFORE, { ...LAUNCH, spotsLeft: 0 }).visible).toBe(false);
-  });
-
-  it('mide el cupo tomado para la barra', () => {
-    expect(urgency(BEFORE).spotsTakenPct).toBeCloseTo(77, 6);
-    expect(urgency(BEFORE, { ...LAUNCH, spotsLeft: 100 }).spotsTakenPct).toBe(0);
-  });
-
-  it('habla en singular el último día', () => {
-    const u = urgency(new Date('2026-09-15T10:00:00').getTime());
-    expect(u.daysLeft).toBe(1);
-    expect(u.label).toBe('último día');
-  });
-});
 
 describe('panel de ruta del diagnóstico (README § 12.3)', () => {
   it('mapea cada punto de partida a su paso', () => {

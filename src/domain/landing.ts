@@ -15,39 +15,6 @@ import {
   type LandingStep,
 } from '@/content/landing';
 
-export interface Urgency {
-  /** La urgencia se muestra en las cuatro superficies o en ninguna. */
-  visible: boolean;
-  daysLeft: number;
-  spotsLeft: number;
-  spotsTotal: number;
-  spotsTakenPct: number;
-  label: string;
-  spotsLabel: string;
-}
-
-/**
- * La urgencia desaparece sola cuando vence la fecha o se agota el cupo: no hay
- * cuenta regresiva que se reinicie ni cupo que reviva.
- */
-export function urgency(now: number, launch = LAUNCH): Urgency {
-  const deadline = new Date(`${launch.deadline}T23:59:59`).getTime();
-  const msLeft = deadline - now;
-  const daysLeft = Math.max(0, Math.ceil(msLeft / 86_400_000));
-  const spotsLeft = Math.max(0, launch.spotsLeft);
-  const visible = msLeft > 0 && spotsLeft > 0;
-
-  return {
-    visible,
-    daysLeft,
-    spotsLeft,
-    spotsTotal: launch.spotsTotal,
-    spotsTakenPct: Math.min(100, ((launch.spotsTotal - spotsLeft) / Math.max(1, launch.spotsTotal)) * 100),
-    label: daysLeft === 1 ? 'último día' : `últimos ${daysLeft} días`,
-    spotsLabel: `${spotsLeft} de ${launch.spotsTotal} lugares`,
-  };
-}
-
 export interface RoutePanel {
   giro: string;
   /** "Tu ruta para abrir una taquería". */

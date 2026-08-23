@@ -1,16 +1,14 @@
 /**
  * Contenido de la landing de venta (README § 12).
  *
- * La urgencia sale toda de `LAUNCH`: si la fecha venció o el cupo se agota,
- * desaparece sola en las cuatro superficies donde aparece.
+ * Sin cifras de escasez: el contador de lugares y la cuenta regresiva de
+ * lanzamiento salieron porque no venían de licencias vendidas de verdad, y
+ * una cifra inventada de urgencia envenena todo lo demás que dice la página.
  */
 
 import { ROUTE_MODULES, TOTAL_ROUTE_TASKS } from './route';
 
 export interface Launch {
-  deadline: string;
-  spotsTotal: number;
-  spotsLeft: number;
   listPrice: number;
   price: number;
   installments: number;
@@ -20,9 +18,6 @@ export interface Launch {
 }
 
 export const LAUNCH: Launch = {
-  deadline: '2026-09-15',
-  spotsTotal: 100,
-  spotsLeft: 23,
   listPrice: 3900,
   price: 2450,
   installments: 3,
