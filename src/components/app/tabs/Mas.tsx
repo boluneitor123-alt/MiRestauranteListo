@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Download, Lock } from 'lucide-react';
-import { FAQ_ITEMS as FAQ, GIROS } from '@/content/catalog';
+import { FAQ_ITEMS as FAQ, GIROS, TUTORIAL } from '@/content/catalog';
 import { ROUTE_MODULES } from '@/content/route';
 import { fixedExpensesTotal } from '@/domain/finance';
 import { DeliveryCalculator } from '../tools/DeliveryCalculator';
@@ -90,33 +90,54 @@ const DELIVERABLES: Array<{ title: string; what: string; who: string; href?: str
   },
 ];
 
+const RESOURCES = [
+  ['Plantilla de costeo (CSV con fórmulas)', 'plantilla-costeo.csv'],
+  ['Comparador de proveedores (CSV con fórmulas)', 'comparador-proveedores.csv'],
+  ['Plan de apertura de 30 días (CSV)', 'plan-apertura-30-dias.csv'],
+  ['Checklist de permisos (imprimible)', 'checklist-permisos.html'],
+  ['Formato de receta estándar (imprimible)', 'receta-estandar.html'],
+  ['Guía de precios de menú (imprimible)', 'guia-precios-menu.html'],
+] as const;
+
+/*
+ * "Cómo usar MiRestauranteListo" sale de TUTORIAL del prototipo, no de una
+ * copia escrita aquí: así no se puede quedar desfasada de la entrega.
+ */
+const HOW_TO = TUTORIAL;
+
+/*
+ * Herramientas abre la pestaña y lleva las cinco juntas (entrega-v2 § "Más").
+ * Antes la plantilla del giro y las referencias de mercado vivían en "Mi
+ * proyecto", separadas de las otras tres sin razón.
+ */
 const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string; meta?: string }> }> = [
+  {
+    title: 'Herramientas',
+    items: [
+      { id: 'anuncios', label: 'Analizador de anuncios' },
+      { id: 'delivery', label: 'Calculadora de delivery' },
+      { id: 'plantilla', label: 'Plantilla de mi giro' },
+      { id: 'giro', label: 'Referencias de mercado' },
+      { id: 'alertas', label: 'Alertas del mentor' },
+    ],
+  },
   {
     title: 'Mi proyecto',
     items: [
       { id: 'perfil', label: 'Mi perfil' },
       { id: 'proyecto', label: 'Datos del proyecto' },
-      { id: 'giro', label: 'Tipo de negocio' },
-      { id: 'plantilla', label: 'Plantilla de mi giro' },
       { id: 'notas', label: 'Mis notas' },
       { id: 'proveedores', label: 'Mis proveedores' },
       { id: 'diagnostico', label: 'Repetir mi diagnóstico' },
     ],
   },
   {
-    title: 'Herramientas',
-    items: [
-      { id: 'delivery', label: 'Calculadora de delivery' },
-      { id: 'anuncios', label: 'Analizador de anuncios' },
-    ],
-  },
-  {
     title: 'Aprender',
     items: [
-      { id: 'como-usar', label: 'Cómo usar MiRestauranteListo', meta: '5 pasos' },
+      { id: 'como-usar', label: 'Cómo usar MiRestauranteListo', meta: `${HOW_TO.length} pasos` },
       { id: 'recorrido', label: 'Repetir el recorrido guiado', meta: `${TOUR_STEPS.length} pasos` },
       { id: 'faq', label: 'Preguntas frecuentes', meta: `${FAQ.length}` },
-      { id: 'recursos', label: 'Recursos descargables', meta: '6' },
+      { id: 'recursos', label: 'Recursos descargables', meta: `${RESOURCES.length}` },
       { id: 'novedades', label: 'Novedades incluidas' },
     ],
   },
@@ -133,14 +154,6 @@ const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string
   },
 ];
 
-const RESOURCES = [
-  ['Plantilla de costeo (CSV con fórmulas)', 'plantilla-costeo.csv'],
-  ['Comparador de proveedores (CSV con fórmulas)', 'comparador-proveedores.csv'],
-  ['Plan de apertura de 30 días (CSV)', 'plan-apertura-30-dias.csv'],
-  ['Checklist de permisos (imprimible)', 'checklist-permisos.html'],
-  ['Formato de receta estándar (imprimible)', 'receta-estandar.html'],
-  ['Guía de precios de menú (imprimible)', 'guia-precios-menu.html'],
-] as const;
 
 const CHANGELOG = [
   ['v1.0 · Hoy', 'Ruta de 90 tareas en 14 módulos, costeador con sub-recetas, presupuesto con subconceptos y punto de equilibrio.'],
@@ -157,13 +170,6 @@ const TERMS = [
   ['Qué no somos', 'MiRestauranteListo es una herramienta de planeación. No sustituye a tu contador ni a tu asesor legal.'],
 ] as const;
 
-const HOW_TO = [
-  ['Contesta tu diagnóstico', 'Doce preguntas para saber en qué etapa estás y qué te falta.'],
-  ['Sigue tu ruta', 'Diez módulos en orden. Cada tarea te dice por qué importa y qué hacer exactamente.'],
-  ['Costea tus platillos', 'Captura ingredientes con su precio de compra y su merma para ver tu costo real.'],
-  ['Arma tus números', 'Presupuesto de apertura, gastos fijos y cuánto tienes que vender al día.'],
-  ['Revisa cada semana', 'Los insumos se mueven: vuelve a tus costos una vez al mes.'],
-] as const;
 
 /** Pestaña "Más" y sus sub-pantallas (README § 1.9). */
 export function Mas({
@@ -228,7 +234,12 @@ export function Mas({
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
-      <H size={25}>Más</H>
+      <div>
+        <H size={27}>Más</H>
+        <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--color-text-2)' }}>
+          Tu perfil, tu proyecto y ayuda.
+        </p>
+      </div>
 
       <Card>
         <Row gap={12} style={{ flexWrap: 'wrap' }}>
@@ -718,7 +729,7 @@ function SubScreenView(props: {
       ));
 
     case 'como-usar':
-      return wrap('Cómo usar MiRestauranteListo', '5 pasos', (
+      return wrap('Cómo usar MiRestauranteListo', `${HOW_TO.length} pasos`, (
         <>
           {HOW_TO.map(([title, body], i) => (
             <Card key={title} radius={RADIUS.block} style={{ padding: 14 }}>

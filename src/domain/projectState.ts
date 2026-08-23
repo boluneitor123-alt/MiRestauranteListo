@@ -13,6 +13,7 @@ import type { Concept, Subconcept } from './finance';
 import type { Dish, Ingredient, Subrecipe } from './types';
 import { SURVIVAL_DEFAULTS } from './survival';
 import { DELIVERY_DEFAULTS, type DeliveryInput } from './delivery';
+import { CAPACITY_DEFAULTS, type CapacityInput } from './reality';
 import { DEFAULT_FOOD_COST_TARGET } from './costing';
 import { BREAKEVEN_DEFAULTS } from './finance';
 import { DEFAULT_LAYOUT_ID } from './menu';
@@ -118,6 +119,8 @@ export interface ProjectState {
   prepMinutes: number;
   /** Cuántos platillos salen al día en total, para estimar la compra de insumos. */
   dailyMix: number;
+  /** Capacidad del negocio: alimenta la revisión de realidad de Números. */
+  capacity: CapacityInput;
   /** Prueba de estrés: cuánto suben los insumos, cuánto la renta, cuánto baja la venta. */
   stress: StressTest;
   /** Lo último que capturó en la calculadora de delivery. */
@@ -236,6 +239,7 @@ export function emptyProjectState(overrides: Partial<ProjectState> = {}): Projec
     weeklyHours: SURVIVAL_DEFAULTS.weeklyHours,
     prepMinutes: SURVIVAL_DEFAULTS.prepMinutes,
     dailyMix: SURVIVAL_DEFAULTS.dailyMix,
+    capacity: { ...CAPACITY_DEFAULTS },
     stress: { ...NO_STRESS },
     delivery: { ...DELIVERY_DEFAULTS },
     ads: { ...EMPTY_ADS },
@@ -393,6 +397,7 @@ export function importBackup(input: unknown): ProjectState {
   const project = asRecord(raw.project);
   const settings = asRecord(raw.settings);
   const stress = asRecord(raw.stress);
+  const capacity = asRecord(raw.capacity);
   const delivery = asRecord(raw.delivery);
   const ads = asRecord(raw.ad ?? raw.ads);
 
@@ -463,6 +468,12 @@ export function importBackup(input: unknown): ProjectState {
     weeklyHours: asNumber(raw.weeklyHours ?? raw.hrsWeek, base.weeklyHours),
     prepMinutes: asNumber(raw.prepMinutes ?? raw.prepMin, base.prepMinutes),
     dailyMix: asNumber(raw.dailyMix ?? raw.mixDaily, base.dailyMix),
+    capacity: {
+      // El prototipo guarda los tres sueltos (capHour, peakHours, seats).
+      ordersPerHour: asNumber(capacity.ordersPerHour ?? raw.capHour, base.capacity.ordersPerHour),
+      peakHours: asNumber(capacity.peakHours ?? raw.peakHours, base.capacity.peakHours),
+      seats: asNumber(capacity.seats ?? raw.seats, base.capacity.seats),
+    },
     stress: {
       supplies: asNumber(stress.supplies ?? raw.stressIns, 0),
       rent: asNumber(stress.rent ?? raw.stressRent, 0),

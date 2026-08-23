@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, Search } from 'lucide-react';
+import { CircleHelp, Lock, Plus, Search } from 'lucide-react';
 import { dishMetrics } from '@/domain/costing';
 import { menuAggregates } from '@/domain/aggregates';
 import { subrecipeUnitCost, subrecipeBatchCost } from '@/domain/costing';
@@ -12,6 +12,8 @@ import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, EmptyState, H, Muted, Pill, RADIUS, Row, text } from '@/components/ui';
 import { PlanDeAccion, PlanTeaser } from '@/components/app/costeador/PlanDeAccion';
+import { Chrome } from '@/components/app/inicio/Chrome';
+import { Encabezado } from '@/components/app/inicio/Encabezado';
 
 export type CostView = 'platillos' | 'menu' | 'subrecetas';
 
@@ -36,6 +38,11 @@ export function Costeador({
   onOpenPaywall,
   onUpdate,
   onFlash,
+  onOpenProfile,
+  onOpenAlerts,
+  onOpenProject,
+  onOpenGuide,
+  hasAlerts,
 }: {
   state: ProjectState;
   view: CostView;
@@ -49,6 +56,14 @@ export function Costeador({
   onOpenPaywall: () => void;
   onUpdate: (fn: (s: ProjectState) => ProjectState) => void;
   onFlash: (message: string) => void;
+  onOpenProfile: () => void;
+  onOpenAlerts: () => void;
+  /** Abre los datos del proyecto desde el rótulo del encabezado. */
+  onOpenProject: () => void;
+  /** Abre las preguntas frecuentes, que son la guía del costeo. */
+  onOpenGuide: () => void;
+  /** Hay una alerta que merece el punto naranja de la campana. */
+  hasAlerts: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -67,38 +82,129 @@ export function Costeador({
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
-      <H size={25}>Costeador de Platillos</H>
-
-      <Row gap={6} style={{ background: 'var(--color-neutral-200)', borderRadius: RADIUS.pill, padding: 4 }}>
-        {(
-          [
-            ['platillos', 'Platillos'],
-            ['menu', 'Mi Menú'],
-            ['subrecetas', 'Sub-recetas'],
-          ] as Array<[CostView, string]>
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onChangeView(id)}
+      <Chrome
+        initial={(state.profile.name || 'T').trim().slice(0, 1).toUpperCase()}
+        hasAlerts={hasAlerts}
+        marca="Costeador"
+        icono={
+          <span
             style={{
-              flex: 1, minWidth: 0,
-              height: 38,
-              borderRadius: RADIUS.pill,
-              border: 'none',
-              background: view === id ? 'var(--color-surface)' : 'transparent',
-              boxShadow: view === id ? 'var(--shadow-sm)' : 'none',
-              color: view === id ? 'var(--color-text)' : text(55),
-              fontWeight: 800,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-body)',
+              display: 'grid',
+              placeItems: 'center',
+              width: 34,
+              height: 34,
+              flex: 'none',
+              borderRadius: 10,
+              background: 'var(--cat-numeros)',
+              color: 'var(--cat-numeros-ink)',
             }}
           >
-            {label}
-          </button>
-        ))}
-      </Row>
+            <svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <rect x="4" y="2.5" width="16" height="19" rx="2.5" />
+              <path d="M8 7h8M8 11.5h.01M12 11.5h.01M16 11.5h.01M8 15.5h.01M12 15.5h.01M16 15.5v3M8 18.5h4" />
+            </svg>
+          </span>
+        }
+        onOpenAlerts={onOpenAlerts}
+        onOpenProfile={onOpenProfile}
+      />
+
+      <Encabezado
+        titulo="Costeador de platillos"
+        bajada="Calcula el costo real y define precios con ganancia."
+        proyecto={state.project.name}
+        onOpenProject={onOpenProject}
+      />
+
+      <button
+        type="button"
+        onClick={onOpenGuide}
+        style={{
+          justifySelf: 'start',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          height: 44,
+          paddingInline: 15,
+          border: '1px solid var(--color-accent-300)',
+          borderRadius: RADIUS.control,
+          background: 'var(--color-accent-100)',
+          color: 'var(--color-accent-900)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13.5,
+          fontWeight: 700,
+        }}
+      >
+        <CircleHelp size={16} strokeWidth={2.4} style={{ flex: 'none' }} />
+        Ver guía
+      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        {/*
+          Con 200px de mínimo las tres pestañas y el botón caben juntos en un
+          teléfono de 430; en uno de 360 el botón se va a su propio renglón en
+          lugar de dejar las pestañas en 43px de ancho.
+        */}
+        <div style={{ flex: 1, minWidth: 200, display: 'flex', gap: 8 }}>
+          {(
+            [
+              ['platillos', 'Platillos'],
+              ['menu', 'Mi menú'],
+              ['subrecetas', 'Subrecetas'],
+            ] as Array<[CostView, string]>
+          ).map(([id, label]) => {
+            const on = view === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onChangeView(id)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  height: 46,
+                  padding: '0 8px',
+                  borderRadius: RADIUS.control,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  background: on ? 'var(--color-accent-200)' : 'var(--color-surface)',
+                  color: on ? 'var(--color-accent-900)' : 'var(--color-text-2)',
+                  border: `1px solid ${on ? 'var(--color-accent-300)' : 'var(--color-border)'}`,
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => (can.dishLimit === null || state.dishes.length < can.dishLimit ? onNewDish() : onOpenPaywall())}
+          style={{
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            height: 46,
+            paddingInline: 18,
+            border: 'none',
+            borderRadius: RADIUS.control,
+            background: 'var(--color-accent)',
+            color: 'var(--on-accent)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-heading)',
+            fontSize: 15,
+            letterSpacing: '-.01em',
+          }}
+        >
+          <Plus size={17} strokeWidth={3} style={{ flex: 'none' }} />
+          Nuevo platillo
+        </button>
+      </div>
 
       {view === 'platillos' ? (
         <>
@@ -116,19 +222,23 @@ export function Costeador({
             </Card>
           ) : null}
 
-          <Button
-            onClick={() => (can.dishLimit === null || state.dishes.length < can.dishLimit ? onNewDish() : onOpenPaywall())}
-          >
-            Nuevo platillo
-          </Button>
-
           <Row style={{ justifyContent: 'space-between' }}>
             <H size={18}>Platillos guardados</H>
             <button
               type="button"
               onClick={() => setSearchOpen((v) => !v)}
               aria-label="Buscar"
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 4 }}
+              style={{
+                width: 44,
+                height: 44,
+                flex: 'none',
+                display: 'grid',
+                placeItems: 'center',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: 0,
+              }}
             >
               <Search size={19} strokeWidth={2.6} color="var(--color-text)" />
             </button>

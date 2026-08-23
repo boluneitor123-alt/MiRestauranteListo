@@ -373,6 +373,18 @@ export function DishEditor({
           </Row>
         </Card>
 
+        <div
+          style={{
+            margin: '10px 2px 1px',
+            fontSize: 10.5,
+            letterSpacing: '.09em',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            color: 'var(--color-text-2)',
+          }}
+        >
+          Lo que resulta
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           <ResultCard label="Costo por porción" value={money2(m.costPerPortion)} onInfo={() => setInfo('costo')} />
           <ResultCard

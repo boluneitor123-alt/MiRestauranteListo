@@ -603,6 +603,27 @@ export function App() {
             onOpenSubrecipe={openSubrecipe}
             onNewSubrecipe={() => openSubrecipe()}
             onOpenPaywall={() => setScreen('paywall')}
+            onOpenProfile={() => {
+              setTab('mas');
+              setSubScreen('perfil');
+              scrollTop();
+            }}
+            onOpenAlerts={() => {
+              setTab('mas');
+              setSubScreen('alertas');
+              scrollTop();
+            }}
+            onOpenProject={() => {
+              setTab('mas');
+              setSubScreen('proyecto');
+              scrollTop();
+            }}
+            onOpenGuide={() => {
+              setTab('mas');
+              setSubScreen('faq');
+              scrollTop();
+            }}
+            hasAlerts={hasAlerts}
             onUpdate={update}
             onFlash={flash}
           />
@@ -616,6 +637,22 @@ export function App() {
             can={can}
             formOpen={formOpen}
             onChangeView={setNumbersView}
+            onOpenProfile={() => {
+              setTab('mas');
+              setSubScreen('perfil');
+              scrollTop();
+            }}
+            onOpenAlerts={() => {
+              setTab('mas');
+              setSubScreen('alertas');
+              scrollTop();
+            }}
+            onOpenProject={() => {
+              setTab('mas');
+              setSubScreen('proyecto');
+              scrollTop();
+            }}
+            hasAlerts={hasAlerts}
             onPatch={patch}
             onOpenPaywall={() => setScreen('paywall')}
             onPrint={() => window.open('/print/resumen-financiero', '_blank', 'noopener')}
