@@ -35,9 +35,8 @@ En el panel de Stripe (modo **Live**, no Test):
 
 1. **Developers → Webhooks → Add endpoint.**
 2. URL: `https://TU-DOMINIO/api/webhooks/stripe`
-3. Eventos a escuchar: `payment_intent.succeeded` y `charge.refunded`.
-   (`checkout.session.completed` se sigue atendiendo, por si algún día se vuelve
-   a abrir un Checkout hospedado, pero el cobro de hoy llega como PaymentIntent.)
+3. Eventos a escuchar: `payment_intent.succeeded` y `charge.refunded`. Son los
+   dos únicos que el servidor atiende; cualquier otro se ignora.
 4. Copia el **Signing secret** que te da (empieza con `whsec_`): ese es
    `STRIPE_WEBHOOK_SECRET`.
 5. **Developers → API keys**: copia la llave pública (`pk_live_…`) a

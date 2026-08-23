@@ -319,7 +319,7 @@ export function Pago() {
 
                 {fase === 'sin-cobro' ? (
                   <a
-                    href="mailto:hola@mirestaurantelisto.mx"
+                    href="mailto:hola@mirestaurantelisto.com"
                     className="pg-pay"
                     style={{ marginTop: 18, textDecoration: 'none' }}
                   >
@@ -389,7 +389,7 @@ export function Pago() {
               ¿Dudas? Escríbenos
             </div>
             <a
-              href="mailto:hola@mirestaurantelisto.mx"
+              href="mailto:hola@mirestaurantelisto.com"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -400,7 +400,7 @@ export function Pago() {
               }}
             >
               <Ico name="mail" size={17} width={2.2} />
-              hola@mirestaurantelisto.mx
+              hola@mirestaurantelisto.com
             </a>
           </div>
           <div style={{ flex: 1 }} />
@@ -548,7 +548,7 @@ function Exito({ estado, precio }: { estado: EstadoDeCobro; precio: number }) {
       </a>
 
       <p style={{ marginTop: 12, fontSize: 13, lineHeight: 1.55, color: 'var(--ink-3)' }}>
-        Si algo no se abre, escríbenos a hola@mirestaurantelisto.mx y lo resolvemos.
+        Si algo no se abre, escríbenos a hola@mirestaurantelisto.com y lo resolvemos.
       </p>
     </div>
   );

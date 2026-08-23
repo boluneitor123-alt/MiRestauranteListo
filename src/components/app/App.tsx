@@ -346,21 +346,10 @@ export function App() {
           entitlement={entitlement}
           onClose={() => setScreen('app')}
           onClaim={claim}
-          onCheckout={async () => {
-            // El cobro lo abre el servidor con el precio del panel; al volver,
-            // `?pago=1` dispara la activación automática.
-            try {
-              const response = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deviceId, returnPath: '/app?pago=1' }),
-              });
-              const data = (await response.json()) as { ok: boolean; url?: string; message?: string };
-              if (data.ok && data.url) window.location.href = data.url;
-              else flash(data.message ?? 'No pudimos abrir el pago. Intenta de nuevo.');
-            } catch {
-              flash('Necesitas conexión para abrir el pago.');
-            }
+          onCheckout={() => {
+            // El cobro vive en `/pago`, con el Payment Element de Stripe. Al
+            // volver, `?pago=1` dispara la activación automática.
+            window.location.href = '/pago';
           }}
         />
       );

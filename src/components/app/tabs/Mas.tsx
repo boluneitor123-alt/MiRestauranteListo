@@ -795,7 +795,7 @@ function SubScreenView(props: {
           </Card>
           <Card radius={RADIUS.block} style={{ padding: 14 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Correo</div>
-            <Muted size={12.5}>hola@mirestaurantelisto.mx</Muted>
+            <Muted size={12.5}>hola@mirestaurantelisto.com</Muted>
           </Card>
           <Card radius={RADIUS.block} style={{ padding: 14 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Horario</div>
