@@ -370,7 +370,17 @@
   color: var(--color-text-2);
 }
 
+/*
+  Va dentro de una frase, así que no puede medir 44px de alto sin abrir un
+  hueco en el renglón. El área que se toca sí llega a 44: el relleno crece
+  hacia afuera y el margen negativo lo devuelve, así que se puede tocar sin
+  que se mueva nada de sitio. Es la puerta al registro desde el login: dejarla
+  en 22px era pedirle puntería a alguien con el teléfono en una mano.
+*/
 .cta-pie .cta-link {
   align-self: auto;
   min-height: 0;
+  display: inline-block;
+  padding: 11px 6px;
+  margin: -11px -6px;
 }

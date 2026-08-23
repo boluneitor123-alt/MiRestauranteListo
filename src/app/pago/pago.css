@@ -1,3 +1,88 @@
+/* ── La rejilla de la pantalla ────────────────────────────────────────── */
+
+/*
+  Esta rejilla y el `position:sticky` de la tarjeta estaban en `style=` dentro
+  del JSX, y un atributo en línea le gana a cualquier media query: por eso en
+  el teléfono la columna izquierda quedaba en 0px y su texto salía en una
+  columna de una palabra por línea, detrás de la tarjeta. Los cortes son los
+  de `PagoMRL.dc.html`.
+*/
+
+.pg-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 540px);
+  gap: 40px;
+  align-items: start;
+}
+
+.pg-card {
+  position: sticky;
+  top: 18px;
+  padding: 26px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 40px rgb(28 26 23 / 0.07);
+}
+
+@media (max-width: 1000px) {
+  .pg-split {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  /* Primero el pedido y el cobro; el argumento de venta, después. */
+  .pg-left {
+    order: 2;
+  }
+
+  .pg-right {
+    order: 1;
+  }
+
+  .pg-card {
+    position: static;
+  }
+}
+
+/* ── El resumen del pedido ────────────────────────────────────────────── */
+
+.pg-sum-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Se encoge esta y no el precio: si no, el nombre y los $2,450 se montaban. */
+.pg-sum-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.pg-sum-precio {
+  flex: none;
+  text-align: right;
+}
+
+/* En el teléfono no caben lado a lado: el precio baja debajo del nombre. */
+@media (max-width: 460px) {
+  .pg-sum-fila {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Base 0, no `auto`: con `auto` el nombre pedía su ancho y se iba de renglón. */
+  .pg-sum-texto {
+    flex: 1 1 0;
+  }
+
+  .pg-sum-precio {
+    flex: 1 0 100%;
+    text-align: left;
+    padding-top: 12px;
+    border-top: 1.5px solid rgb(28 26 23 / 0.1);
+  }
+}
+
 /**
  * La pantalla de pago (`PagoMRL.dc.html`).
  *
@@ -137,9 +222,3 @@
   }
 }
 
-/* Arriba de 1000px la tarjeta se queda pegada; abajo estorba. */
-@media (max-width: 1000px) {
-  .pg-card {
-    position: static;
-  }
-}

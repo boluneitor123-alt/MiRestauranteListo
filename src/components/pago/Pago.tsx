@@ -172,9 +172,9 @@ export function Pago() {
       </header>
 
       <section className="lp-sec">
-        <div className="lp-split" style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,540px)', alignItems: 'start' }}>
+        <div className="pg-split">
           {/* ── Lo que compras ── */}
-          <div>
+          <div className="pg-left">
             <div className="lp-hand" style={{ fontSize: 25, lineHeight: 1.2, color: 'var(--ink-2)' }}>
               Estás a un paso
               <br />
@@ -235,17 +235,7 @@ export function Pago() {
           </div>
 
           {/* ── El pedido y el cobro ── */}
-          <div
-            className="pg-card"
-            style={{
-              position: 'sticky',
-              top: 18,
-              padding: 26,
-              borderRadius: 22,
-              background: '#fff',
-              boxShadow: '0 10px 40px rgb(28 26 23 / 0.07)',
-            }}
-          >
+          <div className="pg-card pg-right">
             {fase === 'listo' ? (
               <Exito estado={estadoFinal} precio={precio} />
             ) : (
@@ -432,7 +422,7 @@ export function Pago() {
 function Pedido({ precio }: { precio: number }) {
   return (
     <div style={{ marginTop: 20, padding: 22, borderRadius: 17, background: 'var(--amber-xl)' }} className="pg-sum">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div className="pg-sum-fila">
         <span
           style={{
             display: 'grid',
@@ -450,13 +440,13 @@ function Pedido({ precio }: { precio: number }) {
         >
           MRL
         </span>
-        <span style={{ flex: 1, minWidth: 0 }}>
+        <span className="pg-sum-texto">
           <span style={{ display: 'block', fontFamily: 'var(--disp)', fontSize: 18, fontWeight: 800, letterSpacing: '-.02em' }}>
             MiRestauranteListo
           </span>
           <span style={{ display: 'block', fontSize: 14, color: 'var(--ink-2)', marginTop: 2 }}>Acceso de por vida</span>
         </span>
-        <span style={{ textAlign: 'right', flex: 'none' }}>
+        <span className="pg-sum-precio">
           <span className="pg-precio" style={{ display: 'block', fontFamily: 'var(--disp)', fontSize: 29, fontWeight: 900, letterSpacing: '-.03em' }}>
             {money(precio)}
           </span>

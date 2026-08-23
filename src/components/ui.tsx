@@ -300,17 +300,37 @@ export function Row({
   gap = 10,
   align = 'center',
   style,
+  className,
 }: {
   children: ReactNode;
   gap?: number;
   align?: CSSProperties['alignItems'];
   style?: CSSProperties;
+  className?: string;
 }) {
-  return <div style={{ display: 'flex', alignItems: align, gap, ...style }}>{children}</div>;
+  return (
+    <div className={className} style={{ display: 'flex', alignItems: align, gap, ...style }}>
+      {children}
+    </div>
+  );
 }
 
-export function Muted({ children, size = 13, style }: { children: ReactNode; size?: number; style?: CSSProperties }) {
-  return <div style={{ fontSize: size, color: text(62), lineHeight: 1.45, ...style }}>{children}</div>;
+export function Muted({
+  children,
+  size = 13,
+  style,
+  className,
+}: {
+  children: ReactNode;
+  size?: number;
+  style?: CSSProperties;
+  className?: string;
+}) {
+  return (
+    <div className={className} style={{ fontSize: size, color: text(62), lineHeight: 1.45, ...style }}>
+      {children}
+    </div>
+  );
 }
 
 /** Hoja inferior (FAB, información). */

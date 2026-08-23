@@ -259,12 +259,22 @@ export function Mas({
           >
             {(state.profile.name || 'T').slice(0, 1).toUpperCase()}
           </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15.5, fontWeight: 700 }}>{state.profile.name || 'Tu perfil'}</div>
-            <Muted size={12}>{state.profile.email || 'Sin correo capturado'}</Muted>
+          {/*
+            El correo se corta con puntos suspensivos en vez de partirse: a
+            360px la etiqueta de la prueba le ganaba el ancho y lo dejaba en una
+            tira de 21px, con el correo repartido en trece renglones.
+          */}
+          <div className="mrl-perfil-texto">
+            <div className="mrl-trunc" style={{ fontSize: 15.5, fontWeight: 700 }}>
+              {state.profile.name || 'Tu perfil'}
+            </div>
+            <Muted size={12} className="mrl-trunc">
+              {state.profile.email || 'Sin correo capturado'}
+            </Muted>
           </div>
           <span
             style={{
+              flex: 'none',
               padding: '5px 10px',
               borderRadius: RADIUS.pill,
               background: entitlement?.licensed ? 'var(--color-accent-2-100)' : 'var(--color-neutral-200)',
@@ -725,6 +735,21 @@ function SubScreenView(props: {
               </Muted>
             </Card>
           ))}
+          {/* Lo de arriba es el resumen; los documentos completos viven en su ruta. */}
+          <Card radius={RADIUS.block} style={{ padding: 14 }}>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Los documentos completos</div>
+            <Muted size={12.5} style={{ marginTop: 4 }}>
+              Lo de arriba es el resumen. Si quieres la letra completa, aquí está.
+            </Muted>
+            <Row gap={10} style={{ marginTop: 12, flexWrap: 'wrap' }}>
+              <Button variant="secondary" height={44} style={{ width: 'auto', flex: '1 1 140px' }} onClick={() => window.open('/terminos', '_blank', 'noopener')}>
+                Términos de uso
+              </Button>
+              <Button variant="secondary" height={44} style={{ width: 'auto', flex: '1 1 140px' }} onClick={() => window.open('/privacidad', '_blank', 'noopener')}>
+                Aviso de privacidad
+              </Button>
+            </Row>
+          </Card>
         </>
       ));
 

@@ -100,7 +100,8 @@ export function HerramientasRapidas({ onGo }: { onGo: (target: Target) => void }
         </button>
       </div>
 
-      <div className="mrl-qtools" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+      {/* La rejilla vive en `.mrl-qtools`: en línea, el media query de 390px no podría ganarle. */}
+      <div className="mrl-qtools">
         {HERRAMIENTAS.map((h) => (
           <button
             key={h.label}
