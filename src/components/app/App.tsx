@@ -73,7 +73,8 @@ export function App() {
   const [authMode, setAuthMode] = useState<AuthMode>('registro');
   const [tab, setTab] = useState<Tab>('inicio');
   const [obStep, setObStep] = useState(0);
-  const [moduleId, setModuleId] = useState(ROUTE_MODULES[0].id);
+  // null = Mi Ruta enseña sus tres etapas; con id, el módulo abierto.
+  const [moduleId, setModuleId] = useState<string | null>(null);
   const [openTaskKey, setOpenTaskKey] = useState<string | null>(null);
   const [costView, setCostView] = useState<CostView>('platillos');
   const [celebration, setCelebration] = useState<CelebrationState | null>(null);
@@ -554,6 +555,11 @@ export function App() {
               update((s) => ({ ...s, extraTasks: s.extraTasks.filter((x) => x.id !== id) }))
             }
             onOpenTask={setOpenTaskKey}
+            onOpenProject={() => {
+              setTab('mas');
+              setSubScreen('proyecto');
+              scrollTop();
+            }}
             onOpenPaywall={() => setScreen('paywall')}
             onOpenOverview={() => {
               setTab('mas');

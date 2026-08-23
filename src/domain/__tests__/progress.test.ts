@@ -7,10 +7,12 @@ import {
   progressLevel,
   progressWithoutModule,
   projectProgress,
+  stageLabel,
+  stageProgress,
   taskKey,
   type RouteModule,
 } from '../progress';
-import { ROUTE_MODULES, TOTAL_ROUTE_TASKS, SKIP_REASONS } from '@/content/route';
+import { ETAPAS, ROUTE_MODULES, TOTAL_ROUTE_TASKS, SKIP_REASONS } from '@/content/route';
 
 const modules: RouteModule[] = [
   {
@@ -221,5 +223,70 @@ describe('proyección de fecha de apertura', () => {
     expect(paceProjection({ pending: 0, done: 90, startedAt: HOY - 10 * DIA, now: HOY })).toBe(
       'Terminaste tu ruta completa.',
     );
+  });
+});
+
+describe('las tres etapas de Mi Ruta', () => {
+  const progreso = () =>
+    projectProgress({ modules: ROUTE_MODULES, done: {}, skipped: {} });
+
+  it('agrupa los 10 módulos de ruta sin dejar ninguno fuera', () => {
+    const etapas = stageProgress(ETAPAS, progreso().modules);
+    expect(etapas).toHaveLength(3);
+    const agrupados = etapas.flatMap((e) => e.modules.map((m) => m.id));
+    const deRuta = ROUTE_MODULES.filter((m) => !m.course).map((m) => m.id);
+    expect([...agrupados].sort()).toEqual([...deRuta].sort());
+    // Ningún mini curso entra en una etapa: los cursos van aparte.
+    expect(agrupados.some((id) => ROUTE_MODULES.find((m) => m.id === id)?.course)).toBe(false);
+  });
+
+  it('suma las tareas de sus módulos y arranca todo pendiente', () => {
+    const etapas = stageProgress(ETAPAS, progreso().modules);
+    for (const e of etapas) {
+      expect(e.total).toBe(e.modules.reduce((a, m) => a + m.total, 0));
+      expect(e.done).toBe(0);
+      expect(e.state).toBe('Pendiente');
+    }
+  });
+
+  it('pasa a en progreso con una tarea y a completado con todas', () => {
+    const define = ETAPAS[0];
+    const modulos = ROUTE_MODULES.filter((m) => define.mods.includes(m.id));
+    const tareas = modulos.flatMap((m) => moduleTasks(m));
+
+    const una = stageProgress(ETAPAS, projectProgress({
+      modules: ROUTE_MODULES, done: { [tareas[0].key]: true },
+    }).modules)[0];
+    expect(una.done).toBe(1);
+    expect(una.state).toBe('En progreso');
+
+    const todas = Object.fromEntries(tareas.map((t) => [t.key, true]));
+    const llena = stageProgress(ETAPAS, projectProgress({ modules: ROUTE_MODULES, done: todas }).modules)[0];
+    expect(llena.done).toBe(llena.total);
+    expect(llena.state).toBe('Completado');
+  });
+
+  it('saca de la cuenta los módulos omitidos', () => {
+    const define = ETAPAS[0];
+    const omitido = define.mods[0];
+    const sinOmitir = stageProgress(ETAPAS, progreso().modules)[0];
+    const conOmitido = stageProgress(ETAPAS, projectProgress({
+      modules: ROUTE_MODULES, done: {}, skipped: { [omitido]: 'No aplica' },
+    }).modules)[0];
+    const tareasDelOmitido = moduleTasks(ROUTE_MODULES.find((m) => m.id === omitido)!).length;
+    expect(conOmitido.total).toBe(sinOmitir.total - tareasDelOmitido);
+    // El módulo sigue apareciendo en la etapa, marcado como omitido.
+    expect(conOmitido.modules.find((m) => m.id === omitido)?.skipped).toBe(true);
+  });
+
+  it('nombra la etapa de la siguiente tarea y avisa cuando ya sólo quedan cursos', () => {
+    expect(stageLabel(ETAPAS, projectProgress({ modules: ROUTE_MODULES, done: {} }).nextTask))
+      .toBe('Define · etapa 1 de 3');
+
+    const deRuta = ROUTE_MODULES.filter((m) => !m.course).flatMap((m) => moduleTasks(m));
+    const todo = Object.fromEntries(deRuta.map((t) => [t.key, true]));
+    const soloCursos = projectProgress({ modules: ROUTE_MODULES, done: todo });
+    expect(stageLabel(ETAPAS, soloCursos.nextTask)).toBe('Puntos extra');
+    expect(stageLabel(ETAPAS, undefined)).toBe('Puntos extra');
   });
 });

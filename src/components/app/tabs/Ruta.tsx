@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bike, Check, ChevronDown, Lock, Megaphone, Star, Target as TargetIcon } from 'lucide-react';
+import { ArrowLeft, Bike, Check, ChevronDown, ChevronRight, Lock, Megaphone, Star } from 'lucide-react';
 import { ROUTE_MODULES, SKIP_REASONS } from '@/content/route';
 import { projectProgress, progressWithoutModule, type ModuleProgress, type RouteTask } from '@/domain/progress';
 import {
@@ -15,13 +15,24 @@ import {
 } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, text } from '@/components/ui';
-import { RouteMenus, type MenuOpen } from '../ruta/RouteMenus';
 import { Lesson } from '../ruta/Lesson';
+import { Etapas } from '../ruta/Etapas';
+import { ListaModulos } from '../ruta/ListaModulos';
+import { moduleIcon } from '../ruta/moduleIcons';
 
 type SkipFlow = { moduleId: string; step: 'motivo' | 'confirmar'; reason: string } | null;
 
-/** Token de color de un módulo, listo para CSS. */
-const cv = (col: string) => `var(--color-${col || 'accent-500'})`;
+/** El icono de tres trazos del módulo. */
+function IconoModulo({ id }: { id: string }) {
+  const [d1, d2, d3] = moduleIcon(id);
+  return (
+    <svg width={23} height={23} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={d1} />
+      <path d={d2} />
+      <path d={d3} />
+    </svg>
+  );
+}
 
 /** Mi Ruta: 14 módulos, 90 lecciones. */
 export function Ruta({
@@ -31,6 +42,7 @@ export function Ruta({
   openTaskKey,
   formOpen,
   onSelectModule,
+  onOpenProject,
   onToggleTask,
   onSkipModule,
   onRestoreModule,
@@ -43,10 +55,13 @@ export function Ruta({
 }: {
   state: ProjectState;
   level: AccessLevel;
-  moduleId: string;
+  /** Módulo abierto, o null cuando se ven las etapas o la lista completa. */
+  moduleId: string | null;
   openTaskKey: string | null;
   formOpen: boolean;
-  onSelectModule: (id: string) => void;
+  onSelectModule: (id: string | null) => void;
+  /** Abre los datos del proyecto desde el rótulo del encabezado. */
+  onOpenProject: () => void;
   onToggleTask: (key: string) => void;
   onSkipModule: (id: string, reason: string) => void;
   onRestoreModule: (id: string) => void;
@@ -62,9 +77,9 @@ export function Ruta({
   const [showForm, setShowForm] = useState(formOpen);
   const [title, setTitle] = useState('');
   const [hint, setHint] = useState('');
-  const [menu, setMenu] = useState<MenuOpen>(null);
-  // En cuanto abre el menú de la ruta una vez, sus animaciones se apagan.
-  const [rutaSeen, setRutaSeen] = useState(false);
+  // Vista de lista completa; con moduleId en null la alterna con las etapas.
+  const [lista, setLista] = useState(false);
+  const [stageOpen, setStageOpen] = useState<string | null>(null);
 
   const progress = projectProgress({
     modules: ROUTE_MODULES,
@@ -72,54 +87,83 @@ export function Ruta({
     skipped: state.skipped,
     extraTasks: state.extraTasks,
   });
-  const rutaModules = progress.modules.filter((m) => !m.course);
-  const cursoModules = progress.modules.filter((m) => m.course);
-  const current = progress.modules.find((m) => m.id === moduleId) ?? progress.modules[0];
+  const current = progress.modules.find((m) => m.id === moduleId);
 
+  const abrirModulo = (id: string) => {
+    onSelectModule(id);
+    onOpenTask(null);
+    setLista(false);
+  };
+
+  // ── Etapas y lista completa: las dos vistas sin módulo abierto ──────────
+  if (!current) {
+    return (
+      <div className="mrl-measure" style={{ padding: '18px 20px' }}>
+        <Encabezado
+          titulo="Mi ruta"
+          bajada="Tu plan paso a paso para abrir tu restaurante."
+          proyecto={state.project.name}
+          onOpenProject={onOpenProject}
+        />
+        <div style={{ marginTop: 18 }}>
+          {lista ? (
+            <ListaModulos
+              progress={progress}
+              level={level}
+              done={state.done}
+              onSelect={abrirModulo}
+              onBack={() => setLista(false)}
+            />
+          ) : (
+            <Etapas
+              progress={progress}
+              level={level}
+              stageOpen={stageOpen}
+              onToggleStage={setStageOpen}
+              onSelectModule={abrirModulo}
+              onOpenList={() => setLista(true)}
+              onOpenNext={() => {
+                const siguiente = progress.nextTask;
+                if (!siguiente) return;
+                onSelectModule(siguiente.moduleId);
+                onOpenTask(siguiente.key);
+                setLista(false);
+              }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Un módulo abierto: sus lecciones ───────────────────────────────────
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <div>
-          <H size={25}>Mi Ruta</H>
-          <Muted size={12.5}>{progress.pct}% completado</Muted>
-        </div>
-        <button
-          type="button"
-          onClick={onOpenOverview}
-          style={{
-            height: 44,
-            padding: '0 14px',
-            borderRadius: RADIUS.pill,
-            border: '1.5px solid var(--color-divider)',
-            background: 'transparent',
-            color: 'var(--color-text)',
-            fontWeight: 700,
-            fontSize: 13,
-            cursor: 'pointer',
-            fontFamily: 'var(--font-body)',
-          }}
-        >
-          Vista general
-        </button>
-      </Row>
-
-      <RouteMenus
-        level={level}
-        rutaModules={rutaModules}
-        cursoModules={cursoModules}
-        current={current}
-        open={menu}
-        rutaSeen={rutaSeen}
-        onToggle={(which) => {
-          if (which === 'ruta') setRutaSeen(true);
-          setMenu((prev) => (prev === which ? null : which));
-        }}
-        onSelect={(id) => {
-          onSelectModule(id);
+      <button
+        type="button"
+        onClick={() => {
+          onSelectModule(null);
           onOpenTask(null);
-          setMenu(null);
         }}
-      />
+        className="mrl-hit"
+        style={{
+          justifySelf: 'start',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 7,
+          padding: '10px 4px',
+          border: 'none',
+          background: 'none',
+          color: 'var(--color-accent-700)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13.5,
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+      >
+        <ArrowLeft size={15} strokeWidth={3} />
+        Mi ruta
+      </button>
 
       <ModuleCard
         module={current}
@@ -201,6 +245,60 @@ export function Ruta({
   );
 }
 
+/**
+ * Encabezado de Mi Ruta: título, bajada y el rótulo del proyecto, que abre
+ * sus datos. En el prototipo el rótulo es un selector de restaurante; aquí
+ * cada cuenta tiene un proyecto, así que lleva a editarlo.
+ */
+function Encabezado({
+  titulo,
+  bajada,
+  proyecto,
+  onOpenProject,
+}: {
+  titulo: string;
+  bajada: string;
+  proyecto: string;
+  onOpenProject: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <H size={27}>{titulo}</H>
+        <p style={{ margin: '5px 0 0', fontSize: 14, color: 'var(--color-text-2)' }}>{bajada}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onOpenProject}
+        style={{
+          flex: 'none',
+          minHeight: 44,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 9,
+          padding: '11px 13px',
+          border: '1px solid var(--color-border)',
+          borderRadius: RADIUS.inner,
+          background: 'var(--color-surface)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-body)',
+          color: 'var(--color-text)',
+          maxWidth: '52%',
+        }}
+      >
+        <svg width={19} height={19} style={{ flex: 'none' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M4 9.5 5.5 4h13L20 9.5" />
+          <path d="M4 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0M5.5 11.5V20h13v-8.5M10 20v-5h4v5" />
+        </svg>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {proyecto}
+        </span>
+        <ChevronDown size={15} strokeWidth={2.8} style={{ flex: 'none', color: 'var(--color-text-2)' }} />
+      </button>
+    </div>
+  );
+}
+
 /** Tarjeta del módulo activo: nombre, descripción, avance y el botón de omitir. */
 function ModuleCard({
   module,
@@ -212,17 +310,17 @@ function ModuleCard({
   onRestore: () => void;
 }) {
   return (
-    <Card style={module.course ? { border: `2px dashed ${cv(module.col)}` } : undefined}>
+    <Card style={module.course ? { borderColor: 'var(--color-accent-2-300)' } : undefined}>
       {module.course ? (
         <Row gap={7} style={{ marginBottom: 8 }}>
-          <Star size={13} fill="currentColor" strokeWidth={2.6} color={cv(module.col)} />
+          <Star size={13} fill="currentColor" strokeWidth={2.6} color="var(--color-accent-2-600)" />
           <span
             style={{
               fontSize: 10.5,
               letterSpacing: '.09em',
               textTransform: 'uppercase',
               fontWeight: 800,
-              color: cv(module.col),
+              color: 'var(--color-accent-2-700)',
             }}
           >
             Punto extra · Mini curso
@@ -233,21 +331,17 @@ function ModuleCard({
       <Row gap={12} align="flex-start">
         <span
           style={{
-            width: 42,
-            height: 42,
-            borderRadius: RADIUS.small,
-            background: cv(module.col),
-            color: 'var(--color-bg)',
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: module.course ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)',
+            color: module.course ? 'var(--color-accent-2-700)' : 'var(--color-accent-600)',
             display: 'grid',
             placeItems: 'center',
             flexShrink: 0,
           }}
         >
-          {module.course ? (
-            <Star size={20} fill="currentColor" strokeWidth={2.6} />
-          ) : (
-            <TargetIcon size={22} strokeWidth={2.6} />
-          )}
+          <IconoModulo id={module.id} />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <H size={19}>{module.name}</H>
@@ -258,7 +352,7 @@ function ModuleCard({
             <span style={{ flex: 1, minWidth: 0 }}>
               <ProgressBar pct={module.skipped ? 0 : module.pct} />
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: cv(module.col) }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>
               {module.skipped ? 'omitido' : `${module.pct}%`}
             </span>
           </Row>
