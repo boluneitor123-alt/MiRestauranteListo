@@ -307,3 +307,22 @@ export function stageLabel(stages: readonly StageDef[], nextTask?: RouteTask): s
   const nombre = stages[i].name.charAt(0) + stages[i].name.slice(1).toLowerCase();
   return `${nombre} · etapa ${i + 1} de ${stages.length}`;
 }
+
+/** Cuántas tareas enseña Inicio en "Tareas de tu ruta". */
+export const HOME_TASKS = 4;
+
+/**
+ * La ventana de tareas que enseña Inicio: la que sigue, con una hecha antes
+ * para que se vea de dónde viene el avance, y las siguientes para saber qué
+ * viene. Al final de la ruta la ventana se pega al final en lugar de encogerse.
+ */
+export function taskWindow(
+  tasks: readonly RouteTask[],
+  next?: RouteTask,
+  size: number = HOME_TASKS,
+): RouteTask[] {
+  if (!tasks.length) return [];
+  const i = next ? tasks.indexOf(next) : tasks.length - 1;
+  const desde = Math.max(0, Math.min(i - 1, tasks.length - size));
+  return tasks.slice(desde, desde + size);
+}

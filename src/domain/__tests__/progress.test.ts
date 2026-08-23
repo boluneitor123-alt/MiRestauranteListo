@@ -9,6 +9,8 @@ import {
   projectProgress,
   stageLabel,
   stageProgress,
+  taskWindow,
+  HOME_TASKS,
   taskKey,
   type RouteModule,
 } from '../progress';
@@ -288,5 +290,35 @@ describe('las tres etapas de Mi Ruta', () => {
     const soloCursos = projectProgress({ modules: ROUTE_MODULES, done: todo });
     expect(stageLabel(ETAPAS, soloCursos.nextTask)).toBe('Puntos extra');
     expect(stageLabel(ETAPAS, undefined)).toBe('Puntos extra');
+  });
+});
+
+describe('la ventana de tareas de Inicio', () => {
+  const tareas = ROUTE_MODULES.flatMap((m) => moduleTasks(m));
+
+  it('enseña cuatro, con una hecha antes de la que sigue', () => {
+    const ventana = taskWindow(tareas, tareas[5]);
+    expect(ventana).toHaveLength(HOME_TASKS);
+    // La que sigue va en segundo lugar: antes se ve una ya hecha.
+    expect(ventana[1].key).toBe(tareas[5].key);
+    expect(ventana[0].key).toBe(tareas[4].key);
+  });
+
+  it('no se sale por la izquierda con la primera tarea', () => {
+    const ventana = taskWindow(tareas, tareas[0]);
+    expect(ventana.map((t) => t.key)).toEqual(tareas.slice(0, HOME_TASKS).map((t) => t.key));
+  });
+
+  it('se pega al final en lugar de encogerse con la última', () => {
+    const ventana = taskWindow(tareas, tareas[tareas.length - 1]);
+    expect(ventana).toHaveLength(HOME_TASKS);
+    expect(ventana[HOME_TASKS - 1].key).toBe(tareas[tareas.length - 1].key);
+  });
+
+  it('sin pendientes enseña las últimas, y con lista vacía no enseña nada', () => {
+    const ventana = taskWindow(tareas, undefined);
+    expect(ventana).toHaveLength(HOME_TASKS);
+    expect(ventana[HOME_TASKS - 1].key).toBe(tareas[tareas.length - 1].key);
+    expect(taskWindow([], undefined)).toEqual([]);
   });
 });

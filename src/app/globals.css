@@ -290,6 +290,23 @@ textarea {
   padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
+/*
+ * Las seis herramientas rápidas: tres por fila. En pantallas de 360px tres
+ * columnas dejan la descripción en una tira de dos letras, así que abajo de
+ * 390px pasan a dos por fila.
+ */
+.mrl-qtools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 389px) {
+  .mrl-qtools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Dos tarjetas a lo ancho, apiladas en pantallas angostas. */
 .mrl-duo {
   display: grid;

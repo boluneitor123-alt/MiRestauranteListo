@@ -210,6 +210,8 @@ export function App() {
   );
 
   const blocked = entitlement?.level === 'bloqueado';
+  // El punto naranja de la campana: sólo con una recomendación de severidad alta.
+  const hasAlerts = diagnosis.recommendations.some((r) => r.severity === 'alta');
 
   const scrollTop = () => scrollRef.current?.scrollTo({ top: 0 });
 
@@ -220,6 +222,7 @@ export function App() {
     setSubScreen(null);
     setFormOpen(false);
     if (target.module) setModuleId(target.module);
+    setOpenTaskKey(target.task ?? null);
     if (target.tab === 'numeros') setNumbersView((target.view as NumbersView) ?? 'home');
     if (target.tab === 'costeador') setCostView((target.view as CostView) ?? 'platillos');
     if (target.tab === 'mas' && target.view) setSubScreen(target.view as SubScreen);
@@ -481,7 +484,6 @@ export function App() {
           <Inicio
             state={state}
             diagnosis={diagnosis}
-            can={can}
             licensed={!!entitlement?.licensed}
             trial={
               entitlement && !entitlement.licensed
@@ -489,7 +491,12 @@ export function App() {
                 : null
             }
             startedAt={entitlement?.trial.startedAt ?? null}
+            hasAlerts={hasAlerts}
             onGo={go}
+            onOpenProject={() => {
+              setTab('mas');
+              setSubScreen('proyecto');
+            }}
             onOpenProfile={() => {
               setTab('mas');
               setSubScreen('perfil');
@@ -560,6 +567,17 @@ export function App() {
               setSubScreen('proyecto');
               scrollTop();
             }}
+            onOpenProfile={() => {
+              setTab('mas');
+              setSubScreen('perfil');
+              scrollTop();
+            }}
+            onOpenAlerts={() => {
+              setTab('mas');
+              setSubScreen('alertas');
+              scrollTop();
+            }}
+            hasAlerts={hasAlerts}
             onOpenPaywall={() => setScreen('paywall')}
             onOpenOverview={() => {
               setTab('mas');
