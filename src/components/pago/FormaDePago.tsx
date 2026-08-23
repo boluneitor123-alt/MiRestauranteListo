@@ -195,11 +195,11 @@ export function FormaDePago({
       <p style={{ marginTop: 14, textAlign: 'center', fontSize: 13, lineHeight: 1.6, color: 'var(--ink-3)' }}>
         {/* Enlaces dentro de una línea de texto: la excepción documentada al mínimo de 44px. */}
         Al completar tu compra aceptas nuestros{' '}
-        <a className="mrl-inline" href="/#faq">
+        <a className="mrl-inline" href="/terminos">
           Términos de uso
         </a>{' '}
         y la{' '}
-        <a className="mrl-inline" href="/#faq">
+        <a className="mrl-inline" href="/privacidad">
           Política de privacidad
         </a>
         .

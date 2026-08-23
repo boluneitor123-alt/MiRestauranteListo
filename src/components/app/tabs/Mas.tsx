@@ -735,6 +735,21 @@ function SubScreenView(props: {
               </Muted>
             </Card>
           ))}
+          {/* Lo de arriba es el resumen; los documentos completos viven en su ruta. */}
+          <Card radius={RADIUS.block} style={{ padding: 14 }}>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Los documentos completos</div>
+            <Muted size={12.5} style={{ marginTop: 4 }}>
+              Lo de arriba es el resumen. Si quieres la letra completa, aquí está.
+            </Muted>
+            <Row gap={10} style={{ marginTop: 12, flexWrap: 'wrap' }}>
+              <Button variant="secondary" height={44} style={{ width: 'auto', flex: '1 1 140px' }} onClick={() => window.open('/terminos', '_blank', 'noopener')}>
+                Términos de uso
+              </Button>
+              <Button variant="secondary" height={44} style={{ width: 'auto', flex: '1 1 140px' }} onClick={() => window.open('/privacidad', '_blank', 'noopener')}>
+                Aviso de privacidad
+              </Button>
+            </Row>
+          </Card>
         </>
       ));
 

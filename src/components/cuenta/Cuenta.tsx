@@ -290,11 +290,11 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
             <p className="cta-legal">
               {/* Enlaces dentro de una línea de texto: la excepción documentada al mínimo de 44px. */}
               Al crear tu cuenta aceptas nuestros{' '}
-              <a className="mrl-inline" href="/#faq">
+              <a className="mrl-inline" href="/terminos">
                 Términos de uso
               </a>{' '}
               y la{' '}
-              <a className="mrl-inline" href="/#faq">
+              <a className="mrl-inline" href="/privacidad">
                 Política de privacidad
               </a>
               .
