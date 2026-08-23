@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=Figtree:wght@400;500;600;700;800&family=Caveat:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#FAF5EC; --cream-2:#F3EBDC; --paper:#FFFDF8; --white:#FFFFFF;
+    --ink:#1C1A17; --ink-2:#4A453D; --ink-3:#878175;
+    --amber:#F5A623; --amber-l:#FFC85C; --amber-xl:#FDEFD2; --amber-d:#D4820A;
+    --orange:#E8821E;
+    --sage:#DDE8CE; --sage-d:#5E7D3E;
+    --rose:#F8DFD9; --sky:#D9E6F2;
+    --line:#E7DECD; --line-2:#EFE7DA; --danger:#C0392B;
+    --disp:'Archivo', system-ui, sans-serif;
+    --body:'Figtree', system-ui, sans-serif;
+    --hand:'Caveat', cursive;
+    --mono:'Space Mono', ui-monospace, monospace;
+  }
+  * { box-sizing:border-box }
+  html { overflow-x:clip }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip }
+  a { color:var(--orange); text-decoration:underline } a:hover { color:var(--amber-d) }
+  h1,h2 { font-family:var(--disp); font-weight:900; letter-spacing:-.03em; line-height:1.04; margin:0; text-wrap:balance }
+  p { margin:0; text-wrap:pretty }
+  button, input, label { font-family:inherit }
+  :focus-visible { outline:3px solid var(--orange); outline-offset:2px; border-radius:8px }
+  @keyframes floaty { 0%,100% { transform:translateY(0) rotate(var(--r,0deg)) } 50% { transform:translateY(-6px) rotate(var(--r,0deg)) } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:none } }
+  @keyframes drawline { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+  @keyframes spin { to { transform:rotate(360deg) } }
+  .post { animation:floaty 6.5s ease-in-out infinite }
+  .rise { animation:fadeUp .55s cubic-bezier(.2,.7,.3,1) both }
+  .uline { transform-origin:left center; animation:drawline .8s .35s cubic-bezier(.22,.75,.3,1) both }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important } }
+
+  @media (max-width: 1000px) {
+    .mrl-nav { display:none !important }
+    .mrl-split { grid-template-columns:1fr !important; gap:28px !important }
+    .mrl-left { order:2 }
+    .mrl-right { order:1 }
+    .mrl-card { position:static !important }
+  }
+  @media (max-width: 620px) {
+    .mrl-wrap { padding:18px 14px 30px !important }
+    .mrl-head { padding:10px 14px !important; gap:10px !important }
+    .mrl-head a span:last-child { font-size:16px !important }
+    .mrl-head a span:first-child { width:40px !important; height:40px !important; font-size:13px !important }
+    .mrl-login { display:none !important }
+    .mrl-launch { font-size:9.5px !important; letter-spacing:.02em !important }
+    .mrl-launchbar { padding:9px 14px !important; gap:9px !important }
+    .mrl-launchbar span:last-child { font-size:12px !important; padding:4px 10px !important }
+
+    /* el formulario primero; el saludo y Arnold, después */
+    .mrl-card { padding:22px 16px !important; border-radius:18px !important; box-shadow:0 6px 22px rgba(28,26,23,.06) !important }
+    .mrl-tabs button { font-size:15.5px !important; height:48px !important }
+    .mrl-h2 { font-size:25px !important }
+    .mrl-field { height:54px !important; padding-left:14px !important; gap:10px !important }
+    .mrl-cta { height:58px !important; font-size:16.5px !important }
+    .mrl-oauth { height:54px !important; font-size:15px !important }
+
+    .mrl-intro { text-align:center }
+    .mrl-intro h1 { font-size:32px !important }
+    .mrl-hand { font-size:22px !important }
+    .mrl-handline { margin-left:auto !important; margin-right:auto !important }
+    .mrl-lead { font-size:15.5px !important; margin-left:auto !important; margin-right:auto !important }
+    .mrl-arnimg { width:110% !important; margin-left:-5% !important }
+
+    .mrl-trust3 { grid-template-columns:1fr !important }
+    .mrl-trust3 > div { border-left:none !important; padding:16px 18px !important; display:flex; align-items:center; gap:13px; text-align:left !important }
+    .mrl-trust3 > div:not(:first-child) { border-top:1px solid var(--line-2) }
+    .mrl-trust3 > div > span { margin:0 !important; flex:none }
+    .mrl-trust3 > div > div { margin-top:0 !important }
+
+    .mrl-foot { flex-direction:column !important; align-items:stretch !important; gap:14px !important; padding:16px 14px calc(16px + env(safe-area-inset-bottom)) !important }
+    .mrl-foot > div:first-child { flex-direction:column !important; align-items:stretch !important; gap:10px !important }
+    .mrl-foot button { width:100%; justify-content:center }
+    .mrl-footr { border-left:none !important; padding-left:0 !important; border-top:1.5px solid rgba(255,255,255,.18); padding-top:14px }
+    .mrl-devices { gap:22px !important }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh; display:flex; flex-direction:column">
+
+  <header style="background:var(--cream)">
+    <div class="mrl-head" style="max-width:1120px; margin:0 auto; padding:16px 22px; display:flex; align-items:center; gap:16px">
+      <a href="LandingMRL v2.dc.html" style="display:flex; align-items:center; gap:12px; color:var(--ink); text-decoration:none">
+        <span style="display:grid; place-items:center; width:46px; height:46px; border-radius:11px; background:var(--ink); color:var(--white); font-family:var(--disp); font-weight:900; font-size:15px; letter-spacing:-.02em">MRL</span>
+        <span style="font-family:var(--disp); font-weight:800; font-size:19px; letter-spacing:-.02em">Mi<span style="color:var(--orange)">Restaurante</span>Listo</span>
+      </a>
+      <nav class="mrl-nav" style="flex:1; display:flex; align-items:center; justify-content:center; gap:28px">
+        <a href="LandingMRL v2.dc.html#como" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">¿Cómo funciona?</a>
+        <a href="LandingMRL v2.dc.html#temario" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">Temario</a>
+        <a href="LandingMRL v2.dc.html#faq" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">Preguntas</a>
+      </nav>
+      <div style="display:flex; align-items:center; gap:11px">
+        <button class="mrl-login" style="height:46px; padding-inline:22px; border-radius:11px; border:2px solid var(--ink); background:var(--white); font-size:14.5px; font-weight:700; color:var(--ink); cursor:pointer" style-hover="background:var(--amber-xl)" onClick="{{ goLogin }}">Iniciar sesión</button>
+        <button style="height:46px; padding-inline:22px; border-radius:11px; border:2px solid var(--ink); background:var(--amber); font-size:14.5px; font-weight:800; color:var(--ink); cursor:pointer" style-hover="background:var(--amber-l)" onClick="{{ goSignup }}">Crear cuenta</button>
+      </div>
+    </div>
+  </header>
+
+  <div style="background:#F6DFA8">
+    <div class="mrl-launchbar" style="max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap">
+      <span class="mrl-launch" style="font-family:var(--mono); font-size:12.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink)">🚀 Precio de lanzamiento · quedan {{ spotsLeft }} de {{ spotsTotal }} lugares</span>
+      <span style="font-family:var(--mono); font-size:13.5px; font-weight:700; letter-spacing:.06em; background:var(--ink); color:var(--amber-l); padding:5px 13px; border-radius:7px">{{ countdown }}</span>
+    </div>
+  </div>
+
+  <div class="mrl-wrap" style="flex:1; max-width:1120px; width:100%; margin:0 auto; padding:38px 22px 44px">
+    <div class="mrl-split" style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,516px); gap:44px; align-items:start">
+
+      <div class="mrl-left rise"><div class="mrl-intro">
+        <div class="mrl-hand" style="font-family:var(--hand); font-size:26px; line-height:1.2; color:var(--ink)">Bienvenido a tu<br>ruta para abrir tu<br>restaurante.</div>
+        <svg width="176" height="10" viewBox="0 0 176 10" fill="none" class="uline mrl-handline" style="display:block; margin:1px 0 26px"><path d="M3 6.6C38 2.6 128 1.8 173 5" stroke="#F5A623" stroke-width="4" stroke-linecap="round"/></svg>
+
+        <h1 style="font-size:clamp(38px,4.8vw,56px)">Tu restaurante<br>empieza <span style="position:relative; display:inline-block; padding-bottom:.16em; color:var(--orange)">aquí.<svg width="112%" height="14" viewBox="0 0 200 14" preserveAspectRatio="none" fill="none" class="uline" style="position:absolute; left:-6%; bottom:-10px"><path d="M5 9C56 3 148 2.6 195 7" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/></svg></span></h1>
+
+        <p class="mrl-lead" style="margin-top:22px; font-size:17px; line-height:1.6; color:var(--ink-2); max-width:400px">Crea tu cuenta y accede a todas las herramientas, calculadoras y pasos para abrir tu negocio de comida con números reales.</p>
+
+        </div>
+        <div style="position:relative; margin-top:14px">
+          <img class="mrl-arnimg" src="assets/arnold-hero.png" alt="Arnold en su escritorio, con su libreta de plan, su taza y sus notas" loading="eager" decoding="async" style="display:block; width:106%; max-width:none; margin-left:-5%; height:auto">
+        </div>
+
+        <div class="mrl-trust3" style="margin-top:8px; display:grid; grid-template-columns:repeat(3,1fr); border-radius:20px; background:var(--paper); overflow:hidden">
+          <sc-for list="{{ trust3 }}" as="t3" hint-placeholder-count="3">
+            <div style="{{ t3.cell }}">
+              <span style="display:grid; place-items:center; width:44px; height:44px; margin:0 auto; border-radius:50%; background:var(--cream-2); color:var(--ink-2)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="{{ t3.d1 }}"></path>
+                  <path d="{{ t3.d2 }}"></path>
+                </svg>
+              </span>
+              <div style="margin-top:11px; font-family:var(--disp); font-size:12px; font-weight:800; letter-spacing:.03em; text-transform:uppercase">{{ t3.t }}</div>
+              <div style="margin-top:6px; font-size:13px; line-height:1.45; color:var(--ink-3)">{{ t3.d }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="mrl-right rise">
+        <div class="mrl-card" style="position:sticky; top:20px; padding:34px 34px 30px; border-radius:22px; background:var(--white); box-shadow:0 10px 40px rgba(28,26,23,.07)">
+
+          <div class="mrl-tabs" style="display:flex; gap:0; border-bottom:1.5px solid var(--line-2)">
+            <button style="{{ tabSignup }}" onClick="{{ goSignup }}">Crear cuenta</button>
+            <button style="{{ tabLogin }}" onClick="{{ goLogin }}">Iniciar sesión</button>
+          </div>
+
+          <sc-if value="{{ isReset }}">
+            <div style="padding-top:26px">
+              <sc-if value="{{ sent }}">
+                <div>
+                  <div style="display:grid; place-items:center; width:56px; height:56px; border-radius:50%; background:var(--sage); color:var(--sage-d)">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17Z"/><path d="m4 6.5 8 6 8-6"/></svg>
+                  </div>
+                  <h2 class="mrl-h2" style="margin-top:16px; font-size:27px">Revisa tu correo</h2>
+                  <p style="margin-top:9px; font-size:15.5px; line-height:1.55; color:var(--ink-2)">Te enviamos un enlace para restablecer tu contraseña.</p>
+                  <button style="margin-top:22px; width:100%; height:56px; border-radius:12px; border:2px solid var(--ink); background:var(--white); font-size:15.5px; font-weight:700; color:var(--ink); cursor:pointer" style-hover="background:var(--amber-xl)" onClick="{{ resend }}">Reenviar enlace</button>
+                  <button style="margin-top:11px; width:100%; height:48px; border:none; background:none; font-size:14.5px; font-weight:700; color:var(--ink-2); cursor:pointer; text-decoration:underline" onClick="{{ goLogin }}">Volver a iniciar sesión</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+                <form onSubmit="{{ submit }}">
+                  <h2 class="mrl-h2" style="font-size:29px">Recupera tu acceso</h2>
+                  <p style="margin-top:9px; font-size:15.5px; line-height:1.55; color:var(--ink-2)">Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.</p>
+                  <div class="mrl-field" style="{{ boxMail }}">
+                    <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17Z"/><path d="m4 6.5 8 6 8-6"/></svg>
+                    <input id="ac-mail-r" type="email" autocomplete="email" aria-label="Correo electrónico" placeholder="Correo electrónico" value="{{ email }}" onInput="{{ setEmail }}" onBlur="{{ touchMail }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+                  </div>
+                  <sc-if value="{{ errMail }}"><div role="alert" style="margin-top:8px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errMail }}</div></sc-if>
+                  <button type="submit" class="mrl-cta" disabled="{{ busy }}" style="{{ ctaStyle }}" onClick="{{ submit }}">
+                    <sc-if value="{{ busy }}"><span style="width:19px; height:19px; border-radius:50%; border:3px solid rgba(28,26,23,.25); border-top-color:var(--ink); animation:spin .7s linear infinite"></span></sc-if>
+                    {{ ctaLabel }}
+                    <sc-if value="{{ notBusy }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></sc-if>
+                  </button>
+                  <button type="button" style="margin-top:11px; width:100%; height:48px; border:none; background:none; font-size:14.5px; font-weight:700; color:var(--ink-2); cursor:pointer; text-decoration:underline" onClick="{{ goLogin }}">Volver a iniciar sesión</button>
+                </form>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+            <div style="padding-top:26px">
+              <h2 class="mrl-h2" style="font-size:29px">{{ h2 }}</h2>
+              <p style="margin-top:9px; font-size:15.5px; line-height:1.5; color:var(--ink-2)">{{ sub }}</p>
+
+              <form onSubmit="{{ submit }}" style="margin-top:22px; display:flex; flex-direction:column; gap:14px">
+                <sc-if value="{{ isSignup }}">
+                  <div>
+                    <div class="mrl-field" style="{{ boxName }}">
+                      <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.5a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="8" r="3.6"/></svg>
+                      <input id="ac-name" type="text" autocomplete="name" aria-label="Nombre completo" placeholder="Nombre completo" value="{{ name }}" onInput="{{ setName }}" onBlur="{{ touchName }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+                    </div>
+                    <sc-if value="{{ errName }}"><div role="alert" style="margin-top:7px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errName }}</div></sc-if>
+                  </div>
+                </sc-if>
+
+                <div>
+                  <div class="mrl-field" style="{{ boxMail }}">
+                    <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17Z"/><path d="m4 6.5 8 6 8-6"/></svg>
+                    <input id="ac-mail" type="email" autocomplete="email" aria-label="Correo electrónico" placeholder="Correo electrónico" value="{{ email }}" onInput="{{ setEmail }}" onBlur="{{ touchMail }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+                  </div>
+                  <sc-if value="{{ errMail }}"><div role="alert" style="margin-top:7px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errMail }}</div></sc-if>
+                </div>
+
+                <div>
+                  <div class="mrl-field" style="{{ boxPass }}">
+                    <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5"/></svg>
+                    <input id="ac-pass" type="{{ passType }}" autocomplete="{{ passAuto }}" aria-label="Contraseña" placeholder="{{ passPlaceholder }}" value="{{ pass }}" onInput="{{ setPass }}" onBlur="{{ touchPass }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+                    <button type="button" aria-label="{{ passToggleLabel }}" style="display:grid; place-items:center; width:40px; height:40px; flex:none; border:none; border-radius:9px; background:none; color:var(--ink-3); cursor:pointer" style-hover="background:var(--cream-2); color:var(--ink)" onClick="{{ togglePass }}">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="{{ eyeD1 }}"></path>
+                        <path d="{{ eyeD2 }}"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <sc-if value="{{ errPass }}"><div role="alert" style="margin-top:7px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errPass }}</div></sc-if>
+
+                  <sc-if value="{{ showStrength }}">
+                    <div style="margin-top:11px">
+                      <div style="display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)">Seguridad: <span style="{{ strengthLabelStyle }}">{{ strengthLabel }}</span></div>
+                      <div style="margin-top:6px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px">
+                        <sc-for list="{{ strengthBars }}" as="sb" hint-placeholder-count="4">
+                          <span style="{{ sb }}"></span>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+
+                <sc-if value="{{ isLogin }}">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+                    <label style="display:flex; align-items:center; gap:9px; min-height:44px; font-size:14.5px; font-weight:600; color:var(--ink-2); cursor:pointer">
+                      <input type="checkbox" checked="{{ remember }}" onChange="{{ toggleRemember }}" style="width:19px; height:19px; accent-color:#E8821E; cursor:pointer">
+                      Recordarme
+                    </label>
+                    <button type="button" style="min-height:44px; border:none; background:none; padding:0; font-size:14.5px; font-weight:700; color:var(--orange); cursor:pointer; text-decoration:underline" onClick="{{ goReset }}">¿Olvidaste tu contraseña?</button>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ errForm }}">
+                  <div role="alert" style="display:flex; align-items:flex-start; gap:10px; padding:13px 15px; border-radius:13px; background:#FBE9E6; color:#8C2A1F; font-size:14px; line-height:1.45; font-weight:600">
+                    <svg width="18" height="18" style="flex:none; margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/></svg>
+                    {{ errForm }}
+                  </div>
+                </sc-if>
+
+                <button type="submit" class="mrl-cta" disabled="{{ busy }}" style="{{ ctaStyle }}" onClick="{{ submit }}">
+                  <sc-if value="{{ busy }}"><span style="width:19px; height:19px; border-radius:50%; border:3px solid rgba(28,26,23,.25); border-top-color:var(--ink); animation:spin .7s linear infinite"></span></sc-if>
+                  {{ ctaLabel }}
+                  <sc-if value="{{ notBusy }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></sc-if>
+                </button>
+              </form>
+
+              <div style="display:flex; align-items:center; gap:16px; margin:22px 0 16px">
+                <span style="flex:1; height:1px; background:var(--line-2)"></span>
+                <span style="font-size:14px; color:var(--ink-3); white-space:nowrap">o continúa con</span>
+                <span style="flex:1; height:1px; background:var(--line-2)"></span>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:11px">
+                <button class="mrl-oauth" disabled="{{ busy }}" style="{{ oauthStyle }}" onClick="{{ withGoogle }}">
+                  <svg width="21" height="21" viewBox="0 0 24 24" style="flex:none"><path fill="#4285F4" d="M22.6 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.94a5.08 5.08 0 0 1-2.2 3.33v2.77h3.56c2.08-1.92 3.3-4.74 3.3-8.11Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.99 7.28-2.67l-3.56-2.76c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.09a6.6 6.6 0 0 1 0-4.18V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53Z"/></svg>
+                  Continuar con Google
+                </button>
+                <button class="mrl-oauth" disabled="{{ busy }}" style="{{ oauthStyle }}" onClick="{{ withApple }}">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="#1C1A17" style="flex:none"><path d="M17.05 12.94c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.05-2.75-4.12M14.6 5.31c.71-.87 1.19-2.07 1.06-3.27-1.02.04-2.27.68-3.01 1.54-.66.76-1.24 1.99-1.08 3.16 1.14.09 2.31-.58 3.03-1.43"/></svg>
+                  Continuar con Apple
+                </button>
+              </div>
+
+              <sc-if value="{{ isSignup }}">
+                <p style="margin-top:20px; text-align:center; font-size:13.5px; line-height:1.6; color:var(--ink-3)">Al crear tu cuenta aceptas nuestros <a href="#terminos">Términos de uso</a> y <a href="#privacidad">Política de privacidad</a>.</p>
+              </sc-if>
+              <sc-if value="{{ isLogin }}">
+                <p style="margin-top:20px; text-align:center; font-size:14.5px; color:var(--ink-2)">¿Aún no tienes cuenta? <button type="button" style="border:none; background:none; padding:0; font-family:inherit; font-size:14.5px; font-weight:800; color:var(--orange); cursor:pointer; text-decoration:underline" onClick="{{ goSignup }}">Crear cuenta</button></p>
+              </sc-if>
+
+              <div style="margin-top:20px; padding:20px 22px; border-radius:16px; background:#FDF6E7">
+                <div style="text-align:center; font-family:var(--hand); font-size:21px; color:var(--ink)">Accede desde cualquier dispositivo:</div>
+                <div class="mrl-devices" style="margin-top:14px; display:flex; align-items:flex-end; justify-content:center; gap:34px">
+                  <sc-for list="{{ devices }}" as="dv" hint-placeholder-count="3">
+                    <div style="text-align:center">
+                      <span style="display:grid; place-items:center; color:var(--ink)">
+                        <svg width="{{ dv.w }}" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="{{ dv.d1 }}"></path>
+                          <path d="{{ dv.d2 }}"></path>
+                        </svg>
+                      </span>
+                      <div style="margin-top:7px; font-size:13px; font-weight:600; color:var(--ink-2)">{{ dv.label }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="background:var(--ink); color:var(--white)">
+    <div class="mrl-foot" style="max-width:1120px; margin:0 auto; padding:20px 22px calc(20px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:24px">
+      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap">
+        <span style="font-family:var(--disp); font-size:19px; font-weight:800; letter-spacing:-.02em">{{ footAsk }}</span>
+        <button style="height:52px; padding-inline:24px; border-radius:11px; border:2px solid var(--white); background:transparent; font-family:var(--disp); font-size:15.5px; font-weight:800; color:var(--white); cursor:pointer; display:flex; align-items:center; gap:11px" style-hover="background:var(--white); color:var(--ink)" onClick="{{ footGo }}">
+          {{ footLabel }}
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div style="flex:1"></div>
+      <div class="mrl-footr" style="display:flex; align-items:center; gap:12px; border-left:1.5px solid rgba(255,255,255,.18); padding-left:24px">
+        <span style="font-size:19px">🚀</span>
+        <span style="font-size:14.5px; line-height:1.45; color:rgba(255,255,255,.82)">{{ footNote }} <strong style="color:var(--white)">Mi<span style="color:var(--amber)">Restaurante</span>Listo</strong>.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:940}}">
+const LAUNCH = { deadline: '2026-09-15', spotsTotal: 100, spotsLeft: 23 };
+const MAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const EYE_OPEN = ['M2.5 12S6.5 5.5 12 5.5 21.5 12 21.5 12 17.5 18.5 12 18.5 2.5 12 2.5 12Z', 'M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6'];
+const EYE_OFF = ['M3 3l18 18', 'M10.2 6.1A8.6 8.6 0 0 1 12 5.5c5.5 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.6 8.2A17 17 0 0 0 2.5 12S6.5 18.5 12 18.5c1 0 1.9-.2 2.7-.5'];
+
+// Fuerza de la contraseña: largo + variedad de caracteres.
+function fuerza(p) {
+  if (!p) return 0;
+  let n = 0;
+  if (p.length >= 8) n++;
+  if (p.length >= 12) n++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++;
+  if (/\d/.test(p)) n++;
+  if (/[^\w\s]/.test(p)) n++;
+  return Math.min(4, Math.max(1, n));
+}
+
+class Component extends DCLogic {
+  state = {
+    view: 'signup',
+    name: '', email: '', pass: '',
+    tName: false, tMail: false, tPass: false,
+    show: false, remember: true,
+    busy: false, errForm: '', sent: false
+  };
+
+  componentDidMount() {
+    this.t = setInterval(() => this.forceUpdate(), 1000);
+    const h = (location.hash || '').replace('#', '');
+    if (h === 'login' || h === 'reset' || h === 'signup') this.setState({ view: h });
+  }
+  componentWillUnmount() { clearInterval(this.t); clearTimeout(this.fake); }
+
+  ir(view) {
+    clearTimeout(this.fake);
+    this.setState({ view, errForm: '', sent: false, busy: false, tName: false, tMail: false, tPass: false });
+    try { history.replaceState(null, '', '#' + view); } catch (e) {}
+  }
+
+  // Abre la sesión y devuelve a la app. El backend real lo conecta Claude Code;
+  // aquí la autenticación se simula, pero el viaje de vuelta sí es real: sin él,
+  // cerrar sesión dejaba al usuario rebotando entre las dos páginas.
+  entrar() {
+    if (this.state.busy) return;
+    this.setState({ busy: true, errForm: '' });
+    this.fake = setTimeout(() => {
+      try { window.localStorage.setItem('mrl.session', '1'); } catch (e) {}
+      window.location.href = 'MiRestauranteListo.dc.html';
+    }, 900);
+  }
+
+  // El backend real lo conecta Claude Code; aquí solo se simula la espera.
+  simular(mensaje) {
+    if (this.state.busy) return;
+    this.setState({ busy: true, errForm: '' });
+    this.fake = setTimeout(() => this.setState({ busy: false, errForm: mensaje }), 1100);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isSignup = s.view === 'signup', isLogin = s.view === 'login', isReset = s.view === 'reset';
+
+    const ms = new Date(LAUNCH.deadline + 'T23:59:59').getTime() - Date.now();
+    const pad = x => String(x).padStart(2, '0');
+    const countdown = Math.max(0, Math.floor(ms / 864e5)) + 'd ' +
+      pad(Math.max(0, Math.floor(ms / 36e5) % 24)) + ':' +
+      pad(Math.max(0, Math.floor(ms / 6e4) % 60)) + ':' +
+      pad(Math.max(0, Math.floor(ms / 1e3) % 60));
+
+    const mailOk = MAIL_RE.test(s.email.trim());
+    const nameOk = s.name.trim().length >= 2;
+    const passOk = s.pass.length >= 8;
+
+    const errName = isSignup && s.tName && !nameOk ? 'Escribe tu nombre.' : '';
+    const errMail = s.tMail && !mailOk ? (s.email.trim() ? 'Ese correo no se ve bien. Revísalo.' : 'Escribe tu correo.') : '';
+    const errPass = isSignup && s.tPass && !passOk ? 'Usa al menos 8 caracteres.' : (isLogin && s.tPass && !s.pass ? 'Escribe tu contraseña.' : '');
+
+    const box = bad => ({
+      marginTop: '0', display: 'flex', alignItems: 'center', gap: '12px',
+      height: '58px', padding: '0 8px 0 16px', borderRadius: '12px',
+      background: 'var(--white)',
+      border: '1.5px solid ' + (bad ? 'var(--danger)' : 'var(--line)')
+    });
+
+    const f = fuerza(s.pass);
+    const FT = [
+      ['Débil', 'var(--danger)'],
+      ['Débil', 'var(--danger)'],
+      ['Regular', 'var(--amber-d)'],
+      ['Buena', 'var(--sage-d)'],
+      ['Fuerte', 'var(--sage-d)']
+    ][f];
+
+    const tab = on => ({
+      flex: 1, height: '52px', border: 'none', background: 'none', cursor: 'pointer',
+      fontFamily: 'var(--disp)', fontSize: '17px', fontWeight: 800, letterSpacing: '-.01em',
+      color: on ? 'var(--ink)' : 'var(--ink-3)',
+      borderBottom: '3px solid ' + (on ? 'var(--amber)' : 'transparent'),
+      marginBottom: '-1.5px'
+    });
+
+    const ctaLabel = isSignup ? (s.busy ? 'Creando tu cuenta…' : 'Crear mi cuenta')
+      : isLogin ? (s.busy ? 'Entrando…' : 'Iniciar sesión')
+      : (s.busy ? 'Enviando…' : 'Enviar enlace');
+
+    return {
+      countdown, spotsLeft: LAUNCH.spotsLeft + '', spotsTotal: LAUNCH.spotsTotal + '',
+
+      isSignup, isLogin, isReset, isAuth: isSignup || isLogin,
+      sent: isReset && s.sent, notSent: isReset && !s.sent,
+
+      tabSignup: tab(isSignup), tabLogin: tab(isLogin),
+      goSignup: () => this.ir('signup'),
+      goLogin: () => this.ir('login'),
+      goReset: () => this.ir('reset'),
+
+      h2: isSignup ? 'Crea tu cuenta' : 'Bienvenido de vuelta',
+      sub: isSignup
+        ? 'Empieza tu prueba gratuita de 7 días, sin tarjeta de crédito.'
+        : 'Tu ruta, tus números y tu progreso siguen aquí.',
+
+      name: s.name, email: s.email, pass: s.pass,
+      setName: e => this.setState({ name: e.target.value }),
+      setEmail: e => this.setState({ email: e.target.value }),
+      setPass: e => this.setState({ pass: e.target.value }),
+      touchName: () => this.setState({ tName: true }),
+      touchMail: () => this.setState({ tMail: true }),
+      touchPass: () => this.setState({ tPass: true }),
+
+      errName, errMail, errPass, errForm: s.errForm,
+      boxName: box(!!errName), boxMail: box(!!errMail), boxPass: box(!!errPass),
+
+      passType: s.show ? 'text' : 'password',
+      passAuto: isSignup ? 'new-password' : 'current-password',
+      passPlaceholder: isSignup ? 'Crea una contraseña' : 'Contraseña',
+      passToggleLabel: s.show ? 'Ocultar contraseña' : 'Mostrar contraseña',
+      togglePass: () => this.setState({ show: !s.show }),
+      eyeD1: s.show ? EYE_OFF[0] : EYE_OPEN[0],
+      eyeD2: s.show ? EYE_OFF[1] : EYE_OPEN[1],
+
+      showStrength: isSignup && !!s.pass,
+      strengthLabel: FT[0],
+      strengthLabelStyle: { fontWeight: 800, color: FT[1] },
+      strengthBars: [0, 1, 2, 3].map(i => ({
+        display: 'block', height: '5px', borderRadius: '999px',
+        background: i < f ? FT[1] : 'var(--line-2)'
+      })),
+
+      remember: s.remember,
+      toggleRemember: () => this.setState({ remember: !s.remember }),
+
+      busy: s.busy, notBusy: !s.busy, ctaLabel,
+      ctaStyle: {
+        marginTop: isReset ? '18px' : '4px', width: '100%', height: '62px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '11px',
+        borderRadius: '13px', border: 'none',
+        background: s.busy ? 'var(--amber-xl)' : 'var(--amber)',
+        fontFamily: 'var(--disp)', fontSize: '18px', fontWeight: 800,
+        letterSpacing: '-.01em', color: 'var(--ink)',
+        cursor: s.busy ? 'progress' : 'pointer'
+      },
+      oauthStyle: {
+        width: '100%', height: '58px', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', gap: '12px', borderRadius: '13px',
+        border: '1.5px solid var(--line)', background: 'var(--white)',
+        fontSize: '16px', fontWeight: 700, color: 'var(--ink)',
+        cursor: s.busy ? 'progress' : 'pointer', opacity: s.busy ? .55 : 1
+      },
+
+      submit: e => {
+        if (e && e.preventDefault) e.preventDefault();
+        this.setState({ tName: true, tMail: true, tPass: true });
+        if (!mailOk) return;
+        if (isSignup && (!nameOk || !passOk)) return;
+        if (isLogin && !s.pass) return;
+        if (isReset) {
+          if (this.state.busy) return;
+          this.setState({ busy: true, errForm: '' });
+          this.fake = setTimeout(() => this.setState({ busy: false, sent: true }), 1000);
+          return;
+        }
+        this.entrar();
+      },
+      resend: () => this.setState({ sent: false }),
+      withGoogle: () => this.entrar(),
+      withApple: () => this.entrar(),
+
+      trust3: [
+        ['7 días sin riesgo', 'Si no te ayuda, te reembolsamos.', ['M12 2.5 4 6v6c0 4.6 3.4 8.6 8 9.5 4.6-.9 8-4.9 8-9.5V6Z', 'm8.6 12 2.3 2.3 4.5-4.6']],
+        ['Sin tarjeta', 'No pedimos tarjeta para la prueba.', ['M4.5 12A2.5 2.5 0 0 1 7 9.5h10a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 17 21.5H7A2.5 2.5 0 0 1 4.5 19Z', 'M8.5 9.5V7a3.5 3.5 0 0 1 7 0v2.5']],
+        ['Acceso inmediato', 'Empieza a usarlo al instante.', ['M12 3a9 9 0 1 0 8.5 6', 'M21 3v6h-6']]
+      ].map(([t, d, ic], i) => ({
+        t, d, d1: ic[0], d2: ic[1],
+        cell: { padding: '22px 18px', textAlign: 'center', borderLeft: i ? '1px solid var(--line-2)' : 'none' }
+      })),
+
+      devices: [
+        { label: 'Celular', w: 22, d1: 'M7 3.5A2 2 0 0 1 9 1.5h6a2 2 0 0 1 2 2v17a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2Z', d2: 'M10.5 19.5h3' },
+        { label: 'Tablet', w: 27, d1: 'M4.5 4A2.5 2.5 0 0 1 7 1.5h10A2.5 2.5 0 0 1 19.5 4v16a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 20Z', d2: 'M10.5 19.5h3' },
+        { label: 'Computadora', w: 36, d1: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v10H4Z', d2: 'M2 18.5h20' }
+      ],
+
+      footAsk: isSignup ? '¿Ya tienes cuenta?' : '¿Aún no tienes cuenta?',
+      footLabel: isSignup ? 'Iniciar sesión' : 'Crear cuenta',
+      footGo: () => this.ir(isSignup ? 'login' : 'signup'),
+      footNote: '[EDITAR] Frase de cierre — sin cifras que no puedas comprobar. Ej: Construye tu restaurante con'
+    };
+  }
+}
+</script>
+</body>
+</html>

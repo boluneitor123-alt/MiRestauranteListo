@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=Figtree:wght@400;500;600;700;800&family=Caveat:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#FAF5EC; --cream-2:#F3EBDC; --paper:#FFFDF8; --white:#FFFFFF;
+    --ink:#1C1A17; --ink-2:#4A453D; --ink-3:#878175;
+    --amber:#F5A623; --amber-l:#FFC85C; --amber-xl:#FDEFD2; --amber-d:#D4820A;
+    --orange:#E8821E;
+    --sage:#DDE8CE; --sage-d:#5E7D3E; --sage-xl:#EFF6E6;
+    --rose:#F8DFD9; --sky:#D9E6F2; --lila:#E6DEF3;
+    --line:#E7DECD; --line-2:#EFE7DA; --danger:#C0392B;
+    --disp:'Archivo', system-ui, sans-serif;
+    --body:'Figtree', system-ui, sans-serif;
+    --hand:'Caveat', cursive;
+    --mono:'Space Mono', ui-monospace, monospace;
+  }
+  * { box-sizing:border-box }
+  html { overflow-x:clip }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip }
+  a { color:var(--orange); text-decoration:underline } a:hover { color:var(--amber-d) }
+  h1,h2 { font-family:var(--disp); font-weight:900; letter-spacing:-.03em; line-height:1.04; margin:0; text-wrap:balance }
+  p { margin:0; text-wrap:pretty }
+  button, input, label { font-family:inherit }
+  :focus-visible { outline:3px solid var(--orange); outline-offset:2px; border-radius:8px }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:none } }
+  @keyframes drawline { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+  @keyframes spin { to { transform:rotate(360deg) } }
+  .rise { animation:fadeUp .55s cubic-bezier(.2,.7,.3,1) both }
+  .uline { transform-origin:left center; animation:drawline .8s .4s cubic-bezier(.22,.75,.3,1) both }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important } }
+
+  @media (max-width: 1000px) {
+    .mrl-nav { display:none !important }
+    .mrl-split { grid-template-columns:1fr !important; gap:26px !important }
+    .mrl-left { order:2 }
+    .mrl-right { order:1 }
+    .mrl-card { position:static !important }
+  }
+  @media (max-width: 620px) {
+    .mrl-wrap { padding:18px 14px 28px !important }
+    .mrl-head { padding:10px 14px !important; gap:10px !important }
+    .mrl-login { display:none !important }
+    .mrl-launch { font-size:9.5px !important; letter-spacing:.02em !important }
+    h1 { font-size:31px !important }
+    .mrl-hand { font-size:21px !important }
+    .mrl-card { padding:20px 15px !important; border-radius:18px !important }
+    .mrl-sum { padding:18px 15px !important }
+    .mrl-price { font-size:27px !important }
+    .mrl-badges { grid-template-columns:1fr !important; gap:8px !important }
+    .mrl-field { height:54px !important }
+    .mrl-paybtn { height:60px !important; font-size:16px !important }
+    .mrl-foot4 { grid-template-columns:1fr 1fr !important }
+    .mrl-foot4 > div { border-left:none !important }
+    .mrl-foot4 > div:nth-child(even) { border-left:1px solid var(--line-2) !important }
+    .mrl-foot4 > div:nth-child(n+3) { border-top:1px solid var(--line-2) }
+    .mrl-blackfoot { flex-direction:column !important; align-items:flex-start !important; gap:16px !important }
+    .mrl-blackfoot > div { border-left:none !important; padding-left:0 !important }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh; display:flex; flex-direction:column">
+
+  <div style="background:var(--amber)">
+    <div style="max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap">
+      <span class="mrl-launch" style="font-family:var(--mono); font-size:12.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink)">🚀 Precio de lanzamiento · quedan {{ spotsLeft }} de {{ spotsTotal }} lugares</span>
+      <span style="font-family:var(--mono); font-size:13.5px; font-weight:700; letter-spacing:.06em; background:var(--ink); color:var(--amber-l); padding:5px 13px; border-radius:7px">{{ countdown }}</span>
+    </div>
+  </div>
+
+  <header>
+    <div class="mrl-head" style="max-width:1120px; margin:0 auto; padding:16px 22px; display:flex; align-items:center; gap:16px">
+      <a href="LandingMRL v2.dc.html" style="display:flex; align-items:center; gap:12px; color:var(--ink); text-decoration:none">
+        <span style="display:grid; place-items:center; width:46px; height:46px; border-radius:11px; background:var(--ink); color:var(--white); font-family:var(--disp); font-weight:900; font-size:15px; letter-spacing:-.02em">MRL</span>
+        <span style="font-family:var(--disp); font-weight:800; font-size:19px; letter-spacing:-.02em">Mi<span style="color:var(--orange)">Restaurante</span>Listo</span>
+      </a>
+      <nav class="mrl-nav" style="flex:1; display:flex; align-items:center; justify-content:center; gap:28px">
+        <a href="LandingMRL v2.dc.html#como" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">¿Cómo funciona?</a>
+        <a href="LandingMRL v2.dc.html#temario" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">Temario</a>
+        <a href="LandingMRL v2.dc.html#faq" style="font-size:14.5px; font-weight:600; color:var(--ink-2); text-decoration:none" style-hover="color:var(--orange)">Preguntas</a>
+      </nav>
+      <div style="display:flex; align-items:center; gap:11px">
+        <button class="mrl-login" style="height:46px; padding-inline:22px; border-radius:11px; border:2px solid var(--ink); background:var(--white); font-size:14.5px; font-weight:700; color:var(--ink); cursor:pointer" style-hover="background:var(--amber-xl)" onClick="{{ goLogin }}">Iniciar sesión</button>
+        <button style="height:46px; padding-inline:22px; border-radius:11px; border:2px solid var(--ink); background:var(--amber); font-size:14.5px; font-weight:800; color:var(--ink); cursor:pointer" style-hover="background:var(--amber-l)" onClick="{{ goSignup }}">Crear cuenta</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mrl-wrap" style="flex:1; max-width:1120px; width:100%; margin:0 auto; padding:26px 22px 40px">
+    <div class="mrl-split" style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,540px); gap:40px; align-items:start">
+
+      <div class="mrl-left rise">
+        <div style="display:flex; align-items:flex-start; gap:14px">
+          <div>
+            <div class="mrl-hand" style="font-family:var(--hand); font-size:25px; line-height:1.2; color:var(--ink-2)">Estás a un paso<br>de hacerlo realidad.</div>
+          </div>
+          <svg width="44" height="40" viewBox="0 0 44 40" fill="none" style="flex:none; margin-top:18px"><path d="M3 4c14 8 26 18 33 30" stroke="#1C1A17" stroke-width="2" stroke-linecap="round"/><path d="M26 33.5 37 35l-2-10.5" stroke="#1C1A17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#F5A623" style="flex:none; margin-top:6px"><path d="m12 2 2.4 6.4L21 10.8l-6.6 2.4L12 19.6l-2.4-6.4L3 10.8l6.6-2.4Z"/></svg>
+        </div>
+
+        <h1 style="margin-top:20px; font-size:clamp(34px,4.4vw,50px)">Acceso inmediato<br>de por vida.</h1>
+        <div style="position:relative; display:inline-block; padding-bottom:16px; margin-top:6px; font-family:var(--hand); font-weight:700; font-size:clamp(34px,4.2vw,46px); line-height:1.05; color:var(--orange)">Pago único y listo.<svg width="60%" height="12" viewBox="0 0 200 12" preserveAspectRatio="none" fill="none" class="uline" style="position:absolute; right:0; bottom:0"><path d="M4 8C56 3 148 2.6 196 6.5" stroke="#F5A623" stroke-width="4.5" stroke-linecap="round"/></svg></div>
+
+        <p style="margin-top:20px; font-size:17px; line-height:1.6; color:var(--ink-2); max-width:420px">Sin suscripciones, sin mensualidades.<br>Un solo pago y es <span style="background:var(--amber-l); padding:2px 6px; font-weight:700">tuyo para siempre.</span></p>
+
+        <div style="margin-top:26px; padding:24px 24px; border-radius:20px; background:var(--paper)">
+          <div style="font-family:var(--disp); font-weight:800; font-size:17px; letter-spacing:-.01em">Con tu acceso obtienes:</div>
+          <div style="margin-top:18px; display:flex; flex-direction:column; gap:17px">
+            <sc-for list="{{ includes }}" as="inc" hint-placeholder-count="5">
+              <div style="display:flex; gap:14px; align-items:flex-start">
+                <span style="{{ inc.circ }}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="{{ inc.d1 }}"></path>
+                    <path d="{{ inc.d2 }}"></path>
+                  </svg>
+                </span>
+                <span style="flex:1; min-width:0">
+                  <span style="display:block; font-size:15.5px; font-weight:800">{{ inc.t }}</span>
+                  <span style="display:block; font-size:13.5px; line-height:1.45; color:var(--ink-3); margin-top:3px">{{ inc.d }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="position:relative; margin-top:22px; display:flex; align-items:flex-end; gap:0">
+          <img src="assets/arnold-cierre.png" alt="Arnold celebrando" loading="lazy" decoding="async" style="display:block; width:56%; max-width:250px; height:auto">
+          <div style="position:relative; flex:1; min-width:0; margin-bottom:34px">
+            <div style="position:relative; padding:22px 24px; border:2.5px solid var(--ink); border-radius:38px; background:var(--paper)">
+              <span style="font-family:var(--hand); font-size:27px; line-height:1.2; color:var(--ink)">¡Nos vemos<br>dentro! <span style="color:var(--orange)">♥</span></span>
+              <span style="position:absolute; left:-9px; bottom:20px; width:18px; height:18px; border-left:2.5px solid var(--ink); border-bottom:2.5px solid var(--ink); background:var(--paper); transform:rotate(45deg)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mrl-right rise">
+        <div class="mrl-card" style="position:sticky; top:18px; padding:26px 26px 26px; border-radius:22px; background:var(--white); box-shadow:0 10px 40px rgba(28,26,23,.07)">
+
+          <div style="display:flex; align-items:center; justify-content:center; gap:11px; flex-wrap:wrap">
+            <svg width="17" height="17" style="flex:none; color:var(--ink-2)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5"/></svg>
+            <span style="font-size:14.5px; font-weight:600; color:var(--ink-2)">Pago 100% seguro con</span>
+            <span style="font-family:var(--disp); font-weight:900; font-size:19px; letter-spacing:-.03em; color:#635BFF">stripe</span>
+            <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:5px; background:var(--sage-d); color:var(--white); font-family:var(--disp); font-size:11px; font-weight:900; letter-spacing:-.01em">PCI DSS</span>
+          </div>
+
+          <div class="mrl-sum" style="margin-top:20px; padding:22px 22px; border-radius:17px; background:var(--amber-xl)">
+            <div style="display:flex; align-items:center; gap:14px">
+              <span style="display:grid; place-items:center; width:52px; height:52px; flex:none; border-radius:12px; background:var(--ink); color:var(--white); font-family:var(--disp); font-weight:900; font-size:15px; letter-spacing:-.02em">MRL</span>
+              <span style="flex:1; min-width:0">
+                <span style="display:block; font-family:var(--disp); font-size:18px; font-weight:800; letter-spacing:-.02em">MiRestauranteListo</span>
+                <span style="display:block; font-size:14px; color:var(--ink-2); margin-top:2px">Acceso de por vida</span>
+              </span>
+              <span style="text-align:right; flex:none">
+                <span class="mrl-price" style="display:block; font-family:var(--disp); font-size:29px; font-weight:900; letter-spacing:-.03em">{{ price }}</span>
+                <span style="display:block; font-size:13px; color:var(--ink-2); margin-top:1px">Pago único</span>
+              </span>
+            </div>
+            <div style="margin-top:18px; padding-top:16px; border-top:1.5px solid rgba(28,26,23,.12); display:flex; align-items:flex-end; justify-content:space-between; gap:12px">
+              <span style="font-family:var(--disp); font-size:17px; font-weight:800; letter-spacing:-.01em">Total a pagar</span>
+              <span style="text-align:right">
+                <span style="display:flex; align-items:baseline; gap:7px; justify-content:flex-end">
+                  <span class="mrl-price" style="font-family:var(--disp); font-size:31px; font-weight:900; letter-spacing:-.03em">{{ price }}</span>
+                  <span style="font-family:var(--mono); font-size:14px; font-weight:700; color:var(--ink-2)">MXN</span>
+                </span>
+                <span style="display:block; font-size:13px; color:var(--ink-2); margin-top:2px">Sin impuestos adicionales</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="mrl-badges" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px">
+            <sc-for list="{{ badges }}" as="bg" hint-placeholder-count="3">
+              <div style="display:flex; align-items:center; gap:10px; padding:13px 12px; border:1.5px solid var(--line-2); border-radius:14px">
+                <span style="display:grid; place-items:center; width:32px; height:32px; flex:none; border-radius:50%; background:var(--cream-2); color:var(--ink-2)">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="{{ bg.d1 }}"></path>
+                    <path d="{{ bg.d2 }}"></path>
+                  </svg>
+                </span>
+                <span style="flex:1; min-width:0; font-size:12.5px; line-height:1.32; font-weight:600; color:var(--ink-2)">{{ bg.t }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <form onSubmit="{{ pagar }}">
+            <div style="margin-top:22px; font-family:var(--disp); font-size:17px; font-weight:800; letter-spacing:-.01em">Datos de contacto</div>
+            <div class="mrl-field" style="{{ boxMail }}">
+              <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17Z"/><path d="m4 6.5 8 6 8-6"/></svg>
+              <input id="pg-mail" type="email" autocomplete="email" aria-label="Correo electrónico" placeholder="Correo electrónico" value="{{ email }}" onInput="{{ setEmail }}" onBlur="{{ touchMail }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+            </div>
+            <sc-if value="{{ errMail }}"><div role="alert" style="margin-top:7px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errMail }}</div></sc-if>
+
+            <div style="margin-top:20px; font-family:var(--disp); font-size:17px; font-weight:800; letter-spacing:-.01em">Método de pago</div>
+            <div style="margin-top:9px; border:1.5px solid var(--line); border-radius:13px; overflow:hidden">
+              <div style="padding:13px 16px 0; font-size:13.5px; font-weight:600; color:var(--ink-2)">Número de tarjeta</div>
+              <div style="display:flex; align-items:center; gap:10px; height:52px; padding:0 16px">
+                <input id="pg-card" type="text" inputmode="numeric" autocomplete="cc-number" aria-label="Número de tarjeta" placeholder="1234 1234 1234 1234" value="{{ card }}" onInput="{{ setCard }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+                <span style="display:flex; gap:5px; flex:none">
+                  <sc-for list="{{ brands }}" as="br" hint-placeholder-count="3">
+                    <span style="{{ br.style }}">{{ br.label }}</span>
+                  </sc-for>
+                </span>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; border-top:1.5px solid var(--line-2)">
+                <input id="pg-exp" type="text" inputmode="numeric" autocomplete="cc-exp" aria-label="Vencimiento" placeholder="MM / AA" value="{{ exp }}" onInput="{{ setExp }}" style="height:52px; padding:0 16px; border:none; border-right:1.5px solid var(--line-2); background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink); min-width:0">
+                <input id="pg-cvc" type="text" inputmode="numeric" autocomplete="cc-csc" aria-label="Código de seguridad" placeholder="CVC" value="{{ cvc }}" onInput="{{ setCvc }}" style="height:52px; padding:0 16px; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink); min-width:0">
+              </div>
+            </div>
+
+            <div style="margin-top:16px; font-size:13.5px; font-weight:600; color:var(--ink-2)">Nombre en la tarjeta</div>
+            <div class="mrl-field" style="{{ boxName }}">
+              <svg width="20" height="20" style="flex:none; color:var(--ink-3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.5a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="8" r="3.6"/></svg>
+              <input id="pg-name" type="text" autocomplete="cc-name" aria-label="Nombre completo del titular" placeholder="Nombre completo" value="{{ name }}" onInput="{{ setName }}" onBlur="{{ touchName }}" style="flex:1; width:0; min-width:0; align-self:stretch; border:none; background:none; outline:none; font-size:16px; font-weight:500; color:var(--ink)">
+            </div>
+            <sc-if value="{{ errName }}"><div role="alert" style="margin-top:7px; font-size:13.5px; font-weight:600; color:var(--danger)">{{ errName }}</div></sc-if>
+
+            <label style="margin-top:15px; display:flex; align-items:center; gap:11px; min-height:44px; font-size:14.5px; color:var(--ink-2); cursor:pointer">
+              <input type="checkbox" checked="{{ save }}" onChange="{{ toggleSave }}" style="width:19px; height:19px; accent-color:#E8821E; cursor:pointer">
+              Guardar mis datos para futuras compras (opcional)
+            </label>
+
+            <sc-if value="{{ errForm }}">
+              <div role="alert" style="margin-top:14px; display:flex; align-items:flex-start; gap:10px; padding:13px 15px; border-radius:13px; background:#FBE9E6; color:#8C2A1F; font-size:14px; line-height:1.45; font-weight:600">
+                <svg width="18" height="18" style="flex:none; margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/></svg>
+                {{ errForm }}
+              </div>
+            </sc-if>
+
+            <button type="submit" class="mrl-paybtn" disabled="{{ busy }}" style="{{ payStyle }}" onClick="{{ pagar }}">
+              <sc-if value="{{ busy }}"><span style="width:20px; height:20px; border-radius:50%; border:3px solid rgba(28,26,23,.25); border-top-color:var(--ink); animation:spin .7s linear infinite"></span></sc-if>
+              <sc-if value="{{ notBusy }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5"/></svg></sc-if>
+              {{ payLabel }}
+              <sc-if value="{{ notBusy }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></sc-if>
+            </button>
+
+            <p style="margin-top:14px; text-align:center; font-size:13px; line-height:1.6; color:var(--ink-3)">Al completar tu compra aceptas nuestros <a href="#terminos">Términos de uso</a> y <a href="#privacidad">Política de privacidad</a>.</p>
+          </form>
+
+          <div style="margin-top:20px; padding:20px 22px; border-radius:17px; background:var(--sage-xl); display:flex; align-items:center; gap:16px">
+            <span style="display:grid; place-items:center; width:56px; height:56px; flex:none; border-radius:50%; background:var(--sage-d); color:var(--white)">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4 6v6c0 4.6 3.4 8.6 8 9.5 4.6-.9 8-4.9 8-9.5V6Z"/><path d="m8.6 12 2.3 2.3 4.5-4.6"/></svg>
+            </span>
+            <span style="flex:1; min-width:0">
+              <span style="display:block; font-family:var(--disp); font-size:18px; font-weight:800; letter-spacing:-.01em">Garantía 7 días sin riesgo</span>
+              <span style="display:block; font-size:14.5px; line-height:1.5; color:var(--ink-2); margin-top:4px">{{ garantia }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mrl-foot4" style="margin-top:22px; display:grid; grid-template-columns:repeat(4,1fr); border-radius:20px; background:var(--paper); overflow:hidden">
+      <sc-for list="{{ foot4 }}" as="f4" hint-placeholder-count="4">
+        <div style="{{ f4.cell }}">
+          <span style="display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:11px; background:var(--cream-2); color:var(--ink-2)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="{{ f4.d1 }}"></path>
+              <path d="{{ f4.d2 }}"></path>
+            </svg>
+          </span>
+          <span style="flex:1; min-width:0">
+            <span style="display:block; font-size:13.5px; font-weight:800">{{ f4.t }}</span>
+            <span style="display:block; font-size:12.5px; line-height:1.4; color:var(--ink-3); margin-top:2px">{{ f4.d }}</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:var(--ink); color:var(--white)">
+    <div class="mrl-blackfoot" style="max-width:1120px; margin:0 auto; padding:22px 22px calc(22px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:28px">
+      <div>
+        <div style="font-family:var(--disp); font-size:18px; font-weight:800; letter-spacing:-.01em">¿Dudas? Escríbenos</div>
+        <a href="mailto:hola@mirestaurantelisto.com" style="display:inline-flex; align-items:center; gap:9px; margin-top:8px; font-size:14.5px; color:rgba(255,255,255,.82); text-decoration:none" style-hover="color:#FFC85C">
+          <svg width="17" height="17" style="flex:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17Z"/><path d="m4 6.5 8 6 8-6"/></svg>
+          hola@mirestaurantelisto.com
+        </a>
+      </div>
+      <div style="flex:1"></div>
+      <div style="border-left:1.5px solid rgba(255,255,255,.18); padding-left:28px; display:flex; align-items:center; gap:14px">
+        <span style="font-size:14.5px; line-height:1.45; color:rgba(255,255,255,.82)">Pago procesado de forma segura por</span>
+        <span style="font-family:var(--disp); font-weight:900; font-size:21px; letter-spacing:-.03em; color:#A9A2FF">stripe</span>
+        <span style="display:inline-flex; align-items:center; padding:3px 9px; border-radius:5px; background:rgba(255,255,255,.14); font-family:var(--disp); font-size:11px; font-weight:900">PCI DSS</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:960}}">
+const LAUNCH = { deadline: '2026-09-15', spotsTotal: 100, spotsLeft: 23, price: 2450 };
+const MAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const money = n => '$' + Math.round(n).toLocaleString('es-MX');
+
+const circ = (bg, fg) => ({
+  display: 'grid', placeItems: 'center', width: '44px', height: '44px', flex: 'none',
+  borderRadius: '13px', background: bg, color: fg
+});
+
+class Component extends DCLogic {
+  state = {
+    email: '', name: '', card: '', exp: '', cvc: '',
+    tMail: false, tName: false, save: false, busy: false, errForm: ''
+  };
+
+  componentDidMount() { this.t = setInterval(() => this.forceUpdate(), 1000); }
+  componentWillUnmount() { clearInterval(this.t); clearTimeout(this.fake); }
+
+  // El cobro real lo conecta Claude Code contra Stripe; aquí solo se simula la espera.
+  simular(msg) {
+    if (this.state.busy) return;
+    this.setState({ busy: true, errForm: '' });
+    this.fake = setTimeout(() => this.setState({ busy: false, errForm: msg }), 1300);
+  }
+
+  renderVals() {
+    const s = this.state;
+
+    const ms = new Date(LAUNCH.deadline + 'T23:59:59').getTime() - Date.now();
+    const pad = x => String(x).padStart(2, '0');
+    const countdown = Math.max(0, Math.floor(ms / 864e5)) + 'd ' +
+      pad(Math.max(0, Math.floor(ms / 36e5) % 24)) + ':' +
+      pad(Math.max(0, Math.floor(ms / 6e4) % 60)) + ':' +
+      pad(Math.max(0, Math.floor(ms / 1e3) % 60));
+
+    const mailOk = MAIL_RE.test(s.email.trim());
+    const nameOk = s.name.trim().length >= 2;
+    const errMail = s.tMail && !mailOk ? (s.email.trim() ? 'Ese correo no se ve bien. Revísalo.' : 'Escribe tu correo.') : '';
+    const errName = s.tName && !nameOk ? 'Escribe el nombre que aparece en la tarjeta.' : '';
+
+    const box = bad => ({
+      marginTop: '9px', display: 'flex', alignItems: 'center', gap: '12px',
+      height: '58px', padding: '0 16px', borderRadius: '13px', background: 'var(--white)',
+      border: '1.5px solid ' + (bad ? 'var(--danger)' : 'var(--line)')
+    });
+
+    const digitos = v => v.replace(/[^0-9]/g, '');
+
+    return {
+      countdown, spotsLeft: LAUNCH.spotsLeft + '', spotsTotal: LAUNCH.spotsTotal + '',
+      price: money(LAUNCH.price),
+
+      goLogin: () => { window.location.href = 'CuentaMRL.dc.html#login'; },
+      goSignup: () => { window.location.href = 'CuentaMRL.dc.html#signup'; },
+
+      includes: [
+        ['Las 90 lecciones interactivas', 'Paso a paso, desde la idea hasta la apertura.',
+          ['M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v10H4Z', 'M2 18.5h20'], 'var(--sage)', 'var(--sage-d)'],
+        ['Calculadoras y herramientas', 'Números reales para tomar decisiones reales.',
+          ['M4 4.5A2.5 2.5 0 0 1 6.5 2h11A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5Z', 'M8 6h8M8 10.5h.01M12 10.5h.01M16 10.5h.01M8 14.5h.01M12 14.5h.01M16 14.5v3.5M8 18h4'], 'var(--amber-xl)', 'var(--amber-d)'],
+        ['Plantillas y checklists', 'Listas para usar en tu restaurante.',
+          ['M8 3h8l4 4v14H4V3h4Z', 'M8 12h8M8 16h5M9.5 3v3h5V3'], 'var(--rose)', '#B2554A'],
+        ['Actualizaciones de por vida', 'Nuevos contenidos sin costo adicional.',
+          ['M6.5 18.5A4.5 4.5 0 0 1 6 9.6a6 6 0 0 1 11.5 1.5 4 4 0 0 1-.5 7.4Z', 'M12 12v6M9.5 14.5 12 12l2.5 2.5'], 'var(--sky)', '#3E6289'],
+        ['Soporte por email', 'Te ayudamos cuando lo necesites.',
+          ['M4 13v-1a8 8 0 1 1 16 0v1', 'M4 13h2.5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm16 0h-2.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1H19a1 1 0 0 0 1-1Z'], 'var(--lila)', '#6A4F9E']
+      ].map(([t, d, ic, bg, fg]) => ({ t, d, d1: ic[0], d2: ic[1], circ: circ(bg, fg) })),
+
+      badges: [
+        ['Pago seguro y encriptado', ['M12 2.5 4 6v6c0 4.6 3.4 8.6 8 9.5 4.6-.9 8-4.9 8-9.5V6Z', 'm8.6 12 2.3 2.3 4.5-4.6']],
+        ['Acceso para siempre', ['M12 12c-2-2.6-3.4-3.8-5.2-3.8a3.8 3.8 0 1 0 0 7.6C8.6 15.8 10 14.6 12 12Z', 'M12 12c2 2.6 3.4 3.8 5.2 3.8a3.8 3.8 0 1 0 0-7.6C15.4 8.2 14 9.4 12 12Z']],
+        ['Sin cargos recurrentes', ['M2.5 7.5A2.5 2.5 0 0 1 5 5h14a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 19 19H5a2.5 2.5 0 0 1-2.5-2.5Z', 'M2.5 10h19M6 15h4']]
+      ].map(([t, ic]) => ({ t, d1: ic[0], d2: ic[1] })),
+
+      email: s.email, name: s.name, card: s.card, exp: s.exp, cvc: s.cvc,
+      setEmail: e => this.setState({ email: e.target.value }),
+      setName: e => this.setState({ name: e.target.value }),
+      setCard: e => {
+        const d = digitos(e.target.value).slice(0, 16);
+        this.setState({ card: d.replace(/(.{4})/g, '$1 ').trim() });
+      },
+      setExp: e => {
+        const d = digitos(e.target.value).slice(0, 4);
+        this.setState({ exp: d.length > 2 ? d.slice(0, 2) + ' / ' + d.slice(2) : d });
+      },
+      setCvc: e => this.setState({ cvc: digitos(e.target.value).slice(0, 4) }),
+      touchMail: () => this.setState({ tMail: true }),
+      touchName: () => this.setState({ tName: true }),
+
+      errMail, errName, errForm: s.errForm,
+      boxMail: box(!!errMail), boxName: box(!!errName),
+
+      brands: [
+        ['VISA', '#1A1F71', '#EAF0FF'],
+        ['MC', '#EB001B', '#FFEDEA'],
+        ['AMEX', '#0077A6', '#E6F4FA']
+      ].map(([label, fg, bg]) => ({
+        label,
+        style: {
+          display: 'inline-grid', placeItems: 'center', minWidth: '34px', height: '22px',
+          padding: '0 6px', borderRadius: '4px', background: bg, color: fg,
+          fontFamily: 'var(--disp)', fontSize: '9.5px', fontWeight: 900, letterSpacing: '-.01em'
+        }
+      })),
+
+      save: s.save,
+      toggleSave: () => this.setState({ save: !s.save }),
+
+      busy: s.busy, notBusy: !s.busy,
+      payLabel: s.busy ? 'Procesando tu pago…' : 'Pagar ' + money(LAUNCH.price) + ' MXN',
+      payStyle: {
+        marginTop: '18px', width: '100%', height: '66px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+        borderRadius: '14px', border: 'none',
+        background: s.busy ? 'var(--amber-xl)' : 'var(--amber)',
+        fontFamily: 'var(--disp)', fontSize: '18.5px', fontWeight: 800,
+        letterSpacing: '-.01em', color: 'var(--ink)',
+        cursor: s.busy ? 'progress' : 'pointer'
+      },
+
+      pagar: e => {
+        if (e && e.preventDefault) e.preventDefault();
+        this.setState({ tMail: true, tName: true });
+        if (!mailOk || !nameOk) return;
+        this.simular('Todavía no está conectado el cobro. Claude Code conecta esta pantalla con Stripe.');
+      },
+
+      garantia: 'Si no te ayuda, pides tu reembolso dentro de los primeros 7 días. Así de fácil.',
+
+      foot4: [
+        ['Acceso inmediato', 'Empieza ahora mismo.', ['M3.5 5.5A2 2 0 0 1 5.5 3.5h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z', 'M3.5 9h17M8 2v4M16 2v4']],
+        ['Sin tarjeta para probar', 'Prueba 7 días sin riesgo.', ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z', 'M12 7v5l3 2']],
+        ['Actualizaciones incluidas', 'Nuevos contenidos siempre.', ['M6.5 18.5A4.5 4.5 0 0 1 6 9.6a6 6 0 0 1 11.5 1.5 4 4 0 0 1-.5 7.4Z', 'M12 12v6M9.5 14.5 12 12l2.5 2.5']],
+        ['Soporte humano', 'Te respondemos por email.', ['M4 13v-1a8 8 0 1 1 16 0v1', 'M4 13h2.5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm16 0h-2.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1H19a1 1 0 0 0 1-1Z']]
+      ].map(([t, d, ic], i) => ({
+        t, d, d1: ic[0], d2: ic[1],
+        cell: { display: 'flex', gap: '12px', alignItems: 'center', padding: '18px 18px', borderLeft: i ? '1px solid var(--line-2)' : 'none' }
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
