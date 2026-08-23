@@ -316,7 +316,7 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
           {esLogin ? (
             <p className="cta-pie">
               ¿Aún no tienes cuenta?{' '}
-              <button type="button" className="cta-link" onClick={() => ir('signup')}>
+              <button type="button" className="cta-link mrl-inline" onClick={() => ir('signup')}>
                 Crear cuenta
               </button>
             </p>

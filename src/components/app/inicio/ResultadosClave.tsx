@@ -110,7 +110,7 @@ export function ResultadosClave({ rows }: { rows: KeyResult[] }) {
         <span style={{ fontSize: 12.5, color: 'var(--color-text-2)' }}>Actualizados hoy</span>
       </div>
 
-      <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
         {rows.map((r) => {
           const card: CSSProperties = {
             padding: '14px 13px',

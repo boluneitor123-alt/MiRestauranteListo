@@ -157,7 +157,7 @@ export function Etapas({
       <p style={{ margin: '0 2px 12px', fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-2)' }}>
         Cuatro mini cursos para cuando ya vendes. Tómalos en cualquier orden — no hace falta terminarlos para abrir.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
         {cursos.map((curso) => (
           <FichaCurso key={curso.id} curso={curso} level={level} onSelect={() => onSelectModule(curso.id)} />
         ))}
@@ -244,7 +244,7 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
           paddingTop: 18,
           borderTop: '1px solid var(--color-border)',
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
           gap: 4,
         }}
       >
