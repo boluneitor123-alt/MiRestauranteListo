@@ -209,8 +209,8 @@ export function PlanDeApertura({ state, date, today }: { state: ProjectState; da
       </div>
       <p className="note">
         Calculado con un margen de contribución de {pct(state.margin)}, ticket promedio de {money(state.ticket)} y{' '}
-        {be.days} días de venta al mes. Equivale a un cliente cada {be.minutesBetweenCustomers} minutos durante las
-        horas de operación.
+        {be.days} días de venta al mes. Equivale a un cliente cada {be.minutesBetweenCustomersAtBreakeven} minutos
+        durante las horas de operación.
       </p>
       <table>
         <tbody>

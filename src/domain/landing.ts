@@ -1,75 +1,12 @@
 /**
  * Lógica de la landing de venta (README § 12).
  *
- * Pura y probada: la urgencia que se apaga sola, el panel de ruta que sale del
- * diagnóstico de dos taps y la calculadora con margen fijo de 68%.
+ * Pura y probada: la calculadora en vivo, con el margen bruto fijo del 68% y
+ * los 26 días de venta al mes que usa el diseño.
  */
 
 import { breakeven, LANDING_MARGIN } from './finance';
-import {
-  LANDING_ROUTE,
-  LAUNCH,
-  STARTING_POINTS,
-  TOTAL_STEPS,
-  TYPICAL_INVESTMENT,
-  type LandingStep,
-} from '@/content/landing';
-
-export interface RoutePanel {
-  giro: string;
-  /** "Tu ruta para abrir una taquería". */
-  title: string;
-  step: number;
-  totalSteps: number;
-  progressPct: number;
-  /** Pasos ya cubiertos: se muestran palomeados y tachados. */
-  covered: LandingStep[];
-  /** Bloque de pasos saltados cuando ya busca o tiene local. */
-  skippedNote: string | null;
-  next: LandingStep;
-  /** Los dos pasos que siguen al siguiente. */
-  following: LandingStep[];
-  /** "+N pasos más, en orden." */
-  restLine: string;
-  /** Franja de CTA que lee del diagnóstico. */
-  ctaLine: string;
-}
-
-const ARTICLE: Record<string, string> = {
-  Taquería: 'una taquería',
-  Cafetería: 'una cafetería',
-  'Food truck': 'un food truck',
-  Restaurante: 'un restaurante',
-  'Fonda / cocina económica': 'una fonda',
-  Otro: 'tu negocio de comida',
-};
-
-/** Panel de ruta a partir del diagnóstico de dos taps. */
-export function routePanel(giro: string, startingPointLabel: string): RoutePanel | null {
-  const point = STARTING_POINTS.find((p) => p.label === startingPointLabel);
-  if (!point) return null;
-
-  const covered = LANDING_ROUTE.slice(0, point.nextIndex);
-  const next = LANDING_ROUTE[point.nextIndex];
-  const following = LANDING_ROUTE.slice(point.nextIndex + 1, point.nextIndex + 3);
-  const rest = TOTAL_STEPS - (point.nextIndex + 3);
-
-  return {
-    giro,
-    title: `Tu ruta para abrir ${ARTICLE[giro] ?? 'tu negocio de comida'}`,
-    step: point.step,
-    totalSteps: TOTAL_STEPS,
-    progressPct: (point.step / TOTAL_STEPS) * 100,
-    covered,
-    skippedNote: point.skipped
-      ? `Hay ${point.nextIndex} pasos que van antes de buscar local: los tienes en tu ruta para cerrarlos sin frenar la búsqueda.`
-      : null,
-    next,
-    following,
-    restLine: rest > 0 ? `+${rest} pasos más, en orden.` : '',
-    ctaLine: `Vas en el paso ${point.step} de ${TOTAL_STEPS}. Los otros ${TOTAL_STEPS - point.step} ya están armados y en orden, esperándote.`,
-  };
-}
+import { LAUNCH, TYPICAL_INVESTMENT } from '@/content/landing';
 
 export interface CalculatorInput {
   rent: number;
@@ -90,6 +27,8 @@ export interface CalculatorResult {
   goalTicketsPerDay: number;
   goalMonthlySales: number;
   minutesBetweenCustomers: number;
+  /** Un cliente cada N minutos sólo para no perder: el par de `ticketsPerDay`. */
+  minutesBetweenCustomersAtBreakeven: number;
   days: number;
   /** Cifras absurdas: nota neutral, nunca un error. */
   note: string | null;
@@ -129,6 +68,7 @@ export function calculate(input: CalculatorInput): CalculatorResult {
     goalTicketsPerDay: result.goalTicketsPerDay,
     goalMonthlySales: result.goalMonthlySales,
     minutesBetweenCustomers: result.minutesBetweenCustomers,
+    minutesBetweenCustomersAtBreakeven: result.minutesBetweenCustomersAtBreakeven,
     days: result.days,
     note,
     // Un mes de renta mal elegida cuesta la renta más lo que hay que vender para pagarla.

@@ -158,3 +158,32 @@ describe('escenarios de venta del resumen financiero (README § 9)', () => {
     expect(scenarios[0].customersPerDay).toBe(Math.ceil(scenarios[0].dailySales / 120));
   });
 });
+
+describe('el ritmo de clientes', () => {
+  const be = breakeven({
+    fixedExpenses: 59_000,
+    grossMargin: 68,
+    ticket: 200,
+    ownerGoal: 25_000,
+    hours: 8,
+    closedOneDay: true,
+  });
+
+  it('da un ritmo para no perder y otro para la meta, y no son el mismo', () => {
+    // 17 tickets en 8 horas es uno cada 28 minutos; 24, uno cada 20.
+    expect(be.ticketsPerDay).toBe(17);
+    expect(be.minutesBetweenCustomersAtBreakeven).toBe(28);
+    expect(be.goalTicketsPerDay).toBe(24);
+    expect(be.minutesBetweenCustomers).toBe(20);
+  });
+
+  it('cada ritmo cuadra con sus propios tickets', () => {
+    expect(Math.round((8 * 60) / be.ticketsPerDay)).toBe(be.minutesBetweenCustomersAtBreakeven);
+    expect(Math.round((8 * 60) / be.goalTicketsPerDay)).toBe(be.minutesBetweenCustomers);
+  });
+
+  it('nunca baja de un minuto, aunque los tickets se disparen', () => {
+    const enorme = breakeven({ fixedExpenses: 90_000_000, grossMargin: 68, ticket: 20, ownerGoal: 0, hours: 8 });
+    expect(enorme.minutesBetweenCustomersAtBreakeven).toBeGreaterThanOrEqual(1);
+  });
+});

@@ -122,8 +122,14 @@ export interface BreakevenResult {
   goalMonthlySales: number;
   goalDailySales: number;
   goalTicketsPerDay: number;
-  /** Un cliente cada N minutos, en el turno declarado. */
+  /** Un cliente cada N minutos para llegar a la meta, en el turno declarado. */
   minutesBetweenCustomers: number;
+  /**
+   * Un cliente cada N minutos sólo para no perder. Es el que acompaña a
+   * `ticketsPerDay`: mezclarlos dice que 17 tickets salen a uno cada 20
+   * minutos, cuando salen a uno cada 28.
+   */
+  minutesBetweenCustomersAtBreakeven: number;
   /** Venta diaria de equilibrio con 30 y con 26 días (para la nota del toggle). */
   dailyAt30Days: number;
   dailyAt26Days: number;
@@ -161,6 +167,10 @@ export function breakeven(input: BreakevenInput): BreakevenResult {
     goalDailySales,
     goalTicketsPerDay,
     minutesBetweenCustomers: Math.max(1, Math.round((hours * 60) / (goalTicketsPerDay || 1))),
+    minutesBetweenCustomersAtBreakeven: Math.max(
+      1,
+      Math.round((hours * 60) / (Math.ceil(dailySales / ticket) || 1)),
+    ),
     dailyAt30Days: fixed / margin / DAYS_FULL_MONTH,
     dailyAt26Days: fixed / margin / DAYS_WITH_REST_DAY,
   };
