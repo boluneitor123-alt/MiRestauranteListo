@@ -291,6 +291,16 @@ textarea {
 }
 
 /*
+  Con el botón flotante hay que reservar más: se apoya a 96px del fondo y mide
+  62px, así que su borde superior queda a 158px. Con sólo los 96px de la barra
+  de navegación, el botón tapaba la última tarjeta —en Más, "Alertas del
+  mentor" y los entregables— y no había forma de tocarla.
+*/
+.mrl-scroll-fab {
+  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+}
+
+/*
  * Las seis herramientas rápidas: tres por fila. En pantallas de 360px tres
  * columnas dejan la descripción en una tira de dos letras, así que abajo de
  * 390px pasan a dos por fila.
@@ -337,6 +347,27 @@ textarea {
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-divider);
   z-index: 40;
+}
+
+/*
+  Una línea que se corta con puntos suspensivos. Para datos que no se pueden
+  partir sin volverse ilegibles: un correo, el nombre de un platillo largo.
+*/
+.mrl-trunc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  El nombre y el correo de la tarjeta de perfil.
+  El ancho mínimo es lo que empuja la etiqueta de la prueba al renglón de
+  abajo cuando no caben las dos: sin él, la etiqueta se quedaba al lado y
+  dejaba el correo en una tira de 21px.
+*/
+.mrl-perfil-texto {
+  flex: 1 1 150px;
+  min-width: 150px;
 }
 
 .mrl-fab {
@@ -465,7 +496,7 @@ textarea {
  * (el "(i)" que explica un término, la palomita de una tarea, un chip).
  * Se quedan chicos a propósito y por eso llevan clase.
  */
-:where(button).mrl-inline {
+:where(button, a).mrl-inline {
   min-height: 0;
 }
 

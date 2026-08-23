@@ -37,6 +37,13 @@
   color: var(--ink);
   font-family: var(--body);
   overflow-x: clip;
+}
+
+/*
+  El hueco de la barra fija de compra. Sólo la landing la lleva: en /pago esta
+  misma hoja se reutiliza y ahí un hueco al final sería un vacío sin motivo.
+*/
+.lp-conbarra {
   padding-bottom: 88px;
 }
 
@@ -177,13 +184,25 @@
 
 @media (max-width: 700px) {
   .lp-head > div {
-    padding: 11px 16px;
+    padding: 9px 16px;
     gap: 10px;
   }
 
   /* Compuesto a propósito: .lp-btn declara display más abajo y ganaría. */
   .lp-btn.lp-login {
     display: none;
+  }
+
+  /*
+    La barra de anuncio se encoge en el teléfono (`.mrl-launch` del
+    prototipo). No es fija —se va con el scroll y arriba sólo se queda el
+    encabezado— pero de entrada las dos juntas se comían un quinto de la
+    pantalla antes de la primera palabra.
+  */
+  .lp-bar > div {
+    padding: 8px 16px;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
   }
 }
 
@@ -387,6 +406,31 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
+}
+
+/*
+  La maqueta de la computadora.
+
+  `1fr` a secas no baja del min-content de su contenido, así que en un teléfono
+  la columna del tablero empujaba la maqueta 110px fuera de la pantalla.
+  `minmax(0, 1fr)` la ata al ancho que hay, y el menú lateral se encoge.
+*/
+.lp-laptop {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+}
+
+@media (max-width: 700px) {
+  .lp-laptop {
+    grid-template-columns: 78px minmax(0, 1fr);
+  }
+}
+
+/* Las tres tarjetitas de dentro, por la misma razón que la rejilla de fuera. */
+.lp-laptop-tres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .lp-micro {
@@ -802,7 +846,63 @@
   color: var(--ink-2);
 }
 
+/* ── El demo, la calculadora y la nota de la meta ─────────────────────── */
+
+/*
+  Estas rejillas vivían en `style=` dentro del JSX, y un atributo en línea le
+  gana a cualquier media query: por eso en el teléfono no colapsaban y el
+  título salía en una columna de una palabra por línea. Declararlas aquí es lo
+  que permite que las reglas de abajo hagan su trabajo.
+*/
+
+.lp-demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.lp-calchead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  gap: 26px;
+  align-items: start;
+}
+
+.lp-goalnote {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1.5px dashed rgb(255 253 248 / 0.18);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .lp-demo,
+  .lp-calchead,
+  .lp-goalnote {
+    grid-template-columns: 1fr;
+  }
+
+  /* El video primero: es lo que la gente viene a ver. */
+  .lp-demo > div:nth-child(2) {
+    max-width: 300px;
+    margin: 0 auto;
+    order: -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .lp-demo,
+  .lp-calchead {
+    gap: 22px;
+  }
+}
+
 /* ── Barra fija de compra ─────────────────────────────────────────────── */
+
 
 .lp-sticky {
   position: fixed;
@@ -821,6 +921,29 @@
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/*
+  A 360px el botón se comía el ancho y el precio se partía en tres renglones:
+  la barra crecía a 100px y volvía a tapar el final de la página aunque el
+  hueco de arriba estuviera puesto. Con el botón más corto el precio cabe en
+  un renglón y la barra se queda dentro de sus 88px.
+*/
+@media (max-width: 460px) {
+  .lp-sticky > div {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .lp-sticky .lp-cta {
+    padding-inline: 16px;
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+
+  .lp-sticky .lp-precio {
+    white-space: nowrap;
+  }
 }
 
 /* La maqueta del teléfono flotante y las notas se esconden en pantalla chica. */

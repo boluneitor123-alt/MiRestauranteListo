@@ -288,8 +288,16 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
 
           {esSignup ? (
             <p className="cta-legal">
-              Al crear tu cuenta aceptas nuestros <a href="/#faq">Términos de uso</a> y la{' '}
-              <a href="/#faq">Política de privacidad</a>.
+              {/* Enlaces dentro de una línea de texto: la excepción documentada al mínimo de 44px. */}
+              Al crear tu cuenta aceptas nuestros{' '}
+              <a className="mrl-inline" href="/#faq">
+                Términos de uso
+              </a>{' '}
+              y la{' '}
+              <a className="mrl-inline" href="/#faq">
+                Política de privacidad
+              </a>
+              .
             </p>
           ) : null}
 

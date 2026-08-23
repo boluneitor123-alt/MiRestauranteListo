@@ -109,7 +109,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="lp">
+    <div className="lp lp-conbarra">
       {/*
         ═══ AVISO SUPERIOR ═══
         Sin contador de lugares ni cuenta regresiva: ninguno de los dos salía
@@ -273,15 +273,7 @@ export default function LandingPage() {
       {/* ═══ 4 · EL DEMO ═══ */}
       <section id="demo" className="lp-sec">
         <div className="lp-card">
-          <div
-            className="lp-demo"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1fr) minmax(0,300px) minmax(0,1fr)',
-              gap: 32,
-              alignItems: 'center',
-            }}
-          >
+          <div className="lp-demo">
             <div>
               <Kick>Mira cómo funciona</Kick>
               <h2 style={{ fontSize: 'clamp(28px,3.6vw,42px)', marginTop: 14 }}>
@@ -411,10 +403,7 @@ export default function LandingPage() {
       {/* ═══ 5 · LA CALCULADORA ═══ */}
       <section id="calc" className="lp-sec" style={{ paddingBlock: 20 }}>
         <div className="lp-calc">
-          <div
-            className="lp-calchead"
-            style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,300px)', gap: 26, alignItems: 'start' }}
-          >
+          <div className="lp-calchead">
             <div>
               <Kick>Pruébalo antes de creerme</Kick>
               <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', marginTop: 14 }}>
@@ -560,18 +549,7 @@ export default function LandingPage() {
             <Celda label="Tickets a la semana" valor={miles(result.goalTicketsPerDay * 6)} />
           </div>
 
-          <div
-            className="lp-goalnote"
-            style={{
-              marginTop: 22,
-              paddingTop: 20,
-              borderTop: '1.5px dashed rgb(255 253 248 / 0.18)',
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1fr) minmax(0,300px)',
-              gap: 24,
-              alignItems: 'center',
-            }}
-          >
+          <div className="lp-goalnote">
             <p style={{ fontSize: 14, lineHeight: 1.55, opacity: 0.82 }}>
               Calculado con margen del {LANDING_MARGIN_PCT}% y {result.days} días de venta. Adentro, este mismo cálculo
               usa tu menú costeado platillo por platillo, no un margen supuesto.
@@ -1039,6 +1017,7 @@ export default function LandingPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, flexWrap: 'wrap' }}>
               <span
+                className="lp-precio"
                 style={{ fontFamily: 'var(--disp)', fontWeight: 900, fontSize: 21, color: 'var(--paper)', letterSpacing: '-.02em' }}
               >
                 {precio}
@@ -1106,12 +1085,11 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
         }}
       >
         <div
+          className="lp-laptop"
           style={{
             background: 'var(--paper)',
             borderRadius: '11px 11px 0 0',
             overflow: 'hidden',
-            display: 'grid',
-            gridTemplateColumns: '104px 1fr',
             minHeight: 340,
           }}
         >
@@ -1160,7 +1138,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
             </div>
             <Barra pct={72} color="var(--sage-d)" alto={9} />
 
-            <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 9 }}>
+            <div className="lp-laptop-tres" style={{ marginTop: 16 }}>
               {MOCK_STAGES.map(([name, frac, pct, tono]) => {
                 const col = tono === 'sage' ? 'var(--sage-d)' : tono === 'amber' ? 'var(--amber-d)' : 'var(--ink-3)';
                 return (
@@ -1177,7 +1155,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
               })}
             </div>
 
-            <div style={{ marginTop: 11, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 9 }}>
+            <div className="lp-laptop-tres" style={{ marginTop: 11 }}>
               {[
                 ['Necesitas vender', day, 'al día'],
                 ['Clientes al día', tickets, 'aprox.'],

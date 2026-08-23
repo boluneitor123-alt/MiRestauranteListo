@@ -642,7 +642,8 @@ export function App() {
 
   return (
     <div className="mrl-shell">
-      <div className="mrl-scroll" ref={scrollRef}>
+      {/* El hueco de abajo cambia según haya botón flotante que esquivar. */}
+      <div className={screen === 'app' ? 'mrl-scroll mrl-scroll-fab' : 'mrl-scroll'} ref={scrollRef}>
         {body}
       </div>
 
