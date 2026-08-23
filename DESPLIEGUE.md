@@ -35,9 +35,12 @@ En el panel de Stripe (modo **Live**, no Test):
 
 1. **Developers → Webhooks → Add endpoint.**
 2. URL: `https://TU-DOMINIO/api/webhooks/stripe`
-3. Eventos a escuchar: `checkout.session.completed` y `charge.refunded`.
+3. Eventos a escuchar: `payment_intent.succeeded` y `charge.refunded`. Son los
+   dos únicos que el servidor atiende; cualquier otro se ignora.
 4. Copia el **Signing secret** que te da (empieza con `whsec_`): ese es
    `STRIPE_WEBHOOK_SECRET`.
+5. **Developers → API keys**: copia la llave pública (`pk_live_…`) a
+   `STRIPE_PUBLISHABLE_KEY` y la secreta (`sk_live_…`) a `STRIPE_SECRET_KEY`.
 
 No necesitas crear productos ni precios en Stripe: el monto se arma en cada cobro
 con el precio que tengas guardado en el panel del dueño (`/admin` → Ajustes), y
@@ -95,9 +98,15 @@ el acceso.
 openssl rand -base64 32
 ```
 
-La llave **pública** de Stripe (`pk_live_…`) no se necesita: el cobro se abre
-desde el servidor con Stripe Checkout, así que ningún dato de tarjeta pasa por
-este sitio.
+La llave **pública** de Stripe (`pk_live_…`) sí se necesita, en
+`STRIPE_PUBLISHABLE_KEY`: es la que monta el formulario de tarjeta dentro de
+`/pago`. Es pública por diseño y se puede leer en el navegador; la secreta no.
+
+Los campos de tarjeta son el Payment Element de Stripe y viven dentro de un
+iframe suyo, así que **ningún número de tarjeta pasa por este sitio ni por su
+servidor**. Lo que sí cambia respecto de un Checkout hospedado es el papeleo de
+cumplimiento: al servir tú la página que contiene el formulario, el
+cuestionario PCI que te toca es el SAQ A-EP en vez del SAQ A.
 
 ---
 

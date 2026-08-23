@@ -108,7 +108,7 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
       setError('');
       setVista('reset');
       setBusy(false);
-      window.location.href = `mailto:hola@mirestaurantelisto.mx?subject=${encodeURIComponent(
+      window.location.href = `mailto:hola@mirestaurantelisto.com?subject=${encodeURIComponent(
         'Recuperar mi acceso',
       )}&body=${encodeURIComponent(`Mi correo de la cuenta es: ${correo.trim()}`)}`;
       return;

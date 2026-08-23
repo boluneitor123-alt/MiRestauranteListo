@@ -12,7 +12,7 @@ interface Template {
   body: (data: Record<string, unknown>) => string;
 }
 
-const FROM = 'MiRestauranteListo <hola@mirestaurantelisto.mx>';
+const FROM = 'MiRestauranteListo <hola@mirestaurantelisto.com>';
 
 export const TEMPLATES: Record<MailTemplate, Template> = {
   'compra-confirmada': {

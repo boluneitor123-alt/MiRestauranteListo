@@ -187,6 +187,27 @@
   }
 }
 
+/*
+  En 360px el nombre completo más el botón no caben, y el botón se salía del
+  encabezado. El nombre no se parte —"Mi / Restaurante / Listo" se leería como
+  tres marcas— así que lo que se encoge es la tipografía y el cuadro.
+*/
+@media (max-width: 400px) {
+  .lp-marca {
+    font-size: 15px;
+    gap: 9px;
+    /* El cuadro baja a 38px, pero el enlace sigue siendo un blanco de 44. */
+    min-height: 44px;
+  }
+
+  .lp-marca > span:first-child {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+    border-radius: 9px;
+  }
+}
+
 /* ── Botones ──────────────────────────────────────────────────────────── */
 
 .lp-btn {
