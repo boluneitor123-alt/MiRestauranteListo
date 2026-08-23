@@ -45,7 +45,8 @@ npm run build      # build de producción
 ## Variables de entorno
 
 `DATABASE_URL`, `APP_URL`, `OWNER_EMAIL`, `ADMIN_TOKEN`, `STRIPE_SECRET_KEY`,
-`STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `META_PIXEL_ID`, `META_CAPI_TOKEN`.
+`STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`,
+`META_PIXEL_ID`, `META_CAPI_TOKEN`.
 
 Ninguna llave vive en el código: todas se leen de variables de entorno. El
 archivo `.env` está en `.gitignore` y nunca se sube; `.env.example` sólo lleva

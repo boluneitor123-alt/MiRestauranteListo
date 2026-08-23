@@ -68,6 +68,49 @@ describe('interpretación de eventos de Stripe', () => {
   });
 });
 
+describe('el cobro que se confirma en nuestra pantalla', () => {
+  it('traduce un PaymentIntent pagado', () => {
+    const result = interpretEvent(
+      event('payment_intent.succeeded', {
+        id: 'pi_777',
+        amount: 245000,
+        amount_received: 245000,
+        receipt_email: 'ana@correo.com',
+        latest_charge: 'ch_1',
+        metadata: { deviceId: 'eq-9', userId: 'u9' },
+      }),
+    );
+
+    expect(result).toEqual({
+      kind: 'pago',
+      email: 'ana@correo.com',
+      name: undefined,
+      amount: 2450,
+      // La referencia estable del cobro es el propio PaymentIntent.
+      paymentRef: 'pi_777',
+      deviceId: 'eq-9',
+      userId: 'u9',
+    });
+  });
+
+  it('toma el correo y el nombre del cargo cuando Stripe lo manda expandido', () => {
+    const result = interpretEvent(
+      event('payment_intent.succeeded', {
+        id: 'pi_778',
+        amount: 245000,
+        amount_received: 245000,
+        receipt_email: null,
+        latest_charge: { billing_details: { email: 'luis@correo.com', name: 'Luis Pérez' } },
+        metadata: { deviceId: 'eq-10' },
+      }),
+    );
+
+    expect(result.email).toBe('luis@correo.com');
+    expect(result.name).toBe('Luis Pérez');
+    expect(result.userId).toBeUndefined();
+  });
+});
+
 describe('el producto que ve el cliente en el checkout', () => {
   it('lleva el nombre de la marca', () => {
     expect(productName()).toContain('MiRestauranteListo');

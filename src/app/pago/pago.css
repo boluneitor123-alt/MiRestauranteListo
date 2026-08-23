@@ -1,0 +1,145 @@
+/**
+ * La pantalla de pago (`PagoMRL.dc.html`).
+ *
+ * Sólo lo que esta pantalla no comparte con la landing: el botón de cobro, el
+ * sello PCI, el hueco de los campos mientras Stripe los monta y el giro del
+ * botón mientras cobra.
+ */
+
+/* El botón del prototipo: ámbar plano, sin borde duro, y pálido al cobrar. */
+.pg-pay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 66px;
+  border: none;
+  border-radius: 14px;
+  background: var(--amber);
+  font-family: var(--disp);
+  font-size: 18.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pg-pay:hover:not(:disabled) {
+  background: var(--amber-l);
+}
+
+.pg-pay:disabled {
+  background: var(--amber-xl);
+  color: var(--ink-2);
+  cursor: progress;
+}
+
+/* El sello verde de PCI DSS que acompaña a la palabra "stripe". */
+.pg-pci {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--sage-d);
+  color: #fff;
+  font-family: var(--disp);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.pg-pci-oscuro {
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+}
+
+/* El giro del botón mientras se cobra. */
+.pg-giro {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  border: 3px solid rgb(28 26 23 / 0.25);
+  border-top-color: var(--ink);
+  animation: pgGiro 0.7s linear infinite;
+}
+
+/* El hueco de los campos mientras Stripe termina de montarlos. */
+.pg-hueco {
+  display: block;
+  border-radius: 13px;
+  background: var(--cream-2);
+  animation: pgLate 1.4s ease-in-out infinite;
+}
+
+@keyframes pgGiro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pgLate {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-giro,
+  .pg-hueco {
+    animation: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .pg-pay {
+    height: 60px;
+    font-size: 16px;
+  }
+}
+
+/* ── Lo que cambia en teléfono (mismos cortes del prototipo) ──────────── */
+
+@media (max-width: 620px) {
+  .pg-card {
+    padding: 20px 15px;
+    border-radius: 18px;
+  }
+
+  .pg-sum {
+    padding: 18px 15px;
+  }
+
+  .pg-precio {
+    font-size: 27px;
+  }
+
+  .pg-sellos {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .pg-negra {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .pg-negra-der {
+    border-left: none;
+    padding-left: 0;
+    flex-wrap: wrap;
+  }
+}
+
+/* Arriba de 1000px la tarjeta se queda pegada; abajo estorba. */
+@media (max-width: 1000px) {
+  .pg-card {
+    position: static;
+  }
+}

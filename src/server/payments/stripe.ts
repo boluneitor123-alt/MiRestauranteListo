@@ -105,6 +105,75 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<{ id:
   return { id: session.id, url: session.url };
 }
 
+/* ─────────────────────────  Cobro en nuestra pantalla  ───────────────────── */
+
+export interface IntentInput {
+  /** Precio en pesos. Sale de los ajustes del panel, nunca del navegador. */
+  price: number;
+  /** Equipo que paga: permite activar la licencia sola al confirmar. */
+  deviceId: string;
+  email?: string;
+  userId?: string;
+  maxDevices?: number;
+}
+
+export interface IntentResult {
+  id: string;
+  clientSecret: string;
+  /** Monto en centavos, tal como quedó en Stripe. */
+  amount: number;
+}
+
+/**
+ * Crea el PaymentIntent que alimenta al Payment Element.
+ *
+ * El monto se fija aquí, en el servidor: el navegador recibe un `client_secret`
+ * que sirve para confirmar ese cobro y nada más. Mandar otro precio desde la
+ * pantalla no cambia lo que se cobra.
+ *
+ * `payment_method_types: ['card']` es a propósito: los meses sin intereses de
+ * México sólo existen en tarjeta, y pedirlos explícitamente hace que Stripe
+ * muestre el selector de plazos dentro del Payment Element.
+ */
+export async function createPaymentIntent(input: IntentInput): Promise<IntentResult> {
+  const stripe = getStripe();
+  const intent = await stripe.paymentIntents.create({
+    amount: Math.round(input.price * 100),
+    currency: CURRENCY,
+    payment_method_types: ['card'],
+    payment_method_options: {
+      card: { installments: { enabled: true } },
+    },
+    description: productDescription(input.maxDevices),
+    statement_descriptor_suffix: 'MRL',
+    receipt_email: input.email,
+    metadata: {
+      deviceId: input.deviceId,
+      producto: productName(),
+      ...(input.userId ? { userId: input.userId } : {}),
+    },
+  });
+
+  if (!intent.client_secret) throw new Error('Stripe no devolvió client_secret');
+  return { id: intent.id, clientSecret: intent.client_secret, amount: intent.amount };
+}
+
+/**
+ * Guarda el correo del comprador en un cobro ya abierto.
+ *
+ * Se hace en el servidor y no en `confirmParams` para que el correo con el que
+ * se emite la licencia sea uno que nosotros validamos, y para poder comprobar
+ * que quien lo cambia es el mismo equipo que abrió el cobro.
+ */
+export async function setIntentEmail(intentId: string, email: string, deviceId: string): Promise<boolean> {
+  const stripe = getStripe();
+  const intent = await stripe.paymentIntents.retrieve(intentId);
+  if (intent.metadata?.deviceId !== deviceId) return false;
+  if (intent.status !== 'requires_payment_method' && intent.status !== 'requires_confirmation') return false;
+  await stripe.paymentIntents.update(intentId, { receipt_email: email });
+  return true;
+}
+
 export interface PaymentEvent {
   kind: 'pago' | 'reembolso' | 'ignorar';
   email?: string;
@@ -136,6 +205,22 @@ export function interpretEvent(event: Stripe.Event): PaymentEvent {
         session.id,
       deviceId: session.metadata?.deviceId ?? undefined,
       userId: session.metadata?.userId ?? undefined,
+    };
+  }
+
+  // El cobro desde nuestra pantalla no abre una sesión de Checkout: lo que
+  // llega es el PaymentIntent confirmado por el Payment Element.
+  if (event.type === 'payment_intent.succeeded') {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    const charge = typeof intent.latest_charge === 'object' ? intent.latest_charge : undefined;
+    return {
+      kind: 'pago',
+      email: intent.receipt_email ?? charge?.billing_details?.email ?? undefined,
+      name: charge?.billing_details?.name ?? undefined,
+      amount: (intent.amount_received || intent.amount) / 100,
+      paymentRef: intent.id,
+      deviceId: intent.metadata?.deviceId ?? undefined,
+      userId: intent.metadata?.userId ?? undefined,
     };
   }
 
