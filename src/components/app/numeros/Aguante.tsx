@@ -131,7 +131,7 @@ export function Aguante({
         <Card>
           <div className="mrl-amount">
             <H size={17}>Los primeros cuatro meses</H>
-            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-accent-700)' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-accent-800)' }}>
               {result.cushionLabel}
             </span>
           </div>

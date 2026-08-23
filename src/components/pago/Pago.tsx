@@ -8,7 +8,7 @@ import { AVISO_DE_ESTADO, estadoDeCobro, FUENTE_ELEMENTS, TEMA_ELEMENTS, type Es
 import { money } from '@/domain/format';
 import { getDeviceId } from '@/lib/device';
 import { track } from '@/lib/track';
-import { Arrow, Check, Ico } from '@/components/landing/pieces';
+import { Arrow, Check, Ico, Ilustracion } from '@/components/landing/pieces';
 import { FormaDePago } from './FormaDePago';
 
 /**
@@ -161,7 +161,7 @@ export function Pago() {
           <a href="/" className="lp-marca">
             <span>MRL</span>
             <span>
-              Mi<span style={{ color: 'var(--orange)' }}>Restaurante</span>Listo
+              Mi<span style={{ color: 'var(--orange-texto)' }}>Restaurante</span>Listo
             </span>
           </a>
           <div style={{ flex: 1 }} />
@@ -215,11 +215,12 @@ export function Pago() {
             </div>
 
             <div style={{ marginTop: 22, display: 'flex', alignItems: 'flex-end', gap: 0 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/img/arnold-cierre.webp"
-                alt="Arnold celebrando"
-                loading="lazy"
+              <Ilustracion
+                nombre="arnold-cierre"
+                alt="Arnold celebrando con los brazos en alto el día que abre su restaurante"
+                ancho={800}
+                alto={840}
+                sizes="250px"
                 style={{ display: 'block', width: '56%', maxWidth: 250, height: 'auto' }}
               />
               <div style={{ flex: 1, minWidth: 0, marginBottom: 34 }}>
@@ -227,7 +228,7 @@ export function Pago() {
                   <span className="lp-hand" style={{ fontSize: 27, lineHeight: 1.2 }}>
                     ¡Nos vemos
                     <br />
-                    dentro! <span style={{ color: 'var(--orange)' }}>♥</span>
+                    dentro! <span style={{ color: 'var(--orange-display)' }}>♥</span>
                   </span>
                 </div>
               </div>
@@ -253,7 +254,8 @@ export function Pago() {
 
                 <Pedido precio={precio} />
 
-                <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }} className="pg-sellos">
+                {/* La rejilla vive en `.pg-sellos`: en línea, el corte de 620px no podría ganarle. */}
+                <div className="pg-sellos">
                   {SELLOS.map(([t, icono]) => (
                     <div
                       key={t}
@@ -454,20 +456,10 @@ function Pedido({ precio }: { precio: number }) {
         </span>
       </div>
 
-      <div
-        style={{
-          marginTop: 18,
-          paddingTop: 16,
-          borderTop: '1.5px solid rgb(28 26 23 / 0.12)',
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}
-      >
-        <span style={{ fontFamily: 'var(--disp)', fontSize: 17, fontWeight: 800, letterSpacing: '-.01em' }}>Total a pagar</span>
-        <span style={{ textAlign: 'right' }}>
-          <span style={{ display: 'flex', alignItems: 'baseline', gap: 7, justifyContent: 'flex-end' }}>
+      <div className="pg-total">
+        <span className="pg-total-k">Total a pagar</span>
+        <span className="pg-total-v">
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
             <span className="pg-precio" style={{ fontFamily: 'var(--disp)', fontSize: 31, fontWeight: 900, letterSpacing: '-.03em' }}>
               {money(precio)}
             </span>

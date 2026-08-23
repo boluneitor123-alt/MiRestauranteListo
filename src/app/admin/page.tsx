@@ -460,7 +460,7 @@ export default function AdminPage() {
                     </span>
                   ))}
                 </div>
-                <a href={`mailto:${customer.email}`} style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: 'var(--color-accent-700)' }}>
+                <a href={`mailto:${customer.email}`} style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: 'var(--color-accent-800)' }}>
                   Escribirle por correo →
                 </a>
               </div>

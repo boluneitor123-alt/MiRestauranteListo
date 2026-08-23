@@ -12,12 +12,26 @@
   --paper: #fffdf8;
   --ink: #1c1a17;
   --ink-2: #4a453d;
-  --ink-3: #878175;
+  /*
+    Gris de texto secundario. Era #878175, que sobre crema daba 3.56:1 y sobre
+    papel 3.81:1 — abajo del 4.5 que pide un texto de 12 a 14px, que es donde
+    más se usa. Ahora da 5.09 sobre crema, 5.44 sobre papel y 4.67 sobre el
+    crema-2 de la maqueta, que es el fondo más difícil de los tres.
+  */
+  --ink-3: #6f6858;
   --amber: #f5a623;
   --amber-l: #ffc85c;
   --amber-xl: #fdefd2;
   --amber-d: #d4820a;
   --orange: #e8821e;
+  /*
+    El naranja de relleno no sirve como texto: #e8821e sobre crema da 2.53:1.
+    Estos dos salen de la rampa del sistema (accent-800 y accent-700) y son los
+    valores más claros que pasan en su tamaño: el de texto normal llega a
+    5.88:1 y el de los rótulos grandes a 3.67:1, con mínimos de 4.5 y 3.
+  */
+  --orange-texto: #8a5206;
+  --orange-display: #b86e08;
   --sage: #dde8ce;
   --sage-d: #5e7d3e;
   --rose: #f8dfd9;
@@ -64,12 +78,17 @@
 }
 
 .lp a {
-  color: var(--orange);
+  color: var(--orange-texto);
   text-decoration: none;
 }
 
+/* El botón de "Volver" es un enlace, pero se pinta como botón: tinta, no naranja. */
+.lp a.lp-btn {
+  color: var(--ink);
+}
+
 .lp :focus-visible {
-  outline: 3px solid var(--orange);
+  outline: 3px solid var(--orange-display);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -318,7 +337,7 @@
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--orange-texto);
 }
 
 .lp-kick i {
@@ -426,11 +445,40 @@
   }
 }
 
+/* El nombre de cada etapa dentro de la maqueta. */
+.lp-etapa-nom {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
 /* Las tres tarjetitas de dentro, por la misma razón que la rejilla de fuera. */
 .lp-laptop-tres {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
+}
+
+/*
+  En un teléfono la maqueta mide 292px, y sus tres tarjetas de números caían a
+  52px cada una: "$3,337" se cortaba en "$3,3" y "meta para no perder" salía en
+  cuatro renglones de una palabra. Se apilan, que es como se ve la app de
+  verdad en esa pantalla. Las tres etapas sí caben en fila con la letra un
+  punto más chica.
+*/
+@media (max-width: 700px) {
+  .lp-laptop-tres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /*
+    Las etapas también: en tres columnas la celda daba 30px de contenido y
+    "2. Construye" no cabe ahí ni encogiendo la letra. Apiladas se leen, que
+    es además como se ve la app de verdad en un teléfono.
+  */
+  .lp-laptop-etapas {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .lp-micro {
@@ -844,6 +892,31 @@
   font-size: 15px;
   line-height: 1.6;
   color: var(--ink-2);
+}
+
+/* ── La ilustración del héroe ─────────────────────────────────────────── */
+
+/*
+  En escritorio sangra a propósito, como en el prototipo. En el teléfono no:
+  a 112% del ancho ocupaba la pantalla entera y empujaba el título de la
+  siguiente sección fuera del primer golpe de vista.
+*/
+.lp-arnold img {
+  display: block;
+  width: 112%;
+  /* La sangría no puede pasar del ancho de la pantalla: a 768px el borde
+     derecho se salía 41px. Con el tope, sangra hasta donde hay lugar. */
+  max-width: calc(100vw - 32px);
+  height: auto;
+  margin: -18px -10% 0 -2%;
+}
+
+@media (max-width: 560px) {
+  .lp-arnold img {
+    /* 65% de la pantalla, no de la columna: es lo que se pidió y lo que se ve. */
+    width: 65vw;
+    margin: 0 auto;
+  }
 }
 
 /* ── El demo, la calculadora y la nota de la meta ─────────────────────── */

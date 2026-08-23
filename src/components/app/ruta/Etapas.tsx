@@ -106,7 +106,7 @@ export function Etapas({
             padding: '10px 4px',
             border: 'none',
             background: 'none',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             fontFamily: 'var(--font-body)',
             fontSize: 13,
             fontWeight: 700,
@@ -180,12 +180,21 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/img/arnold-tres.webp"
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', right: -10, top: 8, width: '46%', maxWidth: 190, height: 'auto', pointerEvents: 'none' }}
-      />
+      <picture style={{ display: 'contents' }}>
+        <source type="image/avif" srcSet="/img/arnold-tres-480w.avif 480w, /img/arnold-tres.avif 800w" sizes="190px" />
+        <img
+          src="/img/arnold-tres.webp"
+          srcSet="/img/arnold-tres-480w.webp 480w, /img/arnold-tres.webp 800w"
+          sizes="190px"
+          alt=""
+          aria-hidden
+          width={800}
+          height={847}
+          loading="lazy"
+          decoding="async"
+          style={{ position: 'absolute', right: -10, top: 8, width: '46%', maxWidth: 190, height: 'auto', pointerEvents: 'none' }}
+        />
+      </picture>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 11 }}>
         <span
           style={{
@@ -196,7 +205,7 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
             flex: 'none',
             borderRadius: '50%',
             background: 'var(--color-accent-100)',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
           }}
         >
           <Trazos
@@ -424,7 +433,8 @@ function TarjetaEtapa({
       </button>
 
       {open ? (
-        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+        // 8px es el mínimo entre dos blancos tocables: a 7 se tocaba el de al lado.
+        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {etapa.modules.map((mod) => (
             <FilaModulo key={mod.id} mod={mod} onSelect={() => onSelectModule(mod.id)} />
           ))}

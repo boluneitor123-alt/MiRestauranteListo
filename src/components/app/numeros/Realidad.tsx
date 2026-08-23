@@ -38,7 +38,7 @@ export function Realidad({
           padding: '10px 4px',
           border: 'none',
           background: 'none',
-          color: 'var(--color-accent-700)',
+          color: 'var(--color-accent-800)',
           fontFamily: 'var(--font-body)',
           fontSize: 14,
           fontWeight: 700,
@@ -126,7 +126,7 @@ export function Realidad({
             </p>
             {!row.ok ? (
               <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: RADIUS.block, background: 'var(--color-accent-100)' }}>
-                <div style={{ fontSize: 10.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+                <div style={{ fontSize: 10.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
                   Cómo lo arreglas
                 </div>
                 <p

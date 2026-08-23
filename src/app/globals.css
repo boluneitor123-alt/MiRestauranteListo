@@ -25,7 +25,12 @@
   --color-bg: #fbf8f3;
   --color-surface: #ffffff;
   --color-text: #1a1815;
-  --color-text-2: #7c746a;
+  /*
+    Texto secundario. Era #7c746a: 4.34:1 sobre el fondo y 4.13 sobre el
+    neutral-100 de las tarjetas, abajo del 4.5 que pide un texto de 12–14px.
+    Ahora da 4.97, 5.27 y 4.72 sobre los tres fondos donde se usa.
+  */
+  --color-text-2: #726b60;
   --color-border: #ede7dd;
   --color-divider: rgb(26 24 21 / 0.09);
 
@@ -353,6 +358,46 @@ textarea {
   Una línea que se corta con puntos suspensivos. Para datos que no se pueden
   partir sin volverse ilegibles: un correo, el nombre de un platillo largo.
 */
+/*
+  Los deslizadores de Números.
+
+  El control nativo mide 16px de alto: se puede ver, pero agarrarlo con el
+  pulgar es lotería. La caja crece a 44px y el navegador centra la barra
+  dentro, así que se ve igual y se toca como debe.
+*/
+/*
+  Una fila de tarea en Inicio: icono, título con su pista, insignia de estado y
+  flecha.
+
+  La insignia no se encoge (dice "Siguiente" o "Completada", y truncada no
+  sirve), así que era el título el que se comía todo el apretón: a 360px caía a
+  38px de ancho y salía una palabra por renglón. Con un piso para el texto, lo
+  que baja de renglón es la insignia.
+*/
+.mrl-fila-tarea {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.mrl-fila-texto {
+  flex: 1 1 150px;
+  min-width: 150px;
+}
+
+.mrl-rango {
+  width: 100%;
+  height: 44px;
+  margin-top: 0;
+  background: transparent;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
 .mrl-trunc {
   white-space: nowrap;
   overflow: hidden;

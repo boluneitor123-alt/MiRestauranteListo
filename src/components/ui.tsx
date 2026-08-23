@@ -118,7 +118,7 @@ export function Button({
       border: '1px solid var(--color-border)',
     },
     ghost: { background: 'var(--color-neutral-200)', color: 'var(--color-text)' },
-    light: { background: '#fff', color: 'var(--color-accent-700)' },
+    light: { background: '#fff', color: 'var(--color-accent-800)' },
   };
 
   return (
@@ -220,7 +220,7 @@ export function Pill({
         borderRadius: RADIUS.pill,
         border: `1.5px solid ${selected ? 'var(--color-accent)' : 'var(--color-divider)'}`,
         background: selected ? 'var(--color-accent-100)' : 'transparent',
-        color: selected ? 'var(--color-accent-700)' : text(70),
+        color: selected ? 'var(--color-accent-800)' : text(70),
         fontSize: 13,
         fontWeight: selected ? 800 : 600,
         fontFamily: 'var(--font-body)',

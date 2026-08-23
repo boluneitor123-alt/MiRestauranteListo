@@ -41,12 +41,21 @@ export function SiguientePaso({
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/img/arnold-cierre.webp"
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', right: -14, top: 6, width: '52%', maxWidth: 210, height: 'auto', pointerEvents: 'none' }}
-      />
+      <picture style={{ display: 'contents' }}>
+        <source type="image/avif" srcSet="/img/arnold-cierre-480w.avif 480w, /img/arnold-cierre.avif 800w" sizes="210px" />
+        <img
+          src="/img/arnold-cierre.webp"
+          srcSet="/img/arnold-cierre-480w.webp 480w, /img/arnold-cierre.webp 800w"
+          sizes="210px"
+          alt=""
+          aria-hidden
+          width={800}
+          height={840}
+          loading="lazy"
+          decoding="async"
+          style={{ position: 'absolute', right: -14, top: 6, width: '52%', maxWidth: 210, height: 'auto', pointerEvents: 'none' }}
+        />
+      </picture>
 
       <div style={{ position: 'relative', padding: '18px 18px 0' }}>
         <span

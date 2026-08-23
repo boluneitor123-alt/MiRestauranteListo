@@ -77,7 +77,7 @@ export function TareasDeTuRuta({
             padding: '10px 4px',
             border: 'none',
             background: 'none',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             fontFamily: 'var(--font-body)',
             fontSize: 13,
             fontWeight: 700,
@@ -112,11 +112,8 @@ export function TareasDeTuRuta({
               key={task.key}
               type="button"
               onClick={() => onOpenTask(task.moduleId, task.key)}
+              className="mrl-fila-tarea"
               style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
                 padding: 14,
                 border: 'none',
                 cursor: 'pointer',
@@ -160,7 +157,7 @@ export function TareasDeTuRuta({
                 </svg>
               </span>
 
-              <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <span className="mrl-fila-texto" style={{ textAlign: 'left' }}>
                 <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, lineHeight: 1.25 }}>{task.title}</span>
                 <span style={{ display: 'block', fontSize: 12.5, lineHeight: 1.35, color: 'var(--color-text-2)', marginTop: 2 }}>
                   {task.hint}

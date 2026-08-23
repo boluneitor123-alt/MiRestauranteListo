@@ -28,7 +28,7 @@ import {
 import { calculate } from '@/domain/landing';
 import { money } from '@/domain/format';
 import { track } from '@/lib/track';
-import { Arrow, Check, Ico, Kick, Uline } from '@/components/landing/pieces';
+import { Arrow, Check, Ico, Ilustracion, Kick, Uline } from '@/components/landing/pieces';
 
 const digits = (value: string) => value.replace(/[^0-9]/g, '');
 const num = (value: string) => parseInt(digits(value) || '0', 10) || 0;
@@ -125,7 +125,7 @@ export default function LandingPage() {
           <a href="#top" className="lp-marca">
             <span>MRL</span>
             <span>
-              Mi<span style={{ color: 'var(--orange)' }}>Restaurante</span>Listo
+              Mi<span style={{ color: 'var(--orange-texto)' }}>Restaurante</span>Listo
             </span>
           </a>
           <nav className="lp-nav">
@@ -160,7 +160,7 @@ export default function LandingPage() {
               <br />
               de comida
               <br />
-              <span className="lp-uwrap" style={{ color: 'var(--amber)' }}>
+              <span className="lp-uwrap" style={{ color: 'var(--orange-display)' }}>
                 sin quemar
                 <br />
                 tu dinero.
@@ -203,12 +203,14 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/arnold-hero.webp"
+          <div className="lp-arnold">
+            <Ilustracion
+              nombre="arnold-hero"
               alt="Arnold, con su libreta y los post-its de las preguntas que se hace antes de abrir su restaurante"
-              style={{ display: 'block', width: '112%', maxWidth: 'none', margin: '-18px -10% 0 -2%', height: 'auto' }}
+              ancho={1000}
+              alto={833}
+              sizes="(max-width: 560px) 65vw, (max-width: 900px) 92vw, 460px"
+              prioridad
             />
           </div>
         </div>
@@ -220,7 +222,7 @@ export default function LandingPage() {
           Todo lo que necesitas antes de abrir,
           <br />
           <span className="lp-uwrap">
-            en una <span style={{ color: 'var(--orange)' }}>sola app.</span>
+            en una <span style={{ color: 'var(--orange-display)' }}>sola app.</span>
             <Uline />
           </span>
         </h2>
@@ -281,7 +283,7 @@ export default function LandingPage() {
                 <br />
                 a tu restaurante,
                 <br />
-                <span className="lp-hand" style={{ color: 'var(--orange)', fontSize: '1.12em' }}>
+                <span className="lp-hand" style={{ color: 'var(--orange-display)', fontSize: '1.12em' }}>
                   en un minuto.
                 </span>
               </h2>
@@ -420,11 +422,12 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="lp-hidesm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/img/arnold-calc.webp"
-                alt="Arnold señalando: tus números no mienten"
-                loading="lazy"
+              <Ilustracion
+                nombre="arnold-calc"
+                alt="Arnold señalando su libreta de cuentas: tus números no mienten"
+                ancho={800}
+                alto={533}
+                sizes="(max-width: 900px) 320px, 300px"
                 style={{ display: 'block', width: '100%', height: 'auto' }}
               />
             </div>
@@ -485,7 +488,7 @@ export default function LandingPage() {
                       fontWeight: 900,
                       letterSpacing: '-.02em',
                       fontSize: grande ? 27 : 22,
-                      color: grande ? 'var(--orange)' : 'var(--ink)',
+                      color: grande ? 'var(--orange-texto)' : 'var(--ink)',
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -511,7 +514,7 @@ export default function LandingPage() {
                 Necesitas un cliente cada {result.minutesBetweenCustomersAtBreakeven} minutos durante tus 8 horas de
                 venta.
               </p>
-              <p className="lp-hand" style={{ marginTop: 12, fontSize: 25, lineHeight: 1.25, color: 'var(--orange)' }}>
+              <p className="lp-hand" style={{ marginTop: 12, fontSize: 25, lineHeight: 1.25, color: 'var(--orange-display)' }}>
                 Nada más. Ese es tu número real.
               </p>
             </div>
@@ -603,7 +606,7 @@ export default function LandingPage() {
               <br />
               al día de la apertura,
               <br />
-              <span className="lp-hand" style={{ color: 'var(--orange)', fontSize: '1.12em' }}>
+              <span className="lp-hand" style={{ color: 'var(--orange-display)', fontSize: '1.12em' }}>
                 en 3 movimientos.
               </span>
             </h2>
@@ -612,11 +615,12 @@ export default function LandingPage() {
             </p>
           </div>
           <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/arnold-tres.webp"
-              alt="Arnold mostrando tres dedos"
-              loading="lazy"
+            <Ilustracion
+              nombre="arnold-tres"
+              alt="Arnold levantando tres dedos, uno por cada movimiento de la ruta"
+              ancho={800}
+              alto={847}
+              sizes="340px"
               style={{ display: 'block', width: '100%', maxWidth: 340, height: 'auto', margin: '0 auto' }}
             />
           </div>
@@ -688,7 +692,7 @@ export default function LandingPage() {
               Todo lo que necesitas,
               <br />
               <span className="lp-uwrap">
-                en una <span style={{ color: 'var(--orange)' }}>sola app.</span>
+                en una <span style={{ color: 'var(--orange-display)' }}>sola app.</span>
                 <Uline />
               </span>
             </h2>
@@ -743,11 +747,12 @@ export default function LandingPage() {
             </p>
           </div>
           <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/arnold-cierre.webp"
-              alt="Arnold celebrando"
-              loading="lazy"
+            <Ilustracion
+              nombre="arnold-cierre"
+              alt="Arnold celebrando con los brazos en alto el día que abre su restaurante"
+              ancho={800}
+              alto={840}
+              sizes="320px"
               style={{ display: 'block', width: '100%', maxWidth: 320, height: 'auto', margin: '0 auto' }}
             />
             <div className="lp-postit" style={{ maxWidth: 300, margin: '14px auto 0' }}>
@@ -1120,7 +1125,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
                     padding: '5px 7px',
                     borderRadius: 6,
                     background: i === 0 ? 'var(--paper)' : 'transparent',
-                    color: i === 0 ? 'var(--orange)' : 'var(--ink-3)',
+                    color: i === 0 ? 'var(--orange-texto)' : 'var(--ink-3)',
                   }}
                 >
                   {label}
@@ -1138,7 +1143,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
             </div>
             <Barra pct={72} color="var(--sage-d)" alto={9} />
 
-            <div className="lp-laptop-tres" style={{ marginTop: 16 }}>
+            <div className="lp-laptop-tres lp-laptop-etapas" style={{ marginTop: 16 }}>
               {MOCK_STAGES.map(([name, frac, pct, tono]) => {
                 const col = tono === 'sage' ? 'var(--sage-d)' : tono === 'amber' ? 'var(--amber-d)' : 'var(--ink-3)';
                 return (
@@ -1147,7 +1152,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
                     style={{ padding: '11px 12px', borderRadius: 11, border: '1px solid var(--line)', background: 'var(--cream)' }}
                   >
                     <span style={{ display: 'block', width: 20, height: 20, borderRadius: 7, background: col }} />
-                    <div style={{ fontSize: 12.5, fontWeight: 800, marginTop: 8 }}>{name}</div>
+                    <div className="lp-etapa-nom">{name}</div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{frac}</div>
                     <Barra pct={pct} color={col} alto={4} />
                   </div>

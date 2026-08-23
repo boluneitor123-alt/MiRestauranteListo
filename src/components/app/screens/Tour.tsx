@@ -46,7 +46,7 @@ export function Tour({
             style={{
               border: 'none',
               background: 'transparent',
-              color: 'var(--color-accent-700)',
+              color: 'var(--color-accent-800)',
               fontSize: 12.5,
               fontWeight: 700,
               cursor: 'pointer',
@@ -63,7 +63,7 @@ export function Tour({
         <Muted size={14} style={{ marginTop: 8 }}>
           {current.body}
         </Muted>
-        <Muted size={12.5} style={{ marginTop: 10, color: 'var(--color-accent-700)' }}>
+        <Muted size={12.5} style={{ marginTop: 10, color: 'var(--color-accent-800)' }}>
           {current.tip}
         </Muted>
 

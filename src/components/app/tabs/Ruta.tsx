@@ -170,7 +170,7 @@ export function Ruta({
           padding: '10px 4px',
           border: 'none',
           background: 'none',
-          color: 'var(--color-accent-700)',
+          color: 'var(--color-accent-800)',
           fontFamily: 'var(--font-body)',
           fontSize: 13.5,
           fontWeight: 700,
@@ -314,7 +314,7 @@ function ModuleCard({
             <span style={{ flex: 1, minWidth: 0 }}>
               <ProgressBar pct={module.skipped ? 0 : module.pct} />
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-800)' }}>
               {module.skipped ? 'omitido' : `${module.pct}%`}
             </span>
           </Row>

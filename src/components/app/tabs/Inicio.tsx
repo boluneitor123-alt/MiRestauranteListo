@@ -198,7 +198,7 @@ export function Inicio({
             flex: 'none',
             borderRadius: 14,
             background: 'var(--color-accent-100)',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             display: 'grid',
             placeItems: 'center',
           }}
@@ -413,7 +413,7 @@ function NoOlvides({
                   fontFamily: 'var(--font-body)',
                   fontSize: 12.5,
                   fontWeight: 700,
-                  color: 'var(--color-accent-600)',
+                  color: 'var(--color-accent-800)',
                 }}
               >
                 {rec.cta}

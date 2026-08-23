@@ -21,7 +21,7 @@ export function Legal({ doc, otro }: { doc: LegalDoc; otro: LegalDoc }) {
           <a href="/" className="lp-marca">
             <span>MRL</span>
             <span>
-              Mi<span style={{ color: 'var(--orange)' }}>Restaurante</span>Listo
+              Mi<span style={{ color: 'var(--orange-texto)' }}>Restaurante</span>Listo
             </span>
           </a>
           <div style={{ flex: 1 }} />

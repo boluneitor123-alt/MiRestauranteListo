@@ -45,7 +45,7 @@ export function ListaModulos({
           padding: '10px 4px',
           border: 'none',
           background: 'none',
-          color: 'var(--color-accent-700)',
+          color: 'var(--color-accent-800)',
           fontFamily: 'var(--font-body)',
           fontSize: 13.5,
           fontWeight: 700,

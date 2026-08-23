@@ -682,7 +682,12 @@ export function App() {
                     padding: '6px 0',
                     cursor: 'pointer',
                     opacity: disabled ? 0.4 : 1,
-                    color: active ? 'var(--color-accent)' : text(50),
+                    /*
+                      El rótulo de la pestaña activa iba en el naranja de marca
+                      a 10.5px: 2.03:1 contra el fondo de la barra. El 800 de la
+                      misma rampa da 6.3 y sigue distinguiéndose del gris.
+                    */
+                    color: active ? 'var(--color-accent-800)' : text(50),
                     fontFamily: 'var(--font-body)',
                   }}
                 >

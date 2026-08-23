@@ -70,7 +70,7 @@ export function PuntosExtra({
                 height: 42,
                 borderRadius: '50%',
                 background: 'var(--color-accent-100)',
-                color: 'var(--color-accent-600)',
+                color: 'var(--color-accent-800)',
               }}
             >
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -100,7 +100,7 @@ export function PuntosExtra({
                 marginTop: 12,
                 fontSize: 12.5,
                 fontWeight: 700,
-                color: 'var(--color-accent-600)',
+                color: 'var(--color-accent-800)',
               }}
             >
               {licensed ? 'Empezar' : 'Ver temario'}
