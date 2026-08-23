@@ -327,11 +327,17 @@ export default function LandingPage() {
                   boxShadow: '0 20px 44px rgb(28 26 23 / 0.26)',
                 }}
               >
+                {/*
+                  `preload="none"` y carátula propia: así la página no baja ni
+                  un byte del video hasta que le dan play. La carátula es el
+                  primer cuadro, para que no salte al arrancar.
+                */}
                 <video
                   ref={video}
                   src="/video/demo-mrl.mp4"
+                  poster="/video/demo-mrl-poster.webp"
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   onEnded={() => setDemoOn(false)}
                   style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', background: 'var(--ink)' }}
                 />

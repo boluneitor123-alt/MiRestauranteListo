@@ -8,6 +8,7 @@
 
 import Stripe from 'stripe';
 import { LICENSE_DEFAULTS } from '@/domain/license';
+import { TOTAL_ROUTE_TASKS } from '@/content/route';
 
 export const CURRENCY = 'mxn';
 
@@ -37,6 +38,21 @@ export interface CheckoutInput {
   appUrl: string;
   /** A dónde volver al terminar. */
   returnPath?: string;
+  /** Equipos que cubre la licencia; sale de los ajustes del panel. */
+  maxDevices?: number;
+}
+
+/**
+ * El producto no vive en el catálogo de Stripe: se arma aquí con `price_data`
+ * para que el precio salga de los ajustes del panel y el número de pasos del
+ * contenido real de la ruta. Así nunca se desfasa una copia escrita a mano.
+ */
+export function productName(): string {
+  return 'MiRestauranteListo · acceso de por vida';
+}
+
+export function productDescription(maxDevices = LICENSE_DEFAULTS.maxDevices): string {
+  return `Pago único. Tu ruta de ${TOTAL_ROUTE_TASKS} pasos, el costeador de platillos y tus números, en hasta ${maxDevices} equipos.`;
 }
 
 /**
@@ -63,9 +79,8 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<{ id:
           currency: CURRENCY,
           unit_amount: Math.round(input.price * 100),
           product_data: {
-            name: 'MiRestauranteListo · acceso de por vida',
-            description:
-              'Pago único. Tu ruta de 43 pasos, el costeador de platillos y tus números, en hasta 3 equipos.',
+            name: productName(),
+            description: productDescription(input.maxDevices),
           },
         },
       },

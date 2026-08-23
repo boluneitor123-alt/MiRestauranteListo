@@ -34,6 +34,7 @@ export async function POST(request: Request) {
       email: user?.email ?? str(body.email),
       deviceId,
       userId: user?.id,
+      maxDevices: settings.maxDevices,
       appUrl: process.env.APP_URL || new URL(request.url).origin,
       returnPath: str(body.returnPath),
     });

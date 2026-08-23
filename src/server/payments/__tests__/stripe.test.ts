@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type Stripe from 'stripe';
-import { interpretEvent, INSTALLMENT_PLANS, CURRENCY } from '../stripe';
+import { interpretEvent, INSTALLMENT_PLANS, CURRENCY, productDescription, productName } from '../stripe';
+import { TOTAL_ROUTE_TASKS } from '@/content/route';
 
 const event = (type: string, object: unknown): Stripe.Event =>
   ({ type, data: { object } }) as unknown as Stripe.Event;
@@ -64,5 +65,20 @@ describe('interpretación de eventos de Stripe', () => {
   it('cobra en pesos y ofrece 3 meses sin intereses', () => {
     expect(CURRENCY).toBe('mxn');
     expect(INSTALLMENT_PLANS).toEqual([3]);
+  });
+});
+
+describe('el producto que ve el cliente en el checkout', () => {
+  it('lleva el nombre de la marca', () => {
+    expect(productName()).toContain('MiRestauranteListo');
+  });
+
+  it('cuenta los pasos que trae la ruta de verdad, no un número escrito a mano', () => {
+    expect(productDescription(3)).toContain(`${TOTAL_ROUTE_TASKS} pasos`);
+    expect(productDescription(3)).toContain('hasta 3 equipos');
+  });
+
+  it('sigue el límite de equipos que tenga el panel', () => {
+    expect(productDescription(5)).toContain('hasta 5 equipos');
   });
 });
