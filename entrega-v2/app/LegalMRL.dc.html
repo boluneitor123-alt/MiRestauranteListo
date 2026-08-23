@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#FAF5EC; --paper:#FFFDF8; --white:#FFFFFF;
+    --ink:#1C1A17; --ink-2:#4A453D; --ink-3:#878175;
+    --amber:#F5A623; --amber-xl:#FDEFD2; --amber-d:#D4820A; --orange:#E8821E;
+    --line:#E7DECD;
+    --disp:'Archivo', system-ui, sans-serif;
+    --body:'Figtree', system-ui, sans-serif;
+  }
+  * { box-sizing:border-box }
+  html { overflow-x:clip }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip }
+  a { color:var(--orange) } a:hover { color:var(--amber-d) }
+  h1,h2 { font-family:var(--disp); font-weight:900; letter-spacing:-.03em; line-height:1.06; margin:0 }
+  h3 { font-family:var(--disp); font-weight:800; letter-spacing:-.02em; margin:0 }
+  p, li { margin:0; line-height:1.62; text-wrap:pretty }
+  :focus-visible { outline:3px solid var(--orange); outline-offset:2px; border-radius:6px }
+  @media (max-width: 820px) {
+    .mrl-cols { grid-template-columns:1fr !important }
+    .mrl-toc { display:none !important }
+  }
+  @media (max-width: 560px) {
+    .mrl-wrap { padding:20px 16px 40px !important }
+    h1 { font-size:32px !important }
+    .mrl-card { padding:22px 18px !important }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh">
+  <header style="border-bottom:1px solid var(--line); background:var(--cream)">
+    <div style="max-width:1080px; margin:0 auto; padding:16px 22px; display:flex; align-items:center; gap:14px">
+      <a href="LandingMRL v2.dc.html" style="display:flex; align-items:center; gap:12px; color:var(--ink); text-decoration:none">
+        <span style="display:grid; place-items:center; width:44px; height:44px; border-radius:11px; background:var(--ink); color:var(--white); font-family:var(--disp); font-weight:900; font-size:14px; letter-spacing:-.02em">MRL</span>
+        <span style="font-family:var(--disp); font-weight:800; font-size:18px; letter-spacing:-.02em">Mi<span style="color:var(--orange)">Restaurante</span>Listo</span>
+      </a>
+      <div style="flex:1"></div>
+      <a href="LandingMRL v2.dc.html" style="height:44px; padding-inline:20px; border-radius:11px; border:2px solid var(--ink); background:var(--white); display:flex; align-items:center; font-size:14.5px; font-weight:700; color:var(--ink); text-decoration:none">Volver</a>
+    </div>
+  </header>
+
+  <div class="mrl-wrap" style="max-width:1080px; margin:0 auto; padding:34px 22px 56px">
+    <div style="padding:16px 18px; border-radius:16px; background:var(--amber-xl); border:1.5px solid #F2DFB6; display:flex; gap:12px; align-items:flex-start">
+      <svg width="20" height="20" style="flex:none; margin-top:2px; color:var(--amber-d)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg>
+      <p style="flex:1; min-width:0; font-size:14px; color:#6B4405"><strong>Borrador — falta que lo revise un abogado.</strong> Está escrito para un negocio digital mexicano que vende acceso de por vida con un pago único, pero yo no soy abogado y esto no es asesoría legal. Todo lo que aparece entre corchetes son datos que solo tú tienes. Antes de publicarlo, que lo lea alguien con cédula.</p>
+    </div>
+
+    <div class="mrl-cols" style="margin-top:30px; display:grid; grid-template-columns:minmax(0,210px) minmax(0,1fr); gap:36px; align-items:start">
+      <nav class="mrl-toc" style="position:sticky; top:20px; display:flex; flex-direction:column; gap:3px">
+        <sc-for list="{{ toc }}" as="t" hint-placeholder-count="8">
+          <a href="{{ t.href }}" style="{{ t.style }}">{{ t.label }}</a>
+        </sc-for>
+      </nav>
+
+      <div>
+        <h1 id="terminos" style="font-size:clamp(32px,4.4vw,44px); scroll-margin-top:24px">Términos de uso</h1>
+        <p style="margin-top:10px; font-size:14px; color:var(--ink-3)">Última actualización: {{ hoy }} · MiRestauranteListo</p>
+
+        <div class="mrl-card" style="margin-top:22px; padding:30px 30px; border-radius:20px; background:var(--paper); border:1px solid var(--line); display:flex; flex-direction:column; gap:28px">
+          <sc-for list="{{ terminos }}" as="s" hint-placeholder-count="10">
+            <section id="{{ s.id }}" style="scroll-margin-top:24px">
+              <h3 style="font-size:20px">{{ s.n }}. {{ s.title }}</h3>
+              <div style="margin-top:11px; display:flex; flex-direction:column; gap:11px; font-size:15.5px; color:var(--ink-2)">
+                <sc-for list="{{ s.body }}" as="p" hint-placeholder-count="2">
+                  <p>{{ p }}</p>
+                </sc-for>
+              </div>
+              <sc-if value="{{ s.hasList }}">
+                <ul style="margin:12px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:8px; font-size:15.5px; color:var(--ink-2)">
+                  <sc-for list="{{ s.list }}" as="li" hint-placeholder-count="3">
+                    <li>{{ li }}</li>
+                  </sc-for>
+                </ul>
+              </sc-if>
+            </section>
+          </sc-for>
+        </div>
+
+        <h1 id="privacidad" style="margin-top:48px; font-size:clamp(32px,4.4vw,44px); scroll-margin-top:24px">Aviso de privacidad</h1>
+        <p style="margin-top:10px; font-size:14px; color:var(--ink-3)">Conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares</p>
+
+        <div class="mrl-card" style="margin-top:22px; padding:30px 30px; border-radius:20px; background:var(--paper); border:1px solid var(--line); display:flex; flex-direction:column; gap:28px">
+          <sc-for list="{{ privacidad }}" as="s" hint-placeholder-count="8">
+            <section id="{{ s.id }}" style="scroll-margin-top:24px">
+              <h3 style="font-size:20px">{{ s.n }}. {{ s.title }}</h3>
+              <div style="margin-top:11px; display:flex; flex-direction:column; gap:11px; font-size:15.5px; color:var(--ink-2)">
+                <sc-for list="{{ s.body }}" as="p" hint-placeholder-count="2">
+                  <p>{{ p }}</p>
+                </sc-for>
+              </div>
+              <sc-if value="{{ s.hasList }}">
+                <ul style="margin:12px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:8px; font-size:15.5px; color:var(--ink-2)">
+                  <sc-for list="{{ s.list }}" as="li" hint-placeholder-count="3">
+                    <li>{{ li }}</li>
+                  </sc-for>
+                </ul>
+              </sc-if>
+            </section>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:26px; padding:22px 24px; border-radius:20px; background:var(--ink); color:var(--white)">
+          <h3 style="font-size:19px">¿Dudas sobre esto?</h3>
+          <p style="margin-top:8px; font-size:15px; color:rgba(255,255,255,.82)">Escríbenos a <a href="mailto:hola@mirestaurantelisto.com" style="color:#FFC85C">hola@mirestaurantelisto.com</a> y te respondemos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1120,&quot;height&quot;:900}}">
+const HOY = '23 de agosto de 2026';
+const TITULAR = 'Araceli Pizano Flores';
+const DOMICILIO = 'José Antonio García Jimeno 1001, interior 9, Colonia Jardines de la Hacienda, C.P. 76180, Querétaro, Querétaro';
+const CORREO = 'hola@mirestaurantelisto.com';
+const PRECIO = '$2,450 MXN';
+
+const TERMINOS = [
+  { id: 'quienes', title: 'Quiénes somos', body: [
+    'MiRestauranteListo es un producto digital operado por ' + TITULAR + ', con domicilio en ' + DOMICILIO + '. Puedes contactarnos en ' + CORREO + '.',
+    'Al crear una cuenta, pagar o usar el sitio y la aplicación aceptas estos términos. Si no estás de acuerdo, no uses el servicio.'
+  ] },
+  { id: 'que-es', title: 'Qué es el servicio', body: [
+    'MiRestauranteListo es una herramienta de planeación y aprendizaje para personas que quieren abrir o mejorar un negocio de comida. Incluye lecciones, calculadoras, plantillas y documentos que se generan con los datos que tú capturas.',
+    'El servicio te da método y cálculo. No te da dinero, ni permisos, ni proveedores, ni clientes: eso lo consigues tú.'
+  ] },
+  { id: 'no-asesoria', title: 'Esto no es asesoría profesional', body: [
+    'El contenido de MiRestauranteListo es informativo y educativo. No constituye asesoría financiera, fiscal, contable, legal ni sanitaria.',
+    'Los cálculos que produce la aplicación —punto de equilibrio, costos, precios sugeridos, presupuestos— se basan exclusivamente en los datos que tú capturas. Si capturas datos equivocados, el resultado será equivocado.',
+    'Antes de firmar un contrato, contratar personal, tramitar permisos o comprometer dinero, consulta a un profesional con licencia en tu localidad. Las reglas cambian entre estados y municipios.'
+  ] },
+  { id: 'sin-garantia', title: 'No garantizamos resultados', body: [
+    'No prometemos que vayas a abrir tu negocio, que vayas a ganar dinero, ni que evites pérdidas. El resultado de un negocio depende de decisiones, ejecución, ubicación, mercado y factores fuera de nuestro control.',
+    'Cualquier ejemplo, cifra o escenario que aparezca en el producto es ilustrativo, no una proyección de tus resultados.'
+  ] },
+  { id: 'cuenta', title: 'Tu cuenta', body: [
+    'Necesitas una cuenta para usar el servicio. Eres responsable de la información que registras y de mantener tu contraseña segura.',
+    'Una cuenta es para una persona. No compartas tu acceso, no lo revendas y no lo uses para redistribuir el contenido.',
+    'Podemos suspender o cancelar una cuenta que comparta accesos, copie el contenido para redistribuirlo, intente vulnerar el servicio o incumpla estos términos.'
+  ] },
+  { id: 'prueba', title: 'Prueba de 7 días', body: [
+    'Ofrecemos 7 días de prueba sin costo y sin tarjeta de crédito. Durante la prueba tienes acceso al contenido que se indique en la aplicación.',
+    'Si no pagas al terminar la prueba, tu cuenta y tus datos se conservan, pero pierdes el acceso al contenido de pago. Puedes pagar después y recuperar tu acceso con tu proyecto intacto.'
+  ] },
+  { id: 'pago', title: 'Pago único y acceso', body: [
+    'MiRestauranteListo se vende por un pago único de ' + PRECIO + '. No hay suscripción, no hay cargos recurrentes y no renovamos nada automáticamente.',
+    '"Acceso de por vida" significa: mientras el servicio siga operando, y sin límite de tiempo por tu parte. No significa que exista una obligación perpetua de operar el servicio. Si algún día decidiéramos cerrarlo, te avisaríamos con al menos 90 días de anticipación y te daríamos forma de exportar tu proyecto.',
+    'Los pagos se procesan a través de Stripe. Nosotros no almacenamos tu número de tarjeta.'
+  ] },
+  { id: 'garantia', title: 'Garantía de 14 días', body: [
+    'Si pagas y el producto no te sirve, puedes pedir tu reembolso completo dentro de los 14 días naturales siguientes a la fecha del pago.',
+    'Para solicitarlo, escribe a ' + CORREO + ' desde el correo con el que compraste. No necesitas dar explicaciones.',
+    'El reembolso se hace por la misma vía del pago. El tiempo en que aparece en tu estado de cuenta depende de tu banco, normalmente entre 5 y 10 días hábiles. Al reembolsarte, tu acceso al contenido de pago termina.'
+  ] },
+  { id: 'contenido', title: 'Contenido y propiedad', body: [
+    'Las lecciones, textos, ilustraciones, calculadoras, plantillas y el diseño de MiRestauranteListo son propiedad de ' + TITULAR + ' y están protegidos por las leyes de propiedad intelectual.',
+    'Tu pago te da una licencia personal, intransferible y no exclusiva para usar el contenido. No te transfiere la propiedad.',
+    'Puedes usar los documentos que genera la aplicación —tu plan, tu carta, tus fichas técnicas, tus resúmenes— libremente en tu negocio, imprimirlos y compartirlos con tus socios, contador o banco. Eso es tuyo.',
+    'No puedes copiar, revender, redistribuir ni publicar el contenido de las lecciones ni las herramientas.'
+  ] },
+  { id: 'datos', title: 'Tus datos y tu proyecto', body: [
+    'Los datos de tu proyecto son tuyos. Puedes exportarlos y borrarlos desde la aplicación en cualquier momento.',
+    'Hacemos respaldos, pero no somos un sistema de archivo. Si tu proyecto es importante, exporta tu respaldo de vez en cuando.'
+  ] },
+  { id: 'responsabilidad', title: 'Límite de responsabilidad', body: [
+    'En la medida que la ley lo permita, nuestra responsabilidad total frente a ti por cualquier reclamación relacionada con el servicio se limita al monto que nos pagaste.',
+    'No respondemos por pérdidas indirectas: ganancias no obtenidas, oportunidades perdidas, daños a tu negocio o reputación.',
+    'Nada de lo anterior limita derechos que la ley mexicana te otorgue como consumidor y que no puedan renunciarse.'
+  ] },
+  { id: 'cambios', title: 'Cambios al servicio y a estos términos', body: [
+    'Mejoramos el producto de forma continua: agregamos contenido, cambiamos funciones y ajustamos el diseño. Eso está incluido en tu acceso, sin costo adicional.',
+    'Si cambiamos estos términos de forma significativa, te avisaremos por correo y publicaremos la fecha de actualización. Si no estás de acuerdo con el cambio, puedes dejar de usar el servicio.'
+  ] },
+  { id: 'ley', title: 'Ley aplicable', body: [
+    'Estos términos se rigen por las leyes de los Estados Unidos Mexicanos.',
+    'Para cualquier controversia, las partes se someten a los tribunales competentes de la ciudad de Querétaro, Querétaro, renunciando a cualquier otro fuero.',
+    'Como consumidor, puedes acudir a la Procuraduría Federal del Consumidor (PROFECO) para atender quejas relacionadas con esta compra.'
+  ] }
+];
+
+const PRIVACIDAD = [
+  { id: 'p-responsable', title: 'Responsable de tus datos', body: [
+    TITULAR + ', con domicilio en ' + DOMICILIO + ', es responsable del tratamiento de tus datos personales.',
+    'Para cualquier asunto relacionado con tus datos, escribe a ' + CORREO + '.'
+  ] },
+  { id: 'p-que', title: 'Qué datos recabamos', body: ['Recabamos únicamente lo necesario para que el servicio funcione:'], list: [
+    'Datos de identificación: nombre y correo electrónico.',
+    'Datos de tu proyecto: los que tú capturas sobre tu negocio — giro, presupuesto, platillos, costos, gastos, avance en la ruta.',
+    'Datos de la compra: monto, fecha y estado del pago. Tu tarjeta la procesa y almacena Stripe; nosotros no la vemos ni la guardamos.',
+    'Datos técnicos: dirección IP, tipo de navegador y páginas visitadas, para operar y proteger el servicio.'
+  ] },
+  { id: 'p-para-que', title: 'Para qué los usamos', body: ['Usamos tus datos para estas finalidades necesarias:'], list: [
+    'Crear y mantener tu cuenta, y darte acceso al contenido.',
+    'Guardar tu proyecto y generar tus cálculos y documentos.',
+    'Procesar tu pago y emitir tu comprobante.',
+    'Responder tus dudas y darte soporte.',
+    'Cumplir obligaciones fiscales y legales.'
+  ] },
+  { id: 'p-secundarias', title: 'Finalidades secundarias', body: [
+    'Si nos lo autorizas, también podemos enviarte correos con novedades del producto, contenido nuevo y consejos para tu negocio.',
+    'Esto no es necesario para usar el servicio. Puedes negarte desde el inicio o darte de baja en cualquier momento con el enlace al pie de cada correo, sin que afecte tu acceso.'
+  ] },
+  { id: 'p-terceros', title: 'Con quién los compartimos', body: [
+    'No vendemos tus datos. Los compartimos únicamente con proveedores que nos permiten operar, y solo con lo que necesitan:'
+  ], list: [
+    'Stripe, para procesar pagos.',
+    'Nuestro proveedor de alojamiento y base de datos, para guardar tu cuenta y tu proyecto.',
+    'Nuestro proveedor de correo, para enviarte mensajes del servicio.',
+    'Autoridades, cuando exista una obligación legal.'
+  ] },
+  { id: 'p-derechos', title: 'Tus derechos ARCO', body: [
+    'Tienes derecho a Acceder a tus datos, Rectificarlos si son inexactos, Cancelarlos cuando consideres que no se requieren, y Oponerte a su uso para fines específicos. También puedes revocar tu consentimiento.',
+    'Para ejercerlos, escribe a ' + CORREO + ' desde el correo de tu cuenta, indicando qué derecho quieres ejercer. Te responderemos en un plazo máximo de 20 días hábiles.',
+    'Buena parte de esto lo puedes hacer tú directamente: desde la aplicación puedes ver, editar, exportar y borrar los datos de tu proyecto.'
+  ] },
+  { id: 'p-conservacion', title: 'Cuánto tiempo los guardamos', body: [
+    'Conservamos tus datos mientras tu cuenta exista. Si la borras, eliminamos tu proyecto.',
+    'Conservamos los registros de la compra el tiempo que exijan las obligaciones fiscales aplicables, aunque hayas borrado tu cuenta.'
+  ] },
+  { id: 'p-seguridad', title: 'Cómo los protegemos', body: [
+    'El sitio usa conexión cifrada. Las contraseñas se guardan cifradas, no en texto plano. El acceso a la base de datos está restringido.',
+    'Ningún sistema es infalible. Si ocurriera una vulneración que afecte tus datos de forma significativa, te lo informaríamos.'
+  ] },
+  { id: 'p-cookies', title: 'Cookies', body: [
+    'Usamos cookies necesarias para mantener tu sesión abierta y recordar tus preferencias en la aplicación. Sin ellas el servicio no funciona.',
+    'Si en el futuro usamos cookies de análisis o publicidad, te lo informaremos y pediremos tu consentimiento.'
+  ] },
+  { id: 'p-cambios', title: 'Cambios a este aviso', body: [
+    'Si modificamos este aviso, publicaremos la versión actualizada en esta página con su fecha. Si el cambio es significativo, te avisaremos por correo.'
+  ] }
+];
+
+class Component extends DCLogic {
+  renderVals() {
+    const prep = (arr, pre) => arr.map((s, i) => ({
+      id: s.id, n: i + 1, title: s.title, body: s.body,
+      hasList: !!(s.list && s.list.length), list: s.list || []
+    }));
+
+    const link = (href, label, top) => ({
+      href, label,
+      style: {
+        padding: '8px 11px', borderRadius: '9px', fontSize: '13.5px',
+        fontWeight: top ? 800 : 600, color: top ? 'var(--ink)' : 'var(--ink-2)',
+        textDecoration: 'none', lineHeight: 1.35,
+        marginTop: top ? '14px' : 0
+      }
+    });
+
+    return {
+      hoy: HOY,
+      terminos: prep(TERMINOS),
+      privacidad: prep(PRIVACIDAD),
+      toc: [
+        link('#terminos', 'TÉRMINOS DE USO', true),
+        ...TERMINOS.map(s => link('#' + s.id, s.title)),
+        link('#privacidad', 'AVISO DE PRIVACIDAD', true),
+        ...PRIVACIDAD.map(s => link('#' + s.id, s.title))
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
