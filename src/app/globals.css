@@ -3,67 +3,96 @@
 /**
  * Design tokens de la app del emprendedor.
  *
- * Los valores salen del `:root` de entrega-claude-code/diseno/MiRestauranteListo.dc.html,
- * que es la fuente de verdad. La rampa del naranja va escrita a mano con los
- * hexadecimales del diseño; solo cuando el usuario elige otro acento en Ajustes
- * se deriva con `color-mix` a partir de `--accent` (ver [data-accent='custom']).
+ * Los valores salen del `:root` de entrega-v2/app/MiRestauranteListo.dc.html,
+ * que es la fuente de verdad. La rampa del naranja de marca va escrita a mano
+ * con los hexadecimales del diseño; solo cuando el usuario elige otro acento en
+ * Ajustes se deriva con `color-mix` a partir de `--accent` (ver
+ * [data-accent='custom']).
  */
 
 :root {
-  /* Color de marca: naranja terracota. */
-  --accent: #e07a2b;
+  /* Color de marca: naranja MRL. */
+  --accent: #f5a623;
   --mix-base: #ffffff;
 
   /*
-   * Único color de texto legible sobre relleno de acento CLARO (las rampas
-   * 100-300). Sobre el relleno sólido #e07a2b el diseño usa texto blanco a
-   * propósito: eso no se toca.
+   * Texto sobre el acento. Con el naranja de marca el relleno sólido es
+   * claro, así que la tinta es oscura tanto sobre el 500 como sobre las
+   * rampas 100-300. Nunca texto blanco encima del naranja.
    */
-  --on-accent: #33190a;
+  --on-accent: #1a1815;
 
-  --color-bg: #faf7f5;
-  --color-text: #1d1b1a;
+  --color-bg: #fbf8f3;
   --color-surface: #ffffff;
-  --color-divider: rgb(29 27 26 / 0.1);
+  --color-text: #1a1815;
+  --color-text-2: #7c746a;
+  --color-border: #ede7dd;
+  --color-divider: rgb(26 24 21 / 0.09);
 
   --color-accent: var(--accent);
-  --color-accent-100: #fdf1e6;
-  --color-accent-200: #fadfc4;
-  --color-accent-300: #f4c191;
-  --color-accent-400: #ea9a52;
-  --color-accent-500: #e07a2b;
-  --color-accent-600: #c26320;
-  --color-accent-700: #9e4e18;
-  --color-accent-800: #743812;
-  --color-accent-900: #4c250c;
+  --color-accent-100: #fef3e0;
+  --color-accent-200: #fce3b8;
+  --color-accent-300: #f9ce85;
+  --color-accent-400: #f7b94f;
+  --color-accent-500: #f5a623;
+  --color-accent-600: #e08a0c;
+  --color-accent-700: #b86e08;
+  --color-accent-800: #8a5206;
+  --color-accent-900: #5c3604;
 
-  --color-accent-2: #22a05f;
-  --color-accent-2-100: #e8f7ee;
-  --color-accent-2-200: #cdead9;
-  --color-accent-2-300: #9fd6b8;
-  --color-accent-2-400: #5cbe8b;
-  --color-accent-2-500: #22a05f;
-  --color-accent-2-600: #17854d;
-  --color-accent-2-700: #10683c;
-  --color-accent-2-800: #0b4a2b;
-  --color-accent-2-900: #07301c;
+  --color-accent-2: #22a65b;
+  --color-accent-2-100: #eaf7ee;
+  --color-accent-2-200: #cdebd7;
+  --color-accent-2-300: #9bd8b2;
+  --color-accent-2-400: #5cc183;
+  --color-accent-2-500: #22a65b;
+  --color-accent-2-600: #178a49;
+  --color-accent-2-700: #106b38;
+  --color-accent-2-800: #0b4c28;
+  --color-accent-2-900: #073219;
 
+  /* Neutros cálidos: la escala de crema a carbón. */
   --color-neutral-100: #ffffff;
-  --color-neutral-200: #f4f1ee;
-  --color-neutral-300: #e6e1dc;
-  --color-neutral-400: #c9c3bc;
-  --color-neutral-500: #a09a93;
-  --color-neutral-600: #7b756e;
-  --color-neutral-700: #5a544e;
-  --color-neutral-800: #3b3733;
-  --color-neutral-900: #211f1d;
+  --color-neutral-200: #faf7f2;
+  --color-neutral-300: #ede7dd;
+  --color-neutral-400: #d9d1c4;
+  --color-neutral-500: #a9a198;
+  --color-neutral-600: #7c746a;
+  --color-neutral-700: #57504a;
+  --color-neutral-800: #3a3531;
+  --color-neutral-900: #1a1815;
 
-  --color-warn: #e8a317;
-  --color-warn-100: #fdf3e0;
+  /*
+   * Semánticos. La advertencia usa el mismo naranja de marca, pero solo en
+   * contexto de alerta; fuera de ahí el naranja dirige, no advierte.
+   */
+  --color-warn: #f5a623;
+  --color-warn-100: #fef3e0;
+  --color-warn-700: #b86e08;
+  --color-danger: #d93a2b;
+  --color-danger-100: #fdebe9;
+  --color-danger-700: #a32517;
 
-  --shadow-sm: 0 1px 3px rgb(29 27 26 / 0.07);
-  --shadow-md: 0 6px 18px rgb(29 27 26 / 0.1);
-  --shadow-lg: 0 18px 44px rgb(29 27 26 / 0.16);
+  /*
+   * Pasteles de categoría: clasifican, nunca compiten con el naranja. Cada
+   * uno con su tinta legible encima.
+   */
+  --cat-numeros: #fdf0ce;
+  --cat-numeros-ink: #8a5206;
+  --cat-menu: #fbe0dd;
+  --cat-menu-ink: #a33f30;
+  --cat-permisos: #dceaf7;
+  --cat-permisos-ink: #2f5e8c;
+  --cat-marketing: #e4f0da;
+  --cat-marketing-ink: #4a6b2e;
+  --cat-operacion: #ebe2f7;
+  --cat-operacion-ink: #5b4291;
+  --cat-recursos: #fbf3e0;
+  --cat-recursos-ink: #8a6a2a;
+
+  --shadow-sm: 0 1px 2px rgb(26 24 21 / 0.04), 0 0 0 1px rgb(26 24 21 / 0.05);
+  --shadow-md: 0 4px 14px rgb(26 24 21 / 0.06), 0 0 0 1px rgb(26 24 21 / 0.05);
+  --shadow-lg: 0 16px 40px rgb(26 24 21 / 0.1), 0 0 0 1px rgb(26 24 21 / 0.05);
 
   --font-heading: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;

@@ -123,6 +123,88 @@ export const FIXED: [string, string, number][] = [
 ];
 export const DISHES = [
   {
+    "id": "ramen",
+    "name": "Ramen Tori Tonkotsu",
+    "price": 78,
+    "portions": 1,
+    "varios": 16.5,
+    "empaque": 3,
+    "labor": 0,
+    "photo": "assets/ramen-tori-tonkotsu.png",
+    "ing": [
+      {
+        "name": "Muslo de pollo",
+        "qty": 350,
+        "u": "g",
+        "uc": 0.089,
+        "merma": 12
+      },
+      {
+        "name": "Huesos de pollo",
+        "qty": 800,
+        "u": "g",
+        "uc": 0.025
+      },
+      {
+        "name": "Fideos ramen frescos",
+        "qty": 150,
+        "u": "g",
+        "uc": 0.023
+      },
+      {
+        "name": "Pollo chashu",
+        "qty": 50,
+        "u": "g",
+        "uc": 0.095,
+        "merma": 8
+      },
+      {
+        "name": "Huevo ajitama",
+        "qty": 0.5,
+        "u": "pz",
+        "uc": 4.2
+      },
+      {
+        "name": "Cebollín",
+        "qty": 15,
+        "u": "g",
+        "uc": 0.06,
+        "merma": 15
+      },
+      {
+        "name": "Espinaca baby",
+        "qty": 25,
+        "u": "g",
+        "uc": 0.08,
+        "merma": 10
+      },
+      {
+        "name": "Menma (bambú)",
+        "qty": 20,
+        "u": "g",
+        "uc": 0.105
+      },
+      {
+        "name": "Alga nori",
+        "qty": 1,
+        "u": "pz",
+        "uc": 1.9
+      },
+      {
+        "name": "Salsa tare",
+        "qty": 30,
+        "u": "ml",
+        "uc": 0.052
+      },
+      {
+        "name": "Aceite de ajonjolí",
+        "qty": 5,
+        "u": "ml",
+        "uc": 0.18
+      }
+    ]
+  },
+  {
     "id": "d1",
     "name": "Taco de pastor",
     "price": 28,

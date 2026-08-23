@@ -795,6 +795,79 @@ export const SKIP_REASONS: string[] = [
   "Otro motivo"
 ];
 
+export interface RouteStage {
+  id: string;
+  /** El número que se pinta en el círculo de la etapa. */
+  n: string;
+  name: string;
+  desc: string;
+  /** Ids de los módulos que caen en esta etapa, en orden. */
+  mods: string[];
+  /** Los dos trazos del icono de la etapa. */
+  d1: string;
+  d2: string;
+  /** Relleno y tinta del icono. */
+  tint: string;
+  ink: string;
+}
+
+/**
+ * Las 3 etapas de Mi Ruta. Es la única fuente de verdad de la agrupación de
+ * los 10 módulos de ruta: no la dupliques en ninguna pantalla.
+ */
+export const ETAPAS: RouteStage[] = [
+  {
+    "id": "define",
+    "n": "1",
+    "name": "DEFINE",
+    "desc": "Define tu concepto y entiende tu mercado.",
+    "mods": [
+      "concepto",
+      "local"
+    ],
+    "d1": "M9 18h6M10 21.5h4",
+    "d2": "M12 2.5a7 7 0 0 0-4 12.7V18h8v-2.8A7 7 0 0 0 12 2.5Z",
+    "tint": "var(--color-accent-2-100)",
+    "ink": "var(--color-accent-2-700)"
+  },
+  {
+    "id": "construye",
+    "n": "2",
+    "name": "CONSTRUYE",
+    "desc": "Prepara tu menú, números, permisos y plan.",
+    "mods": [
+      "equipamiento",
+      "proveedores",
+      "menu",
+      "costeo",
+      "permisos"
+    ],
+    "d1": "M7 4h10v5a5 5 0 0 1-10 0Z",
+    "d2": "M7 5.5H4.5v1A3.5 3.5 0 0 0 8 10M17 5.5h2.5v1A3.5 3.5 0 0 1 16 10M9.5 14h5l-.6 4h-3.8ZM8 21h8",
+    "tint": "var(--color-accent-100)",
+    "ink": "var(--color-accent-700)"
+  },
+  {
+    "id": "abre",
+    "n": "3",
+    "name": "ABRE",
+    "desc": "Organiza tu operación, equipo y lanza tu restaurante.",
+    "mods": [
+      "personal",
+      "marketing",
+      "apertura"
+    ],
+    "d1": "M4 9.5 5.5 4h13L20 9.5",
+    "d2": "M4 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0M5.5 11.5V20h13v-8.5M10 20v-5h4v5",
+    "tint": "var(--color-neutral-200)",
+    "ink": "var(--color-text-2)"
+  }
+];
+
+/** Los módulos de una etapa, en el orden en que los lista la etapa. */
+export const stageModules = (stage: RouteStage): RouteModule[] =>
+  stage.mods.map((id) => CATS.find((c) => c.id === id)).filter((c): c is RouteModule => !!c);
+
 // ── Adaptador para el dominio ──────────────────────────────────────────────
 // El dominio (progreso, diagnóstico, landing) habla en español largo; el
 // prototipo abrevia. Traducimos aquí, una sola vez.

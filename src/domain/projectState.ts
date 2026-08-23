@@ -6,7 +6,7 @@
  * servidor y el respaldo `.json` del prototipo entra por `importBackup`.
  */
 
-import { BUDGET_CONCEPTS, FIXED_CONCEPTS } from '@/content/catalog';
+import { ACCENTS, BUDGET_CONCEPTS, FIXED_CONCEPTS } from '@/content/catalog';
 import { ROUTE_MODULES } from '@/content/route';
 import { taskKey, type ExtraTask } from './progress';
 import type { Concept, Subconcept } from './finance';
@@ -134,22 +134,28 @@ export interface ProjectState {
   settings: AppSettings;
 }
 
-/** Los seis acentos de Ajustes (const ACCENTS del prototipo). */
-export const ACCENT_OPTIONS = [
-  { name: 'Naranja', value: '#e07a2b' },
-  { name: 'Terracota', value: '#c67139' },
-  { name: 'Ámbar', value: '#e0891c' },
-  { name: 'Verde', value: '#1f8a5a' },
-  { name: 'Azul', value: '#2f6fd0' },
-  { name: 'Ciruela', value: '#8d3f6d' },
-] as const;
+/**
+ * Los seis acentos de Ajustes. Salen de `ACCENTS` del prototipo, no de una
+ * lista escrita a mano aquí: si la entrega cambia un color, cambia solo.
+ */
+export const ACCENT_OPTIONS: readonly { name: string; value: string }[] = ACCENTS.map(
+  ([name, value]) => ({ name, value: value.toLowerCase() }),
+);
 
 /**
- * El naranja con el que está escrita a mano la rampa de `globals.css`. No es
- * el color por defecto de la app: es el único acento cuyos tonos 100–900 no se
- * derivan, sino que vienen hexadecimal por hexadecimal del diseño.
+ * El naranja de marca: el único acento cuyos tonos 100–900 no se derivan, sino
+ * que vienen hexadecimal por hexadecimal del diseño (ver `globals.css`).
+ * También es el color con el que arranca toda cuenta nueva.
  */
 export const BRAND_ACCENT = ACCENT_OPTIONS[0].value;
+
+/**
+ * El color con el que arranca una cuenta nueva.
+ *
+ * Quien ya eligió el suyo se queda con el suyo — esto sólo decide con cuál
+ * empiezan las cuentas nuevas y con cuál se repone un color guardado inválido.
+ */
+export const DEFAULT_ACCENT = BRAND_ACCENT;
 
 /** Un acento válido es un hexadecimal de 6 dígitos. */
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -162,13 +168,38 @@ export function safeAccent(value: unknown): string {
   return typeof value === 'string' && HEX.test(value.trim()) ? value.trim() : DEFAULT_ACCENT;
 }
 
+/** Tinta oscura y tinta clara: los dos únicos textos que van sobre el acento. */
+const INK_DARK = '#1a1815';
+const INK_LIGHT = '#ffffff';
+
+/** Luminancia relativa (WCAG 2.1) de un hexadecimal de 6 dígitos. */
+function luminancia(hex: string): number {
+  const canal = (i: number) => {
+    const v = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * canal(0) + 0.7152 * canal(1) + 0.0722 * canal(2);
+}
+
+/** Razón de contraste WCAG entre dos luminancias. */
+function contraste(a: number, b: number): number {
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 /**
- * El color con el que arranca una cuenta nueva: el azul de la lista.
+ * Qué tinta va encima del acento sólido.
  *
- * Quien ya eligió el suyo se queda con el suyo — esto sólo decide con cuál
- * empiezan las cuentas nuevas y con cuál se repone un color guardado inválido.
+ * Sobre el naranja de marca el texto es oscuro; sobre un acento hondo como el
+ * carbón o el azul tiene que ser claro o no se lee. Se decide por luminancia
+ * relativa en lugar de por una lista escrita a mano, para que cualquier acento
+ * futuro quede resuelto solo.
  */
-export const DEFAULT_ACCENT = ACCENT_OPTIONS[4].value;
+export function accentInk(accent: string): string {
+  const luz = luminancia(safeAccent(accent));
+  const oscuro = contraste(luz, luminancia(INK_DARK));
+  const claro = contraste(luz, luminancia(INK_LIGHT));
+  return oscuro >= claro ? INK_DARK : INK_LIGHT;
+}
 
 export const DEFAULT_SETTINGS: AppSettings = {
   alerts: true,

@@ -55,9 +55,12 @@ describe('agregados del costeador (README § 4 · "Agregados")', () => {
 
   it('resume la carta de demostración', () => {
     const agg = menuAggregates(DEMO_DISHES);
-    expect(agg.total).toBe(4);
-    expect(agg.priced).toBe(4);
-    expect(agg.averagePrice).toBeCloseTo(90.25, 6);
-    expect(agg.averageFoodCost).toBeCloseTo(38.7889, 3);
+    // El conteo sale de la carta, no de un número escrito aquí.
+    expect(agg.total).toBe(DEMO_DISHES.length);
+    expect(agg.priced).toBe(DEMO_DISHES.length);
+    expect(agg.averagePrice).toBeCloseTo(87.8, 6);
+    // El ramen de ejemplo se vende por debajo de su costo a propósito: por eso
+    // el promedio de la carta queda arriba del 38% sano.
+    expect(agg.averageFoodCost).toBeCloseTo(54.269, 3);
   });
 });

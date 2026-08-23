@@ -7,7 +7,7 @@ import { ONBOARDING_QUESTIONS, TOUR_STEPS } from '@/content/onboarding';
 import { diagnose, type Target } from '@/domain/diagnosis';
 import { DEFAULT_FOOD_COST_TARGET } from '@/domain/costing';
 import { projectProgress, taskKey } from '@/domain/progress';
-import { BRAND_ACCENT } from '@/domain/projectState';
+import { accentInk, BRAND_ACCENT } from '@/domain/projectState';
 import type { Dish, Subrecipe } from '@/domain/types';
 import { detectPlatform, type PlatformInfo } from '@/lib/device';
 import { useStore } from '@/state/store';
@@ -139,6 +139,9 @@ export function App() {
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--accent', state.settings.accent);
+    // La tinta sobre el acento sólido se recalcula con el color elegido: con el
+    // naranja va oscura, con el azul o el carbón va clara.
+    root.style.setProperty('--on-accent', accentInk(state.settings.accent));
     // Con el naranja de marca mandan los hexadecimales del diseño; con
     // cualquier otro acento la rampa se deriva (ver globals.css).
     if (state.settings.accent.toLowerCase() === BRAND_ACCENT.toLowerCase()) root.removeAttribute('data-accent');

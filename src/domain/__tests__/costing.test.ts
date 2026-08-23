@@ -20,6 +20,22 @@ import { DEMO_DISHES, DEMO_SUBRECIPES } from '@/content/demo';
 
 const ctx: CostingContext = { subrecipes: DEMO_SUBRECIPES as Subrecipe[] };
 
+/*
+ * La carta de ejemplo se busca por id, nunca por posición: la entrega puede
+ * agregar platillos al inicio y eso no debe mover ninguna prueba.
+ */
+const demoDish = (id: string): Dish => {
+  const d = (DEMO_DISHES as Dish[]).find((x) => x.id === id);
+  if (!d) throw new Error(`No está el platillo de ejemplo ${id}`);
+  return d;
+};
+
+const demoSubrecipe = (id: string): Subrecipe => {
+  const s = (DEMO_SUBRECIPES as Subrecipe[]).find((x) => x.id === id);
+  if (!s) throw new Error(`No está la sub-receta de ejemplo ${id}`);
+  return s;
+};
+
 const ing = (over: Partial<Ingredient>): Ingredient => ({
   id: 'i',
   name: 'Insumo',
@@ -77,7 +93,7 @@ describe('costo de un ingrediente (README § 4)', () => {
 });
 
 describe('sub-recetas por lote (README § 4 y § 1.7)', () => {
-  const salsa = DEMO_SUBRECIPES[0] as Subrecipe;
+  const salsa = demoSubrecipe('sr1');
 
   it('costea el lote sumando sus ingredientes con merma', () => {
     // Valor exacto de la ficha del prototipo: "Lote $142.30 · $0.05 por ml".
@@ -114,7 +130,7 @@ describe('sub-recetas por lote (README § 4 y § 1.7)', () => {
 });
 
 describe('costo y rentabilidad del platillo (README § 4)', () => {
-  const taco = DEMO_DISHES[0] as Dish;
+  const taco = demoDish('d1');
 
   it('suma ingredientes, varios, empaque y mano de obra por porción', () => {
     expect(dishIngredientsCost(taco)).toBeCloseTo(8.85, 6);

@@ -271,27 +271,27 @@ export const NOTES = [
 export const ACCENTS: [string, string][] = [
   [
     "Naranja",
-    "#e07a2b"
+    "#F5A623"
   ],
   [
     "Terracota",
-    "#c67139"
-  ],
-  [
-    "Ámbar",
-    "#e0891c"
+    "#E8821E"
   ],
   [
     "Verde",
-    "#1f8a5a"
+    "#22A65B"
   ],
   [
     "Azul",
-    "#2f6fd0"
+    "#2F6FD0"
   ],
   [
     "Ciruela",
-    "#8d3f6d"
+    "#8D3F6D"
+  ],
+  [
+    "Carbón",
+    "#3A3531"
   ]
 ];
 export const RES_FILES = {};
