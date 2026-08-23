@@ -8,11 +8,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
 
-const APP = 'entrega-claude-code/diseno/MiRestauranteListo.dc.html';
-const ART = 'entrega-claude-code/diseno/art/illustrations.js';
-// Las 26 de los cursos de Delivery y Contratar llegaron después, en su propio
-// archivo y bajo otro nombre de variable. El sistema visual es el mismo.
-const ART_CURSOS = 'entrega-claude-code/diseno/art/illustrations-cursos.js';
+const APP = 'entrega-v2/app/MiRestauranteListo.dc.html';
+// La entrega v2 ya trae las 90 en un solo archivo: las 64 de la ruta y las 26
+// de los cursos de Delivery y Contratar, con las mismas claves.
+const ART = 'entrega-v2/art/illustrations.js';
 const OUT = 'src/content';
 
 const src = readFileSync(APP, 'utf8');
@@ -26,11 +25,7 @@ const g = (n) => runInContext(n, ctx);
 
 const art = createContext({ window: {} });
 runInContext(readFileSync(ART, 'utf8'), art);
-runInContext(readFileSync(ART_CURSOS, 'utf8'), art);
-const MRL_ART = {
-  ...runInContext('window.MRL_ART', art),
-  ...runInContext('window.MRL_ART_CURSOS', art),
-};
+const MRL_ART = runInContext('window.MRL_ART', art);
 
 const cabecera = (que) =>
   `// Generado por scripts/extraer-diseno.mjs desde el prototipo de diseño.\n` +
@@ -87,6 +82,32 @@ export const TOTAL_MODULES = CATS.length;
 export const taskKey = (catId: string, index: number) => catId + index;
 
 export const SKIP_REASONS: string[] = ${json(g('SKIP_REASONS'))};
+
+export interface RouteStage {
+  id: string;
+  /** El número que se pinta en el círculo de la etapa. */
+  n: string;
+  name: string;
+  desc: string;
+  /** Ids de los módulos que caen en esta etapa, en orden. */
+  mods: string[];
+  /** Los dos trazos del icono de la etapa. */
+  d1: string;
+  d2: string;
+  /** Relleno y tinta del icono. */
+  tint: string;
+  ink: string;
+}
+
+/**
+ * Las 3 etapas de Mi Ruta. Es la única fuente de verdad de la agrupación de
+ * los 10 módulos de ruta: no la dupliques en ninguna pantalla.
+ */
+export const ETAPAS: RouteStage[] = ${json(g('ETAPAS'))};
+
+/** Los módulos de una etapa, en el orden en que los lista la etapa. */
+export const stageModules = (stage: RouteStage): RouteModule[] =>
+  stage.mods.map((id) => CATS.find((c) => c.id === id)).filter((c): c is RouteModule => !!c);
 
 // ── Adaptador para el dominio ──────────────────────────────────────────────
 // El dominio (progreso, diagnóstico, landing) habla en español largo; el

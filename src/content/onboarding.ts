@@ -183,7 +183,7 @@ export const TOUR: TourStep[] = [
   {
     "tab": "ruta",
     "t": "Mi Ruta: qué te falta para abrir",
-    "b": "Diez módulos, del concepto a la apertura. Toca una tarea para ver por qué importa y qué hacer exactamente. Si un módulo no aplica todavía, puedes omitirlo y no cuenta en tu avance.",
+    "b": "Catorce módulos en una sola lista, del concepto a la apertura, cada uno con su avance a la vista. Toca una tarea para ver por qué importa y qué hacer exactamente. Si un módulo no aplica todavía, puedes omitirlo y no cuenta en tu avance.",
     "tip": "Puedes agregar tus propias tareas a cualquier módulo."
   },
   {

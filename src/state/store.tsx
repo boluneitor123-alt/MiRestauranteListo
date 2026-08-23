@@ -159,7 +159,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const data = (await response.json()) as { user: SessionUser | null };
         if (data.user) {
           setUser(data.user);
-          await loadProject();
+          const cargado = await loadProject();
+          // Cuenta recién creada: todavía no hay proyecto en el servidor, así
+          // que el perfil se siembra con los datos de la sesión. Sin esto el
+          // tablero saluda con el marcador de posición en vez del nombre.
+          if (!cargado) {
+            const cuenta = data.user;
+            dispatch({
+              type: 'update',
+              update: (current) => ({
+                ...current,
+                profile: {
+                  ...current.profile,
+                  name: current.profile.name || cuenta.name,
+                  email: current.profile.email || cuenta.email,
+                },
+              }),
+            });
+          }
         }
       } catch {
         // Sin conexión el bloqueo de red se encarga.

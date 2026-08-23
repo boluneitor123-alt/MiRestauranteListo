@@ -227,3 +227,102 @@ export function paceProjection(input: {
     `A tu ritmo actual, abres alrededor del ${day.getDate()} de ${MESES[day.getMonth()]}.`
   );
 }
+
+/** Estado de una etapa: los tres que pinta el prototipo. */
+export type StageState = 'Completado' | 'En progreso' | 'Pendiente';
+
+export interface StageProgress {
+  id: string;
+  /** El número que se pinta en el círculo. */
+  n: string;
+  name: string;
+  desc: string;
+  /** Los dos trazos del icono de la etapa. */
+  d1: string;
+  d2: string;
+  /** Relleno y tinta del icono. */
+  tint: string;
+  ink: string;
+  total: number;
+  done: number;
+  state: StageState;
+  /** Los módulos de la etapa, en el orden que declara la etapa. */
+  modules: ModuleProgress[];
+}
+
+/** La forma mínima de una etapa: lo que `ETAPAS` declara en el prototipo. */
+export interface StageDef {
+  id: string;
+  n: string;
+  name: string;
+  desc: string;
+  mods: readonly string[];
+  d1: string;
+  d2: string;
+  tint: string;
+  ink: string;
+}
+
+/**
+ * Las etapas con su avance. La agrupación viene de `ETAPAS`; aquí sólo se
+ * cuentan las tareas de sus módulos, para que ninguna pantalla tenga que
+ * repetir qué módulo cae en qué etapa.
+ *
+ * Un módulo omitido se queda fuera de la cuenta, igual que en el avance
+ * general: sus tareas no son pendientes ni completadas.
+ */
+export function stageProgress(stages: readonly StageDef[], modules: readonly ModuleProgress[]): StageProgress[] {
+  return stages.map((stage) => {
+    const mods = stage.mods
+      .map((id) => modules.find((m) => m.id === id))
+      .filter((m): m is ModuleProgress => !!m);
+    const contadas = mods.filter((m) => !m.skipped);
+    const total = contadas.reduce((a, m) => a + m.total, 0);
+    const done = contadas.reduce((a, m) => a + m.done, 0);
+    const state: StageState = !total ? 'Pendiente' : done === total ? 'Completado' : done > 0 ? 'En progreso' : 'Pendiente';
+    return {
+      id: stage.id,
+      n: stage.n,
+      name: stage.name,
+      desc: stage.desc,
+      d1: stage.d1,
+      d2: stage.d2,
+      tint: stage.tint,
+      ink: stage.ink,
+      total,
+      done,
+      state,
+      modules: mods,
+    };
+  });
+}
+
+/**
+ * La etapa en la que va el proyecto, como la dice Inicio: "Define · etapa 1
+ * de 3". Si lo pendiente ya es un mini curso, la ruta terminó y no hay etapa.
+ */
+export function stageLabel(stages: readonly StageDef[], nextTask?: RouteTask): string {
+  const i = nextTask ? stages.findIndex((e) => e.mods.includes(nextTask.moduleId)) : -1;
+  if (i < 0) return 'Puntos extra';
+  const nombre = stages[i].name.charAt(0) + stages[i].name.slice(1).toLowerCase();
+  return `${nombre} · etapa ${i + 1} de ${stages.length}`;
+}
+
+/** Cuántas tareas enseña Inicio en "Tareas de tu ruta". */
+export const HOME_TASKS = 4;
+
+/**
+ * La ventana de tareas que enseña Inicio: la que sigue, con una hecha antes
+ * para que se vea de dónde viene el avance, y las siguientes para saber qué
+ * viene. Al final de la ruta la ventana se pega al final en lugar de encogerse.
+ */
+export function taskWindow(
+  tasks: readonly RouteTask[],
+  next?: RouteTask,
+  size: number = HOME_TASKS,
+): RouteTask[] {
+  if (!tasks.length) return [];
+  const i = next ? tasks.indexOf(next) : tasks.length - 1;
+  const desde = Math.max(0, Math.min(i - 1, tasks.length - size));
+  return tasks.slice(desde, desde + size);
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accentInk,
   ACCENT_OPTIONS,
   BACKUP_VERSION,
   BRAND_ACCENT,
@@ -176,15 +177,23 @@ describe('importador del respaldo del prototipo (README § 13, paso 2)', () => {
 });
 
 describe('color de la app', () => {
-  it('una cuenta nueva arranca en el azul', () => {
-    expect(emptyProjectState().settings.accent).toBe('#2f6fd0');
-    expect(DEFAULT_ACCENT).toBe('#2f6fd0');
+  it('una cuenta nueva arranca en el naranja de marca', () => {
+    expect(emptyProjectState().settings.accent).toBe('#f5a623');
+    expect(DEFAULT_ACCENT).toBe('#f5a623');
+    expect(BRAND_ACCENT).toBe(DEFAULT_ACCENT);
   });
 
-  it('el naranja de la rampa escrita a mano sigue siendo otro color', () => {
-    // BRAND_ACCENT no es el color por defecto: es el dueño de la rampa.
-    expect(BRAND_ACCENT).toBe('#e07a2b');
-    expect(BRAND_ACCENT).not.toBe(DEFAULT_ACCENT);
+  it('pone tinta oscura sobre el naranja y tinta clara sobre los acentos hondos', () => {
+    expect(accentInk('#f5a623')).toBe('#1a1815');
+    expect(accentInk('#e8821e')).toBe('#1a1815');
+    expect(accentInk('#22a65b')).toBe('#1a1815');
+    expect(accentInk('#2f6fd0')).toBe('#ffffff');
+    expect(accentInk('#8d3f6d')).toBe('#ffffff');
+    expect(accentInk('#3a3531')).toBe('#ffffff');
+  });
+
+  it('elige tinta aunque el acento guardado sea basura', () => {
+    expect(accentInk('no soy un color')).toBe(accentInk(DEFAULT_ACCENT));
   });
 
   it('respeta el color que el usuario ya eligió', () => {

@@ -9,7 +9,21 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 
-export const RADIUS = { frame: 44, sheet: 34, card: 28, block: 24, inner: 20, small: 16, pill: 999 } as const;
+/*
+ * Radios de la entrega v2: mucho menos redondeo que la versión anterior. Los
+ * controles van a 14px —no a píldora— y las tarjetas a 20px. `pill` sobrevive
+ * sólo para insignias y chips, que sí siguen siendo redondos.
+ */
+export const RADIUS = {
+  frame: 28,
+  sheet: 24,
+  card: 20,
+  block: 18,
+  inner: 16,
+  small: 13,
+  control: 14,
+  pill: 999,
+} as const;
 
 export const text = (opacity: number) => `color-mix(in srgb, var(--color-text) ${opacity}%, transparent)`;
 
@@ -29,7 +43,9 @@ export function Card({
       style={{
         background: 'var(--color-surface)',
         borderRadius: radius,
-        boxShadow: 'var(--shadow-sm)',
+        // v2: las tarjetas se separan del fondo con un borde de 1px, no con
+        // sombra. La sombra queda para lo que de verdad flota.
+        border: '1px solid var(--color-border)',
         padding: 18,
         ...style,
       }}
@@ -92,12 +108,14 @@ export function Button({
   type?: 'button' | 'submit';
 }) {
   const palette: Record<ButtonVariant, CSSProperties> = {
-    primary: { background: 'var(--color-accent)', color: '#fff' },
+    // Sobre el acento la tinta la decide accentInk(): con el naranja de marca
+    // es oscura, con un acento hondo es clara.
+    primary: { background: 'var(--color-accent)', color: 'var(--on-accent)' },
     success: { background: 'var(--color-accent-2-600)', color: '#fff' },
     secondary: {
       background: 'transparent',
       color: 'var(--color-text)',
-      border: '1.5px solid var(--color-divider)',
+      border: '1px solid var(--color-border)',
     },
     ghost: { background: 'var(--color-neutral-200)', color: 'var(--color-text)' },
     light: { background: '#fff', color: 'var(--color-accent-700)' },
@@ -113,7 +131,7 @@ export function Button({
         width: '100%',
         // Ningún botón principal baja de 48px, aunque le pasen una altura menor.
         height: Math.max(48, height),
-        borderRadius: RADIUS.pill,
+        borderRadius: RADIUS.control,
         border: 'none',
         fontFamily: 'var(--font-body)',
         fontSize: 15.5,

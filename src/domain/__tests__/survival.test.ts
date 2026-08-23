@@ -169,8 +169,19 @@ describe('los cuatro números de operación', () => {
 
   it('saca la merma promedio de los ingredientes capturados', () => {
     const r = survival(con());
-    // Los platillos de ejemplo no traen merma; las sub-recetas sí, pero la
-    // merma que se promedia es la de los ingredientes del platillo.
+    // La carta de ejemplo sí trae merma: la que se promedia es la de los
+    // ingredientes del platillo, no la de sus sub-recetas.
+    expect(r.wastePct).toBeCloseTo(11.25, 6);
+    expect(r.ops[1].value).not.toBe('Sin datos');
+    expect(r.ops[1].note).toContain('11% promedio de merma');
+  });
+
+  it('lo dice sin rodeos cuando ningún platillo trae merma', () => {
+    const sinMerma = DEMO_DISHES.map((d) => ({
+      ...d,
+      ingredients: d.ingredients.map(({ waste: _waste, ...i }) => i),
+    }));
+    const r = survival(con({ dishes: sinMerma }));
     expect(r.wastePct).toBe(0);
     expect(r.ops[1].value).toBe('Sin datos');
     expect(r.ops[1].note).toContain('Captura el porcentaje de merma');

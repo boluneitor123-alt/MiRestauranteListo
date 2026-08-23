@@ -171,8 +171,8 @@ export function ResumenFinanciero({ state, date }: { state: ProjectState; date: 
       </table>
       <p className="note">
         Con {money(fixed)} de gastos fijos y un margen de {state.margin}%, necesitas vender {money(be.dailySales)} cada
-        día sólo para no perder dinero: {be.ticketsPerDay} tickets, o un cliente cada {be.minutesBetweenCustomers}{' '}
-        minutos en un turno de {state.hours} horas si quieres alcanzar tu meta.
+        día sólo para no perder dinero: {be.ticketsPerDay} tickets, o un cliente cada{' '}
+        {be.minutesBetweenCustomersAtBreakeven} minutos en un turno de {state.hours} horas.
       </p>
 
       <h2>Escenarios de venta</h2>

@@ -98,6 +98,10 @@ model Project {
   weeklyHours Int     @default(70)
   prepMinutes Int     @default(6)
   dailyMix    Int     @default(100)
+  /// Capacidad del negocio, para la revisión de realidad de Números.
+  ordersPerHour Int   @default(20)
+  peakHours     Int   @default(3)
+  seats         Int   @default(20)
   /// Prueba de estrés, en porcentaje.
   stressSupplies Int  @default(0)
   stressRent     Int  @default(0)

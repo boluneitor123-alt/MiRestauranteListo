@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // El mismo azul que el manifest: es el color de la barra del sistema.
-  themeColor: '#2f6fd0',
+  // El mismo naranja que el manifest: es el color de la barra del sistema.
+  themeColor: '#f5a623',
   width: 'device-width',
   initialScale: 1,
   // Los inputs van a 16px; no hace falta bloquear el zoom del usuario.
@@ -23,11 +23,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Figtree para la app; las tres familias de la landing solo bajan sus
-            archivos cuando una regla de landing.css las usa. */}
+        {/* Figtree para la app; Archivo, Caveat y Space Mono son de la landing
+            y solo bajan sus archivos cuando una regla de landing.css las usa. */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Archivo:wght@400;600;700;800;900&family=Caveat:wght@600;700&family=Space+Mono:wght@400;700&display=swap"
         />
       </head>
       <body>{children}</body>

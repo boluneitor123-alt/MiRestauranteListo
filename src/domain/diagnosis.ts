@@ -20,6 +20,8 @@ export interface Target {
   tab: 'inicio' | 'ruta' | 'costeador' | 'numeros' | 'mas';
   module?: string;
   view?: string;
+  /** Clave de la tarea a dejar abierta dentro del módulo. */
+  task?: string;
 }
 
 export interface Recommendation {

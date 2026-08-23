@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Lock } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronRight, FileText, Lock } from 'lucide-react';
 import { breakeven, conceptTotal, fixedExpensesTotal, investment, type Subconcept } from '@/domain/finance';
 import { money } from '@/domain/format';
 import { menuAggregates } from '@/domain/aggregates';
@@ -12,6 +12,11 @@ import { NumberField } from '../costeador/DishEditor';
 import { Aguante } from '../numeros/Aguante';
 import { survival, type SurvivalResult } from '@/domain/survival';
 import { BUDGET_CONCEPTS } from '@/content/catalog';
+import { BENCH } from '@/content/giros';
+import { realityCheck } from '@/domain/reality';
+import { Realidad } from '../numeros/Realidad';
+import { Chrome } from '../inicio/Chrome';
+import { Encabezado } from '../inicio/Encabezado';
 
 /**
  * El presupuesto que se enseña durante la prueba: los 13 conceptos de una
@@ -63,7 +68,7 @@ function survivalOf(state: ProjectState): SurvivalResult {
   });
 }
 
-export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio' | 'aguante';
+export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio' | 'aguante' | 'realidad';
 
 /** Números: inversión, gastos fijos y punto de equilibrio (README § 1.8). */
 export function Numeros({
@@ -76,6 +81,10 @@ export function Numeros({
   onOpenPaywall,
   onPrint,
   onFlash,
+  onOpenProfile,
+  onOpenAlerts,
+  onOpenProject,
+  hasAlerts,
 }: {
   state: ProjectState;
   view: NumbersView;
@@ -86,6 +95,12 @@ export function Numeros({
   onOpenPaywall: () => void;
   onPrint: () => void;
   onFlash: (message: string) => void;
+  onOpenProfile: () => void;
+  onOpenAlerts: () => void;
+  /** Abre los datos del proyecto desde el rótulo del encabezado. */
+  onOpenProject: () => void;
+  /** Hay una alerta que merece el punto naranja de la campana. */
+  hasAlerts: boolean;
 }) {
   if (view === 'presupuesto') {
     // Durante la prueba el presupuesto NO lleva candado: se ve completo, con
@@ -154,112 +169,269 @@ export function Numeros({
     budgetCap: state.project.budgetCap,
   });
   const aguante = survivalOf(state);
+  const realidad = realityCheck({
+    capacity: state.capacity,
+    ticketsNeeded: be.goalTicketsPerDay || be.ticketsPerDay,
+    monthlySales: be.goalMonthlySales || be.monthlySales,
+    rent: state.fixed.find((c) => c.key === 'renta')?.amount ?? 0,
+    payroll: state.fixed.find((c) => c.key === 'nomina')?.amount ?? 0,
+    investment: invest.total,
+    budgetCap: state.project.budgetCap,
+    giro: state.project.giro,
+    bench: BENCH[state.project.giro] ?? BENCH['Otro'],
+  });
+
+  if (view === 'realidad') {
+    return (
+      <Realidad
+        result={realidad}
+        capacity={state.capacity}
+        onBack={() => onChangeView('home')}
+        onChangeCapacity={(capacity) => onPatch({ capacity })}
+      />
+    );
+  }
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
-      <H size={25}>Números</H>
+      <Chrome
+        initial={(state.profile.name || 'T').trim().slice(0, 1).toUpperCase()}
+        hasAlerts={hasAlerts}
+        onOpenAlerts={onOpenAlerts}
+        onOpenProfile={onOpenProfile}
+      />
 
-      {/*
-        En prueba la tarjeta no lleva candado ni manda al pago: entra a la
-        vista de ejemplo, que se lee completa. Ese bloqueo convierte mejor
-        justo porque deja ver lo que hay dentro.
-      */}
-      <ModuleCard
-        title="Presupuesto de apertura"
-        value={can.showsInvestmentFigures ? money(invest.total) : 'Ver ejemplo'}
-        hint={
-          can.showsInvestmentFigures
-            ? '13 conceptos, con subconceptos y fondo de emergencia'
-            : '13 conceptos con subconceptos · míralo completo antes de pagar'
-        }
-        onClick={() => onChangeView('presupuesto')}
+      <Encabezado
+        titulo="Números"
+        bajada="Las cuentas que deciden si tu negocio aguanta."
+        proyecto={state.project.name}
+        onOpenProject={onOpenProject}
       />
-      <ModuleCard
-        title="Gastos fijos mensuales"
-        value={money(fixed)}
-        hint={`≈ ${money(be.fixedPerDay)} por día de operación`}
-        onClick={() => onChangeView('fijos')}
-      />
-      <ModuleCard
-        title="Punto de equilibrio"
-        value={money(be.dailySales)}
-        hint={`${be.ticketsPerDay} tickets al día para no perder`}
-        onClick={() => onChangeView('equilibrio')}
-      />
+
+      {/* La revisión de realidad abre la pestaña: es lo que cruza todo lo demás. */}
+      <button
+        type="button"
+        onClick={() => onChangeView('realidad')}
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          width: '100%',
+          textAlign: 'left',
+          padding: '20px 18px',
+          border: '1px solid var(--color-accent-200)',
+          borderRadius: RADIUS.card,
+          background: 'var(--color-accent-100)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-body)',
+          color: 'var(--color-text)',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/img/arnold-numeros.webp"
+          alt=""
+          aria-hidden
+          style={{ position: 'absolute', right: -14, top: -6, width: '48%', maxWidth: 186, height: 'auto', pointerEvents: 'none' }}
+        />
+        <span style={{ position: 'relative', display: 'block', maxWidth: '60%' }}>
+          <span style={{ display: 'block', fontSize: 11, letterSpacing: '.1em', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
+            Revisión de realidad
+          </span>
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 22, lineHeight: 1.14, marginTop: 8, letterSpacing: '-.02em' }}>
+            {realidad.head}
+          </span>
+          <span className="mrl-prose" style={{ display: 'block', marginTop: 8, fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-2)' }}>
+            {realidad.sub}
+          </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 14,
+              padding: '11px 16px',
+              border: '1px solid var(--color-border)',
+              borderRadius: 13,
+              background: 'var(--color-surface)',
+              fontWeight: 700,
+              fontSize: 13.5,
+            }}
+          >
+            Ver los {realidad.rows.length} cruces
+            <ArrowRight size={15} strokeWidth={2.8} />
+          </span>
+        </span>
+      </button>
 
       {/*
         "Lo que este negocio te va a dar": la cifra grande es el sueldo real
         del dueño, que es la pregunta con la que llega. Las otras siete viven
         dentro.
       */}
-      <ModuleCard
+      <FilaModulo
+        kicker="Empieza aquí"
         title="Lo que este negocio te va a dar"
-        value={aguante.ownerSalary > 0 ? `${money(aguante.ownerSalary)} al mes` : 'Por calcular'}
         hint={
           aguante.paybackMonths
             ? `Tu sueldo real · la inversión vuelve en el mes ${aguante.paybackMonths}`
-            : 'Tu sueldo real, el valor de tu hora y la prueba de estrés'
+            : 'Tu colchón, tu sueldo y cuándo vuelve tu inversión'
         }
+        tono="accent"
+        d1="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        d2="M12 7.8a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4"
         onClick={() => onChangeView('aguante')}
+      />
+
+      <H size={19} style={{ margin: '12px 2px 0' }}>
+        Tus módulos financieros
+      </H>
+
+      {/*
+        En prueba el presupuesto no lleva candado ni manda al pago: entra a la
+        vista de ejemplo, que se lee completa. Ese bloqueo convierte mejor
+        justo porque deja ver lo que hay dentro.
+      */}
+      <FilaModulo
+        kicker="Módulo 1"
+        title="Presupuesto de apertura"
+        hint={
+          can.showsInvestmentFigures
+            ? `${money(invest.total)} · ${state.budget.length} conceptos`
+            : `${state.budget.length} conceptos con subconceptos · míralo completo antes de pagar`
+        }
+        circulo="var(--color-accent-700)"
+        d1="M3 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
+        d2="M3 7.5 15.5 4l1 3.5M16.5 13.5h.01"
+        onClick={() => onChangeView('presupuesto')}
+      />
+      <FilaModulo
+        kicker="Módulo 2"
+        title="Gastos fijos mensuales"
+        hint={`${money(fixed)} al mes · ${state.fixed.length} conceptos`}
+        circulo="var(--color-accent-2-800)"
+        d1="M4 21V9l8-6 8 6v12"
+        d2="M2 21h20M9 21v-6h6v6M9 11h.01M15 11h.01"
+        onClick={() => onChangeView('fijos')}
+      />
+      <FilaModulo
+        kicker="Módulo 3"
+        title="Punto de equilibrio"
+        hint={`${money(be.monthlySales)} al mes · ${be.ticketsPerDay} tickets al día`}
+        circulo="var(--color-accent-2-600)"
+        d1="M12 3v18M4 8h16"
+        d2="M4 8 2 15h4ZM20 8l-2 7h4ZM8 21h8"
+        onClick={() => onChangeView('equilibrio')}
       />
 
       <button
         type="button"
         onClick={onPrint}
         style={{
-          border: 'none',
-          background: 'transparent',
-          color: 'var(--color-accent-700)',
-          fontWeight: 800,
-          fontSize: 13.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          padding: 16,
+          border: '1px solid var(--color-border)',
+          borderRadius: RADIUS.block,
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
           cursor: 'pointer',
           fontFamily: 'var(--font-body)',
           textAlign: 'left',
         }}
       >
-        Resumen financiero para imprimir o PDF →
+        <FileText size={22} strokeWidth={2} style={{ flex: 'none' }} />
+        <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-.01em' }}>
+          Resumen financiero para imprimir o PDF
+        </span>
+        <ChevronRight size={17} strokeWidth={2.6} style={{ flex: 'none', color: 'var(--color-text-2)' }} />
       </button>
+      <p className="mrl-prose" style={{ margin: '0 2px', fontSize: 13.5, lineHeight: 1.5, color: 'var(--color-text-2)' }}>
+        Incluye presupuesto con subconceptos, gastos fijos, punto de equilibrio y escenarios de venta. Es el documento
+        que le muestras a tu socio o al banco.
+      </p>
     </div>
   );
 }
 
-function ModuleCard({
+/** Una fila de módulo financiero: círculo con icono, rótulo, título y pie. */
+function FilaModulo({
+  kicker,
   title,
-  value,
   hint,
-  locked,
+  tono,
+  circulo,
+  d1,
+  d2,
   onClick,
 }: {
+  kicker: string;
   title: string;
-  value: string;
   hint: string;
-  locked?: boolean;
+  /** 'accent' pinta la fila entera en el pastel del acento. */
+  tono?: 'accent';
+  /** Relleno del círculo del icono cuando la fila va en blanco. */
+  circulo?: string;
+  d1: string;
+  d2: string;
   onClick: () => void;
 }) {
+  const destacada = tono === 'accent';
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
         textAlign: 'left',
-        border: 'none',
-        background: 'var(--color-surface)',
-        borderRadius: RADIUS.card,
-        boxShadow: 'var(--shadow-sm)',
-        padding: 18,
+        padding: 16,
+        border: `1px solid ${destacada ? 'var(--color-accent-200)' : 'var(--color-border)'}`,
+        borderRadius: RADIUS.block,
+        background: destacada ? 'var(--color-accent-100)' : 'var(--color-surface)',
         cursor: 'pointer',
         fontFamily: 'var(--font-body)',
         color: 'var(--color-text)',
       }}
     >
-      <Row style={{ justifyContent: 'space-between' }}>
-        <H size={17}>{title}</H>
-        {locked ? <Lock size={16} color={text(45)} strokeWidth={2.6} /> : null}
-      </Row>
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 25, marginTop: 6 }}>{value}</div>
-      <Muted size={12.5} style={{ marginTop: 4 }}>
-        {hint}
-      </Muted>
+      <span
+        style={{
+          width: 52,
+          height: 52,
+          flex: 'none',
+          borderRadius: '50%',
+          display: 'grid',
+          placeItems: 'center',
+          background: destacada ? 'var(--color-accent-500)' : circulo,
+          color: destacada ? 'var(--on-accent)' : 'var(--color-neutral-100)',
+        }}
+      >
+        <svg width={23} height={23} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d={d1} />
+          <path d={d2} />
+        </svg>
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 10.5, letterSpacing: '.1em', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+          {kicker}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontFamily: 'var(--font-heading)',
+            fontSize: 19,
+            marginTop: 2,
+            color: destacada ? 'var(--color-accent-900)' : 'var(--color-text)',
+          }}
+        >
+          {title}
+        </span>
+        <span style={{ display: 'block', fontSize: 13, marginTop: 2, color: destacada ? 'var(--color-accent-800)' : 'var(--color-text-2)' }}>
+          {hint}
+        </span>
+      </span>
+      <ChevronRight size={17} strokeWidth={2.75} style={{ flex: 'none', color: 'var(--color-neutral-600)' }} />
     </button>
   );
 }
