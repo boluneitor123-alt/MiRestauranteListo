@@ -12,8 +12,6 @@ import type { Dish, Subrecipe } from '@/domain/types';
 import { detectPlatform, type PlatformInfo } from '@/lib/device';
 import { useStore } from '@/state/store';
 import { RADIUS, Sheet, text } from '@/components/ui';
-import { Welcome } from './screens/Welcome';
-import { Auth, type AuthMode } from './screens/Auth';
 import { Onboarding } from './screens/Onboarding';
 import { Diagnostic } from './screens/Diagnostic';
 import { Blocked, OfflineGate, Paywall } from './screens/Gates';
@@ -28,7 +26,7 @@ import { Mas, type SubScreen } from './tabs/Mas';
 import { DishEditor } from './costeador/DishEditor';
 import { SubrecipeEditor } from './costeador/SubrecipeEditor';
 
-type Screen = 'welcome' | 'auth' | 'onboarding' | 'result' | 'app' | 'dish' | 'subedit' | 'paywall';
+type Screen = 'onboarding' | 'result' | 'app' | 'dish' | 'subedit' | 'paywall';
 export type Tab = 'inicio' | 'ruta' | 'costeador' | 'numeros' | 'mas';
 
 const TABS: Array<{ id: Tab; label: string; Icon: typeof Home }> = [
@@ -69,8 +67,9 @@ export function App() {
     logout,
   } = useStore();
 
-  const [screen, setScreen] = useState<Screen>('welcome');
-  const [authMode, setAuthMode] = useState<AuthMode>('registro');
+  // La app arranca en el tablero: si no hay sesión, el efecto de arriba se
+  // lleva al usuario a /cuenta antes de que se pinte nada.
+  const [screen, setScreen] = useState<Screen>('app');
   const [tab, setTab] = useState<Tab>('inicio');
   const [obStep, setObStep] = useState(0);
   // null = Mi Ruta enseña sus tres etapas; con id, el módulo abierto.
@@ -167,42 +166,41 @@ export function App() {
   }, [claim, flash]);
 
   /**
-   * La landing pide la pantalla de acceso con `?entrar` o `?crear`. Cuando lo
-   * pide, manda: aunque haya una sesión abierta en este equipo, se muestra el
-   * formulario. Es la única forma de entrar con otra cuenta sin cerrar la
-   * sesión anterior a mano.
+   * Sin sesión no hay app: se manda a `/cuenta`, que es donde vive el acceso
+   * desde la entrega v2. Antes el formulario era una pantalla interna, y salir
+   * de él con el botón de atrás metía al usuario a la sesión anterior.
+   *
+   * `?entrar` y `?crear` siguen funcionando —la landing los usa— pero ahora
+   * llevan a la página de acceso en lugar de a una pantalla de la app.
    */
-  const autoEntered = useRef(false);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    const quiere = params.has('crear') ? 'registro' : params.has('entrar') ? 'entrar' : null;
-    if (!quiere) return;
-    autoEntered.current = true;
-    setAuthMode(quiere);
-    setScreen('auth');
-    // La petición ya se atendió: se borra de la barra de direcciones para que
-    // recargar la página no vuelva a sacar al usuario de su sesión.
-    params.delete('entrar');
-    params.delete('crear');
-    const resto = params.toString();
-    window.history.replaceState({}, '', resto ? `/app?${resto}` : '/app');
-  }, []);
+    const quiere = params.has('crear') ? 'signup' : params.has('entrar') ? 'login' : null;
+    if (quiere) {
+      window.location.href = `/cuenta#${quiere}`;
+      return;
+    }
+    if (authReady && !user) window.location.href = '/cuenta#login';
+  }, [authReady, user]);
 
   /**
-   * Con sesión abierta no se vuelve a pedir la bienvenida: la app arranca en el
-   * tablero, con el proyecto que ya está en el servidor.
+   * Cuenta sin diagnóstico contestado: se manda al onboarding.
    *
-   * Es una decisión de **arranque**, y por eso se toma una sola vez. Antes se
-   * volvía a tomar cada vez que la pantalla regresaba a la bienvenida, así que
-   * salir de "Entra a tu cuenta" con el botón de atrás metía al usuario a la
-   * sesión anterior sin que él hiciera nada.
+   * Es una decisión de **arranque** y por eso se toma una sola vez: si se
+   * volviera a tomar, "Repetir mi diagnóstico" no podría salir de él.
    */
+  const arranque = useRef(false);
   useEffect(() => {
-    if (autoEntered.current || !authReady || !user || screen !== 'welcome') return;
-    autoEntered.current = true;
-    setScreen('app');
-  }, [authReady, user, screen]);
+    if (arranque.current || !authReady || !user) return;
+    arranque.current = true;
+    if (Object.keys(state.answers).length < ONBOARDING_QUESTIONS.length) {
+      setObStep(0);
+      setScreen('onboarding');
+      // Cuenta nueva: la hoja de instalación sale al llegar al tablero.
+      setInstallPending(true);
+    }
+  }, [authReady, user, state.answers]);
 
   const diagnosis = useMemo(
     () => diagnose({ state, modules: ROUTE_MODULES, showFigures: can.showsInvestmentFigures }),
@@ -297,54 +295,6 @@ export function App() {
   const subrecipe = state.subrecipes.find((s) => s.id === subrecipeId);
 
   const body = (() => {
-    if (screen === 'welcome') {
-      return (
-        <Welcome
-          onStart={() => {
-            setAuthMode('registro');
-            setScreen('auth');
-          }}
-          onSignIn={() => {
-            setAuthMode('entrar');
-            setScreen('auth');
-          }}
-        />
-      );
-    }
-
-    if (screen === 'auth') {
-      return (
-        <Auth
-          mode={authMode}
-          onChangeMode={setAuthMode}
-          // Atrás sale de la app y regresa a la página de venta, que es de
-          // donde vino. Quedarse en la bienvenida no sirve de nada aquí.
-          onBack={() => {
-            window.location.href = '/';
-          }}
-          onRegister={register}
-          onLogin={login}
-          onDone={({ hasProject, redirectTo }) => {
-            // El servidor decide: una cuenta admin va al panel, no a la app.
-            if (redirectTo && redirectTo !== '/app') {
-              window.location.href = redirectTo;
-              return;
-            }
-            if (hasProject) {
-              setScreen('app');
-              setTab('inicio');
-              return;
-            }
-            // Cuenta recién creada: la hoja de instalación queda marcada y
-            // saldrá al llegar al tablero, después del diagnóstico.
-            if (authMode === 'registro') setInstallPending(true);
-            setObStep(0);
-            setScreen('onboarding');
-          }}
-        />
-      );
-    }
-
     if (screen === 'onboarding') {
       return (
         <Onboarding
@@ -357,7 +307,11 @@ export function App() {
               project: id === 'giro' ? { ...s.project, giro: option } : s.project,
             }))
           }
-          onBack={() => (obStep === 0 ? setScreen('auth') : setObStep((n) => n - 1))}
+          onBack={() => {
+            // En el primer paso, atrás sale de la app a la página de acceso.
+            if (obStep === 0) window.location.href = '/cuenta#login';
+            else setObStep((n) => n - 1);
+          }}
           onNext={() => {
             if (obStep === ONBOARDING_QUESTIONS.length - 1) setScreen('result');
             else setObStep((n) => n + 1);
@@ -688,9 +642,9 @@ export function App() {
             onActivate={activate}
             onLogout={async () => {
               await logout();
-              setScreen('welcome');
-              setSubScreen(null);
-              setTab('inicio');
+              // Cerrar sesión saca de la app: el proyecto se queda en el
+              // servidor, intacto, esperando el siguiente inicio de sesión.
+              window.location.href = '/cuenta#login';
             }}
           />
         );

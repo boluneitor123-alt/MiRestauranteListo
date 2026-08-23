@@ -109,14 +109,13 @@ export default function LandingPage() {
   };
 
   /**
-   * Las tres entradas a la app. `?entrar` y `?crear` le dicen a la app qué
-   * pantalla abrir: sin eso, quien ya tiene una sesión en este equipo entra
-   * directo a su tablero y nunca ve el formulario, aunque haya tocado
-   * "Iniciar sesión" para entrar con otra cuenta.
+   * Las tres entradas al producto. Van a la página de acceso, no a la app: el
+   * formulario tiene que salir aunque ya haya una sesión abierta en este
+   * equipo, porque el usuario puede venir a entrar con otra cuenta.
    */
-  const goApp = (event: TrackEvent, pantalla: 'entrar' | 'crear') => () => {
+  const goApp = (event: TrackEvent, vista: 'login' | 'signup') => () => {
     track(event);
-    window.location.href = `/app?${pantalla}=1`;
+    window.location.href = `/cuenta#${vista}`;
   };
 
   const ticketValue = Math.max(20, num(ticket) || 200);
@@ -234,7 +233,7 @@ export default function LandingPage() {
             type="button"
             className="lp-cta lp-cta-ghost"
             style={{ height: 38, paddingInline: 14, fontSize: 13, boxShadow: '2.5px 2.5px 0 var(--ink)' }}
-            onClick={goApp('LeadIntent', 'entrar')}
+            onClick={goApp('LeadIntent', 'login')}
           >
             Iniciar sesión
           </button>
@@ -242,7 +241,7 @@ export default function LandingPage() {
             type="button"
             className="lp-cta"
             style={{ height: 38, paddingInline: 16, fontSize: 13.5, boxShadow: '3px 3px 0 var(--ink)' }}
-            onClick={goApp('Lead', 'crear')}
+            onClick={goApp('Lead', 'signup')}
           >
             Crear cuenta
           </button>
@@ -1555,7 +1554,7 @@ export default function LandingPage() {
           <p className="lp-hand" style={{ margin: '20px 0 0', fontSize: 24 }}>
             {CLOSE_HAND}
           </p>
-          <button type="button" className="lp-cta" style={{ height: 62, paddingInline: 34, marginTop: 24, fontSize: 18 }} onClick={goApp('InicioPrueba', 'crear')}>
+          <button type="button" className="lp-cta" style={{ height: 62, paddingInline: 34, marginTop: 24, fontSize: 18 }} onClick={goApp('InicioPrueba', 'signup')}>
             Empezar mis 7 días gratis
             <Arrow size={18} />
           </button>

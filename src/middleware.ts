@@ -14,9 +14,11 @@ export function middleware(request: NextRequest) {
   const hasSession = !!request.cookies.get(SESSION_COOKIE)?.value;
   if (hasSession) return NextResponse.next();
 
+  // Sin sesión, al acceso: es la única puerta del producto.
   const url = request.nextUrl.clone();
-  url.pathname = '/';
-  url.searchParams.set('entrar', 'panel');
+  url.pathname = '/cuenta';
+  url.search = '';
+  url.hash = 'login';
   return NextResponse.redirect(url);
 }
 
