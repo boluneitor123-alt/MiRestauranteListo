@@ -43,8 +43,12 @@ de nuestro diseño. Si algo obliga a cambiar eso, pregunta antes.
 - Crema `#FBF8F3` de fondo, carbón `#1A1815` de texto.
 - Pasteles para clasificar categorías. El naranja dirige la atención.
 - Arnold es el personaje. No lo reinterpretes ni le cambies el estilo.
-- Los archivos de `entrega-v2/app/*.dc.html` son la referencia visual exacta.
-  Si algo en vivo no coincide con ellos, el archivo manda.
+- Los archivos `.dc.html` de `entrega-v2/app/` son la referencia de diseño para
+  **escritorio**: paleta, tipografía, estructura, jerarquía y textos.
+- Para **teléfono** manda el bloque `LA ESCALA` de `src/app/landing.css`. Los
+  prototipos no traen escala de móvil propia, y encogerlos es justo el defecto
+  que se corrigió. Si un prototipo nuevo contradice la escala de teléfono, gana
+  la escala; avísame y decido.
 
 ## Cómo decidir sin preguntarme
 
