@@ -412,9 +412,9 @@
   al `width: auto` que la escala de teléfono le pone a toda ilustración de la
   landing.
 
-  La sangría se topa en el relleno de la sección —22px, 16 en teléfono— para
-  que el dibujo asome sobre el margen sin salirse de la pantalla: a 768px un
-  -5% son 36px y el borde izquierdo quedaba fuera.
+  La sangría se topa en el relleno de la sección para que el dibujo asome
+  sobre el margen sin salirse: a 1024px justos un -5% de la columna son 23px
+  contra 22 de relleno, y el borde izquierdo quedaba 1px fuera.
 */
 .cta-arnold img {
   display: block;
@@ -425,8 +425,13 @@
   margin-right: 0;
 }
 
-@media (max-width: 700px) {
+/*
+  En una sola columna no hay a dónde sangrar: el dibujo ya usa todo el ancho
+  de la página. Sin sangría y sin el 106%, que si no se sale por la derecha.
+*/
+@media (max-width: 860px) {
   .cta-arnold img {
-    margin-left: max(-5%, -16px);
+    width: 100% !important;
+    margin-left: 0;
   }
 }
