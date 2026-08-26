@@ -67,19 +67,19 @@
   padding-bottom: var(--sp-6);
 }
 
-/* ── Rótulo, titular y apoyo ──────────────────────────────────────────── */
+/* ── Saludo a mano, titular y apoyo ──────────────────────────────────── */
 
-.cta-page .cta-etiqueta {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--orange-texto);
+/*
+  El saludo abre la columna, con la rayita naranja debajo. Es la voz de
+  Arnold, no un rótulo de sistema: por eso va a mano y no en versalitas.
+*/
+.cta-page .cta-saludo {
+  font-size: var(--t-entrada);
+  line-height: 1.2;
+  color: var(--ink-2);
 }
 
 .cta-page .cta-h1 {
-  margin-top: 12px;
   font-size: clamp(var(--min-hero), 5vw, 52px);
   /* El titular no se centra nunca: manda el borde izquierdo. */
   text-align: left;
@@ -98,7 +98,7 @@
 /* ── Los tres pasos ───────────────────────────────────────────────────── */
 
 .cta-pasos {
-  margin: var(--sp-4) 0 0;
+  margin: 0 0 16px;
   padding: 0;
   list-style: none;
   display: flex;
@@ -128,17 +128,89 @@
 /* ── Las dos columnas ─────────────────────────────────────────────────── */
 
 .cta-split {
-  margin-top: var(--sp-5);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: 40px;
   align-items: start;
 }
 
+/*
+  En una sola columna las dos mitades se intercalan: primero el saludo y la
+  promesa, enseguida el formulario, y hasta el final los palomeos y Arnold.
+  Apiladas tal cual, el dibujo a tamaño completo dejaba el primer campo a dos
+  pantallas de scroll de quien viene a registrarse. `display: contents`
+  disuelve las dos columnas para poder ordenar sus piezas entre sí.
+*/
 @media (max-width: 860px) {
   .cta-split {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sp-5);
+    display: flex;
+    flex-direction: column;
+    /* El ritmo lo llevan los márgenes de cada pieza, no un hueco parejo. */
+    gap: 0;
+  }
+
+  .cta-intro,
+  .cta-forma {
+    display: contents;
+  }
+
+  /*
+    Al volverse celdas de un flex, las piezas heredan `min-width: auto` y
+    además el estirado a lo ancho no baja del min-content: a 360px el
+    `<input>` pedía sus 20 caracteres y la tarjeta se salía 6px. Con el ancho
+    fijado al de la columna, cada pieza vuelve a caber.
+  */
+  .cta-intro > *:not(.lp-rayita),
+  .cta-forma > * {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /*
+    La rayita, no: su `viewBox` es de 220×12 y estirada a todo el ancho el
+    trazo se queda centrado dentro de la caja, despegado del renglón que
+    subraya. Se queda con su ancho propio, pegada a la izquierda.
+  */
+  .cta-intro > .lp-rayita {
+    flex: none;
+    align-self: flex-start;
+  }
+
+  .cta-saludo {
+    order: 1;
+  }
+
+  .cta-intro > .lp-rayita {
+    order: 2;
+  }
+
+  .cta-h1 {
+    order: 3;
+  }
+
+  .cta-apoyo {
+    order: 4;
+  }
+
+  .cta-pasos {
+    order: 5;
+    margin-top: var(--sp-5);
+  }
+
+  .cta-card {
+    order: 6;
+  }
+
+  .cta-garantia {
+    order: 7;
+  }
+
+  .cta-palomeos {
+    order: 8;
+  }
+
+  .cta-arnold {
+    order: 9;
   }
 }
 
@@ -299,29 +371,21 @@
   text-underline-offset: 3px;
 }
 
-/* ── La columna de Arnold ─────────────────────────────────────────────── */
-
-/* El dibujo a la izquierda y sus tres palomeos al lado, como en la libreta. */
-.cta-arnold-fila {
-  display: grid;
-  /* 120px de dibujo dejan renglón entero para "Preparar mi apertura". */
-  grid-template-columns: 120px minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
+/* La promesa comercial, discreta, debajo de la tarjeta. */
+.cta-page .cta-garantia {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-.cta-arnold-ilo img {
-  display: block;
-  /* Gana al `width: auto !important` que la escala de teléfono le pone a toda
-     ilustración de la landing: aquí el ancho lo manda la columna. */
-  width: 100% !important;
-  max-width: 100%;
-  height: auto;
-  margin: 0;
-}
+/* ── Los tres palomeos y Arnold ──────────────────────────────────────── */
 
 .cta-palomeos {
-  margin: 0;
+  margin: var(--sp-5) 0 0;
   padding: 0;
   list-style: none;
   display: flex;
@@ -338,28 +402,31 @@
   color: var(--ink);
 }
 
-.cta-page .cta-nota {
-  margin-top: 14px;
-  font-size: var(--t-entrada);
-  line-height: 1.2;
-  color: var(--ink-2);
+.cta-arnold {
+  margin-top: var(--sp-4);
 }
 
-.cta-page .cta-garantia {
-  margin-top: 12px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+/*
+  Arnold cierra la columna a tamaño completo, como en el prototipo: 106% de
+  ancho, sin tope, sangrando por la izquierda. El `!important` es para ganarle
+  al `width: auto` que la escala de teléfono le pone a toda ilustración de la
+  landing.
+
+  La sangría se topa en el relleno de la sección —22px, 16 en teléfono— para
+  que el dibujo asome sobre el margen sin salirse de la pantalla: a 768px un
+  -5% son 36px y el borde izquierdo quedaba fuera.
+*/
+.cta-arnold img {
+  display: block;
+  width: 106% !important;
+  max-width: none;
+  height: auto;
+  margin-left: max(-5%, -22px);
+  margin-right: 0;
 }
 
-@media (max-width: 560px) {
-  /* A 360px el dibujo se lleva un tercio del ancho y los tres palomeos el
-     resto: es el mismo acomodo que el héroe de la landing. */
-  .cta-arnold-fila {
-    grid-template-columns: 34% minmax(0, 1fr);
-    gap: 12px;
+@media (max-width: 700px) {
+  .cta-arnold img {
+    margin-left: max(-5%, -16px);
   }
 }
