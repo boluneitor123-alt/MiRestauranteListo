@@ -306,7 +306,7 @@ export function Lesson({
           style={{
             border: 'none',
             background: 'transparent',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             fontSize: 12.5,
             fontWeight: 700,
             cursor: 'pointer',

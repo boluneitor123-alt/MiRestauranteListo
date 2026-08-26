@@ -66,7 +66,7 @@ export function Chrome({
       >
         {marca ?? (
           <>
-            Mi<span style={{ color: 'var(--color-accent-600)' }}>Restaurante</span>Listo
+            Mi<span style={{ color: 'var(--color-accent-800)' }}>Restaurante</span>Listo
           </>
         )}
       </div>

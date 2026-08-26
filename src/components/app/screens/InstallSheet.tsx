@@ -142,7 +142,7 @@ export function InstallSheet({
             height: 52,
             borderRadius: '50%',
             background: 'var(--color-accent-100)',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             display: 'grid',
             placeItems: 'center',
             marginBottom: 13,

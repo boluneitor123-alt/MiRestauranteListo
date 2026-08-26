@@ -12,12 +12,26 @@
   --paper: #fffdf8;
   --ink: #1c1a17;
   --ink-2: #4a453d;
-  --ink-3: #878175;
+  /*
+    Gris de texto secundario. Era #878175, que sobre crema daba 3.56:1 y sobre
+    papel 3.81:1 — abajo del 4.5 que pide un texto de 12 a 14px, que es donde
+    más se usa. Ahora da 5.09 sobre crema, 5.44 sobre papel y 4.67 sobre el
+    crema-2 de la maqueta, que es el fondo más difícil de los tres.
+  */
+  --ink-3: #6f6858;
   --amber: #f5a623;
   --amber-l: #ffc85c;
   --amber-xl: #fdefd2;
   --amber-d: #d4820a;
   --orange: #e8821e;
+  /*
+    El naranja de relleno no sirve como texto: #e8821e sobre crema da 2.53:1.
+    Estos dos salen de la rampa del sistema (accent-800 y accent-700) y son los
+    valores más claros que pasan en su tamaño: el de texto normal llega a
+    5.88:1 y el de los rótulos grandes a 3.67:1, con mínimos de 4.5 y 3.
+  */
+  --orange-texto: #8a5206;
+  --orange-display: #b86e08;
   --sage: #dde8ce;
   --sage-d: #5e7d3e;
   --rose: #f8dfd9;
@@ -33,6 +47,49 @@
   --hand: 'Caveat', cursive;
   --mono: 'Space Mono', ui-monospace, monospace;
 
+  /* ══════════════════════════════════════════════════════════════════════
+     LA ESCALA
+
+     Un solo lugar para los tamaños de texto y los espacios verticales de
+     toda la página de venta. Abajo, el bloque de teléfono cambia estos
+     valores y con eso cambia el sitio entero: nada se ajusta sección por
+     sección.
+
+     Los titulares se declaran como `clamp(mínimo, vw, máximo)`. A 360px el
+     `vw` siempre queda por debajo del mínimo, así que **el mínimo es lo que
+     ve un teléfono**: por eso lo que viaja en variable es el mínimo, y el
+     escritorio se queda exactamente igual.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* Mínimos de los titulares y las cifras. */
+  --min-hero: 38px;
+  --min-h2: 28px;
+  --min-h2-sm: 26px;
+  --min-h2-lg: 30px;
+  --min-h3: 24px;
+  --min-sub: 20px;
+  --min-guia: 14px;
+  --min-cifra: 36px;
+  --min-cifra-xl: 46px;
+
+  /* La entrada a mano del héroe. */
+  --t-entrada: 27px;
+
+  /* Aire entre los renglones de una lista larga. */
+  --gap-lista: 19px;
+
+  /* Ritmo vertical. Del más apretado al más aireado. */
+  --sp-3: 18px;
+  --sp-4: 26px;
+  --sp-5: 38px;
+  --sp-6: 44px;
+
+  /* Aire de cada sección, arriba y abajo. */
+  --sp-sec: 34px;
+
+  /* Tope de una ilustración: en escritorio no estorba. */
+  --ilo-max: none;
+
   background: var(--cream);
   color: var(--ink);
   font-family: var(--body);
@@ -42,9 +99,17 @@
 /*
   El hueco de la barra fija de compra. Sólo la landing la lleva: en /pago esta
   misma hoja se reutiliza y ahí un hueco al final sería un vacío sin motivo.
+
+  El alto medido de la barra en un teléfono es 80px con el área segura en
+  cero. Se reserva ese alto, un margen de 12 y el área segura del equipo, que
+  es lo que la barra misma añade a su relleno de abajo.
 */
+.lp {
+  --barra-alto: 80px;
+}
+
 .lp-conbarra {
-  padding-bottom: 88px;
+  padding-bottom: calc(var(--barra-alto) + 12px + env(safe-area-inset-bottom, 0px));
 }
 
 .lp h1,
@@ -64,14 +129,67 @@
 }
 
 .lp a {
-  color: var(--orange);
+  color: var(--orange-texto);
   text-decoration: none;
 }
 
+/* El botón de "Volver" es un enlace, pero se pinta como botón: tinta, no naranja. */
+.lp a.lp-btn {
+  color: var(--ink);
+}
+
 .lp :focus-visible {
-  outline: 3px solid var(--orange);
+  outline: 3px solid var(--orange-display);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LA ESCALA, EN TELÉFONO
+
+   Referencia: 360px de ancho por 640px de alto útil, ya descontadas la
+   barra del navegador y la barra fija de precio. La regla que manda: si en
+   escritorio una sección se lee de un golpe de vista, en teléfono también.
+
+   Dentro de una sección el aire va entre 14 y 22px; entre secciones, entre
+   24 y 32px. Los titulares bajan alrededor de un 20%: siguen mandando sobre
+   el cuerpo de texto, pero dejan de comerse media pantalla.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 560px) {
+  .lp {
+    --min-hero: 31px;
+    --min-h2: 23px;
+    --min-h2-sm: 22px;
+    --min-h2-lg: 25px;
+    --min-h3: 20px;
+    --min-sub: 17px;
+    --min-guia: 13.5px;
+    --min-cifra: 30px;
+    --min-cifra-xl: 38px;
+
+    --t-entrada: 21px;
+    --gap-lista: 13px;
+
+    --sp-3: 14px;
+    --sp-4: 18px;
+    --sp-5: 22px;
+    --sp-6: 26px;
+
+    /*
+      Ojo: esto es el relleno de CADA sección, arriba y abajo. Entre dos
+      secciones seguidas el aire es el doble: 15 da 30px, dentro del rango
+      de 24 a 32 que pide el encargo. A 26 daba 52 y se sentía un viaje.
+    */
+    --sp-sec: 15px;
+
+    /*
+      Arnold acompaña, no protagoniza. El techo del encargo es el 55% del alto
+      útil (352px de 640); se queda en 300 —el 47%— para que el titular y la
+      figura entren juntos con aire de sobra.
+    */
+    --ilo-max: 300px;
+  }
 }
 
 /* ── Rejilla ──────────────────────────────────────────────────────────── */
@@ -79,7 +197,7 @@
 .lp-sec {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 34px 22px;
+  padding: var(--sp-sec) 22px;
 }
 
 @media (max-width: 700px) {
@@ -318,7 +436,7 @@
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--orange-texto);
 }
 
 .lp-kick i {
@@ -426,11 +544,40 @@
   }
 }
 
+/* El nombre de cada etapa dentro de la maqueta. */
+.lp-etapa-nom {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
 /* Las tres tarjetitas de dentro, por la misma razón que la rejilla de fuera. */
 .lp-laptop-tres {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
+}
+
+/*
+  En un teléfono la maqueta mide 292px, y sus tres tarjetas de números caían a
+  52px cada una: "$3,337" se cortaba en "$3,3" y "meta para no perder" salía en
+  cuatro renglones de una palabra. Se apilan, que es como se ve la app de
+  verdad en esa pantalla. Las tres etapas sí caben en fila con la letra un
+  punto más chica.
+*/
+@media (max-width: 700px) {
+  .lp-laptop-tres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /*
+    Las etapas también: en tres columnas la celda daba 30px de contenido y
+    "2. Construye" no cabe ahí ni encogiendo la letra. Apiladas se leen, que
+    es además como se ve la app de verdad en un teléfono.
+  */
+  .lp-laptop-etapas {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .lp-micro {
@@ -721,6 +868,22 @@
   gap: 26px;
 }
 
+/* Cada paso: la cabecera con el número, el nombre y su raya de color. */
+.lp-paso-nom {
+  font-family: var(--disp);
+  font-weight: 900;
+  font-size: 23px;
+  letter-spacing: -0.02em;
+  margin-top: 15px;
+}
+
+.lp-paso-raya {
+  width: 68px;
+  height: 5px;
+  border-radius: 999px;
+  margin-top: 7px;
+}
+
 @media (max-width: 900px) {
   .lp-steps {
     grid-template-columns: 1fr;
@@ -738,6 +901,20 @@
 .lp-benef > div {
   padding: 4px 18px;
   border-left: 1.5px dashed var(--line);
+}
+
+/* El rótulo en versalitas de cada beneficio. */
+.lp-benef-k {
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-top: 14px;
+}
+
+.lp-benef-txt {
+  min-width: 0;
 }
 
 .lp-benef > div:first-child {
@@ -846,6 +1023,31 @@
   color: var(--ink-2);
 }
 
+/* ── La ilustración del héroe ─────────────────────────────────────────── */
+
+/*
+  En escritorio sangra a propósito, como en el prototipo. En el teléfono no:
+  a 112% del ancho ocupaba la pantalla entera y empujaba el título de la
+  siguiente sección fuera del primer golpe de vista.
+*/
+.lp-arnold img {
+  display: block;
+  width: 112%;
+  /* La sangría no puede pasar del ancho de la pantalla: a 768px el borde
+     derecho se salía 41px. Con el tope, sangra hasta donde hay lugar. */
+  max-width: calc(100vw - 32px);
+  height: auto;
+  margin: -18px -10% 0 -2%;
+}
+
+@media (max-width: 560px) {
+  .lp-arnold img {
+    /* 65% de la pantalla, no de la columna: es lo que se pidió y lo que se ve. */
+    width: 65vw;
+    margin: 0 auto;
+  }
+}
+
 /* ── El demo, la calculadora y la nota de la meta ─────────────────────── */
 
 /*
@@ -901,6 +1103,75 @@
   }
 }
 
+/* ── Pie ──────────────────────────────────────────────────────────────── */
+
+.lp-pie {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.lp-pie > div {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 30px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.lp-pie-marca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.lp-pie-logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.lp-pie-enlaces {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 22px;
+  flex-wrap: wrap;
+}
+
+.lp-pie a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  color: rgb(255 253 248 / 0.82);
+  text-decoration: none;
+}
+
+.lp-pie a:hover {
+  color: var(--amber-l);
+}
+
+.lp-pie-razon {
+  flex: 1 0 100%;
+  font-size: 12.5px;
+  color: rgb(255 253 248 / 0.5);
+}
+
 /* ── Barra fija de compra ─────────────────────────────────────────────── */
 
 
@@ -912,6 +1183,26 @@
   z-index: 70;
   background: var(--ink);
   padding: 11px 0 calc(11px + env(safe-area-inset-bottom, 0px));
+  /*
+    Entra y sale con el botón del héroe. `visibility` además de `transform`
+    para que, mientras está fuera, no se pueda tocar por accidente.
+  */
+  transform: translateY(100%);
+  visibility: hidden;
+  transition:
+    transform 0.22s ease,
+    visibility 0.22s;
+}
+
+.lp-sticky-on {
+  transform: none;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-sticky {
+    transition: none;
+  }
 }
 
 .lp-sticky > div {
@@ -959,5 +1250,219 @@
   .lp *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   EL ACOMODO EN TELÉFONO
+
+   Lo de arriba son los valores; esto es dónde se aplican. Todo cuelga del
+   mismo corte de 560px, para que la página tenga una sola frontera entre
+   "escritorio" y "teléfono" y no diez.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 560px) {
+  /* Las cajas grandes respiran menos: 32px de relleno son de escritorio. */
+  .lp-card,
+  .lp-soft,
+  .lp-calc {
+    padding: 18px 14px;
+    border-radius: 18px;
+  }
+
+  /* Los tres pasos, los beneficios y las listas largas. */
+  .lp-steps {
+    gap: var(--sp-5);
+  }
+
+  .lp-benef > div {
+    padding: 12px 0;
+  }
+
+  .lp-results {
+    gap: var(--sp-3);
+  }
+
+  .lp-reslist {
+    padding-bottom: var(--sp-3);
+  }
+
+  .lp-fields {
+    gap: 12px;
+  }
+
+  .lp-offer,
+  .lp-demo,
+  .lp-calchead,
+  .lp-goalnote {
+    gap: var(--sp-3);
+  }
+
+  .lp-offerlist {
+    padding-top: var(--sp-3);
+  }
+
+  /*
+    Ninguna ilustración pasa del tope de alto.
+
+    `width: auto` no basta: varias figuras traen `width: 100%` en línea y eso
+    le gana, así que la caja quedaba en 328×300 para un dibujo de proporción
+    0.945 y salía aplastado un 16%. Con `object-fit: contain` la figura
+    conserva su forma dentro de la caja, y `!important` en el ancho porque
+    aquí sí hay que ganarle al atributo en línea.
+  */
+  .lp img {
+    max-height: var(--ilo-max);
+    width: auto !important;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    margin-inline: auto;
+  }
+
+  /*
+    Los sangrados con margen negativo son una decisión de escritorio: a
+    360px cortan el dibujo y se leen como error. Aquí la figura va completa.
+  */
+  .lp-arnold img {
+    width: 65vw;
+    max-width: none;
+    margin: 0 auto;
+  }
+
+  /*
+    La maqueta de la computadora medía 846px de alto —más de una pantalla
+    entera— para ser una ilustración de apoyo. En un teléfono el contenido
+    de esa sección son las seis herramientas, no el dibujo del tablero.
+  */
+  .lp-laptop-marco {
+    display: none;
+  }
+
+  /*
+    El héroe: el botón caía en y=656 de una pantalla de 640, o sea fuera del
+    primer golpe de vista. Las dos micro-promesas bajan debajo del botón —son
+    apoyo, no la promesa— y con eso el botón entra en la primera pantalla.
+  */
+  .lp-hero-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lp-hero-col > .lp-cta,
+  .lp-hero-col > .lp-cta + p {
+    order: 1;
+  }
+
+  .lp-hero-col > .lp-micro {
+    order: 2;
+    margin-top: var(--sp-3);
+  }
+
+  /*
+    El teléfono del demo es 9:16: a todo el ancho medía 526px de alto, más
+    de tres cuartos de pantalla para el marco solo. Con el tope, el titular
+    de la sección y el video se ven juntos.
+  */
+  .lp-demo-marco {
+    max-height: var(--ilo-max);
+    width: auto;
+    margin-inline: auto;
+  }
+
+  .lp-pie > div {
+    padding: 22px 16px;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .lp-pie-enlaces {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  /* Dos columnas a 360px dejan celdas de 160px y el texto en columna. */
+  .lp-micro,
+  .lp-duo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Los discos de icono son de escritorio: 56px de alto por adorno. */
+  .lp-circ {
+    width: 44px;
+    height: 44px;
+  }
+
+  .lp-tile {
+    width: 38px;
+    height: 38px;
+  }
+
+  /*
+    Los cinco beneficios iban en columna —disco arriba, texto abajo— y cada
+    uno medía 165px: 766px por cinco frases. En fila, el disco a la
+    izquierda y el texto a la derecha, cada uno baja a la mitad.
+  */
+  .lp-benef > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 0;
+  }
+
+  .lp-benef > div > span:first-child {
+    margin: 0;
+  }
+
+  .lp-benef-txt {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .lp-benef-k {
+    margin-top: 0;
+  }
+
+  /*
+    Cada paso medía 300px: número y disco en una fila, el nombre debajo, una
+    raya de color, el párrafo y la lista. En teléfono el nombre se sube a la
+    fila del número —ahí sobra ancho— y la raya sale: el color ya lo pone el
+    disco. Tres pasos, 150px menos.
+  */
+  .lp-paso-nom {
+    margin-top: 0;
+    font-size: 20px;
+  }
+
+  .lp-paso-cab {
+    gap: 10px;
+  }
+
+  .lp-paso {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 10px;
+  }
+
+  .lp-paso > .lp-paso-cab {
+    grid-column: 1;
+  }
+
+  .lp-paso > .lp-paso-nom {
+    grid-column: 2;
+  }
+
+  .lp-paso > .lp-paso-raya {
+    display: none;
+  }
+
+  .lp-paso > p,
+  .lp-paso > div:last-child {
+    grid-column: 1 / -1;
   }
 }

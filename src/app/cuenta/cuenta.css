@@ -54,7 +54,7 @@
 }
 
 .cta-marca b {
-  color: var(--color-accent-600);
+  color: var(--color-accent-800);
   font-weight: inherit;
 }
 
@@ -136,7 +136,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 700;
-  color: var(--color-accent-700);
+  color: var(--color-accent-800);
 }
 
 /* ── Tarjeta del formulario ───────────────────────────────────────────── */
@@ -206,8 +206,16 @@
   background: var(--color-bg);
 }
 
+/*
+  El anillo de foco del campo.
+
+  El input trae `outline: none` para que el borde lo dibuje la caja, así que la
+  caja tiene que dar una señal inequívoca: con sólo cambiar el borde 1.5px a un
+  ámbar claro, quien navega con teclado no distinguía dónde estaba parado.
+*/
 .cta-campo:focus-within {
-  border-color: var(--color-accent-400);
+  border-color: var(--color-accent-600);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 34%, transparent);
 }
 
 .cta-campo-i {
@@ -273,7 +281,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-accent-700);
+  color: var(--color-accent-800);
   font-family: var(--font-body);
   font-size: 14.5px;
   font-weight: 700;

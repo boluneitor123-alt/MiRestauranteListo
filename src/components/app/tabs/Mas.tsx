@@ -250,7 +250,7 @@ export function Mas({
               flexShrink: 0,
               borderRadius: RADIUS.pill,
               background: 'var(--color-accent-100)',
-              color: 'var(--color-accent-700)',
+              color: 'var(--color-accent-800)',
               display: 'grid',
               placeItems: 'center',
               fontWeight: 800,
@@ -681,7 +681,7 @@ function SubScreenView(props: {
                   <a
                     href={`/api/recursos/${file}`}
                     download
-                    style={{ color: 'var(--color-accent-700)', fontWeight: 800, fontSize: 12.5 }}
+                    style={{ color: 'var(--color-accent-800)', fontWeight: 800, fontSize: 12.5 }}
                   >
                     Descargar
                   </a>
@@ -765,7 +765,7 @@ function SubScreenView(props: {
                     height: 28,
                     borderRadius: RADIUS.pill,
                     background: 'var(--color-accent-100)',
-                    color: 'var(--color-accent-700)',
+                    color: 'var(--color-accent-800)',
                     display: 'grid',
                     placeItems: 'center',
                     fontWeight: 800,
@@ -866,7 +866,7 @@ function SubScreenView(props: {
                       border: 'none',
                       background: 'transparent',
                       padding: 0,
-                      color: 'var(--color-accent-700)',
+                      color: 'var(--color-accent-800)',
                       fontWeight: 800,
                       fontSize: 12.5,
                       cursor: 'pointer',
@@ -900,7 +900,7 @@ function SubScreenView(props: {
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: 'var(--color-accent-700)',
+                    color: 'var(--color-accent-800)',
                     fontWeight: 800,
                     fontSize: 12.5,
                     cursor: 'pointer',
@@ -1316,7 +1316,7 @@ function Deliverables({
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>Entregables para ti</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-accent-700)' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-accent-800)' }}>
                 {DELIVERABLES.length}
               </span>
             </span>
@@ -1378,7 +1378,7 @@ function Deliverables({
                   <span className="mrl-prose" style={{ display: 'block', marginTop: 2, fontSize: 12.3, lineHeight: 1.45, color: text(65) }}>
                     {doc.what}
                   </span>
-                  <span style={{ display: 'block', marginTop: 4, fontSize: 11.8, fontWeight: 700, color: 'var(--color-accent-700)' }}>
+                  <span style={{ display: 'block', marginTop: 4, fontSize: 11.8, fontWeight: 700, color: 'var(--color-accent-800)' }}>
                     {doc.who}
                   </span>
                 </span>

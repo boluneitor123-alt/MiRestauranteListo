@@ -176,3 +176,58 @@ export function Uline({ color = '#F5A623' }: { color?: string }) {
     </svg>
   );
 }
+
+/**
+ * Una ilustración de Arnold.
+ *
+ * Trae tres tamaños: el navegador baja el que le sirve. En un teléfono a 360px
+ * el héroe se ve a 234px de ancho, así que bajar el archivo de 1000px era pagar
+ * datos por píxeles que nadie ve.
+ *
+ * `width` y `height` son los del archivo, no los de pantalla: con ellos el
+ * navegador reserva el hueco antes de que la imagen llegue y la página no
+ * salta. El tamaño real lo sigue mandando el CSS.
+ */
+export function Ilustracion({
+  nombre,
+  alt,
+  ancho,
+  alto,
+  sizes,
+  prioridad = false,
+  style,
+}: {
+  nombre: string;
+  alt: string;
+  ancho: number;
+  alto: number;
+  sizes: string;
+  /** El héroe: se pide de inmediato porque es lo primero que se ve. */
+  prioridad?: boolean;
+  style?: CSSProperties;
+}) {
+  const base = `/img/${nombre}`;
+  const juego = (ext: string) => `${base}-480w.${ext} 480w, ${base}-720w.${ext} 720w, ${base}.${ext} ${ancho}w`;
+  return (
+    // AVIF primero y WebP de respaldo: el AVIF pesa un tercio menos y el
+    // navegador que no lo entienda se queda con el WebP sin enterarse.
+    // `display: contents` para que el envoltorio no cambie ni un píxel del
+    // acomodo: manda el estilo del <img>, igual que antes.
+    <picture style={{ display: 'contents' }}>
+      <source type="image/avif" srcSet={juego('avif')} sizes={sizes} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`${base}.webp`}
+        srcSet={juego('webp')}
+        sizes={sizes}
+        alt={alt}
+        width={ancho}
+        height={alto}
+        loading={prioridad ? 'eager' : 'lazy'}
+        decoding={prioridad ? 'sync' : 'async'}
+        fetchPriority={prioridad ? 'high' : 'auto'}
+        style={style}
+      />
+    </picture>
+  );
+}

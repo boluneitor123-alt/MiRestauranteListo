@@ -258,7 +258,3 @@ export const DOC_PRIVACIDAD: LegalDoc = {
   sub: 'Conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares',
   sections: PRIVACIDAD,
 };
-
-/** El aviso de borrador que trae la entrega, encima de los dos documentos. */
-export const AVISO_BORRADOR =
-  'Borrador — falta que lo revise un abogado. Está escrito para un negocio digital mexicano que vende acceso de por vida con un pago único, pero yo no soy abogado y esto no es asesoría legal. Antes de publicarlo, que lo lea alguien con cédula.';

@@ -227,12 +227,21 @@ export function Numeros({
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/img/arnold-numeros.webp"
-          alt=""
-          aria-hidden
-          style={{ position: 'absolute', right: -14, top: -6, width: '48%', maxWidth: 186, height: 'auto', pointerEvents: 'none' }}
-        />
+        <picture style={{ display: 'contents' }}>
+          <source type="image/avif" srcSet="/img/arnold-numeros-480w.avif 480w, /img/arnold-numeros.avif 800w" sizes="186px" />
+          <img
+            src="/img/arnold-numeros.webp"
+            srcSet="/img/arnold-numeros-480w.webp 480w, /img/arnold-numeros.webp 800w"
+            sizes="186px"
+            alt=""
+            aria-hidden
+            width={800}
+            height={671}
+            loading="lazy"
+            decoding="async"
+            style={{ position: 'absolute', right: -14, top: -6, width: '48%', maxWidth: 186, height: 'auto', pointerEvents: 'none' }}
+          />
+        </picture>
         <span style={{ position: 'relative', display: 'block', maxWidth: '60%' }}>
           <span style={{ display: 'block', fontSize: 11, letterSpacing: '.1em', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
             Revisión de realidad
@@ -413,7 +422,7 @@ function FilaModulo({
         </svg>
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontSize: 10.5, letterSpacing: '.1em', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+        <span style={{ display: 'block', fontSize: 10.5, letterSpacing: '.1em', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
           {kicker}
         </span>
         <span
@@ -690,7 +699,7 @@ function Budget({
                         style={{
                           border: 'none',
                           background: 'transparent',
-                          color: 'var(--color-accent-700)',
+                          color: 'var(--color-accent-800)',
                           fontSize: 12.5,
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -916,13 +925,14 @@ function Breakeven({
               <span style={{ fontSize: 13, fontWeight: 800 }}>{money(state.ticket)}</span>
             </Row>
             <input
+              className="mrl-rango"
               type="range"
+              aria-label="Ticket promedio, en pesos"
               min={80}
               max={400}
               step={5}
               value={state.ticket}
               onChange={(e) => onPatch({ ticket: Number(e.target.value) })}
-              style={{ width: '100%', marginTop: 8, accentColor: 'var(--color-accent)' }}
             />
           </div>
 
@@ -932,12 +942,13 @@ function Breakeven({
               <span style={{ fontSize: 13, fontWeight: 800 }}>{state.margin}%</span>
             </Row>
             <input
+              className="mrl-rango"
               type="range"
+              aria-label="Margen bruto, en porcentaje"
               min={40}
               max={85}
               value={state.margin}
               onChange={(e) => onPatch({ margin: Number(e.target.value) })}
-              style={{ width: '100%', marginTop: 8, accentColor: 'var(--color-accent)' }}
             />
             {suggested !== null ? <Muted size={12}>Tu costeador sugiere {suggested}%.</Muted> : null}
           </div>

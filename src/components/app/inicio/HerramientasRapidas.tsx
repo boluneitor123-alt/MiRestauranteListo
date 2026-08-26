@@ -88,7 +88,7 @@ export function HerramientasRapidas({ onGo }: { onGo: (target: Target) => void }
             padding: '10px 4px',
             border: 'none',
             background: 'none',
-            color: 'var(--color-accent-700)',
+            color: 'var(--color-accent-800)',
             fontFamily: 'var(--font-body)',
             fontSize: 13,
             fontWeight: 700,

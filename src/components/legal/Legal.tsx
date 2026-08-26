@@ -1,7 +1,7 @@
 'use client';
 
 import type { LegalDoc } from '@/content/legal';
-import { AVISO_BORRADOR, CORREO } from '@/content/legal';
+import { CORREO } from '@/content/legal';
 import { Ico } from '@/components/landing/pieces';
 
 /**
@@ -21,7 +21,7 @@ export function Legal({ doc, otro }: { doc: LegalDoc; otro: LegalDoc }) {
           <a href="/" className="lp-marca">
             <span>MRL</span>
             <span>
-              Mi<span style={{ color: 'var(--orange)' }}>Restaurante</span>Listo
+              Mi<span style={{ color: 'var(--orange-texto)' }}>Restaurante</span>Listo
             </span>
           </a>
           <div style={{ flex: 1 }} />
@@ -32,16 +32,6 @@ export function Legal({ doc, otro }: { doc: LegalDoc; otro: LegalDoc }) {
       </header>
 
       <div className="lg-wrap">
-        <div className="lg-borrador" role="note">
-          <span style={{ color: 'var(--amber-d)', display: 'grid', flex: 'none', marginTop: 2 }}>
-            <Ico name="alerta" size={20} width={2.4} />
-          </span>
-          <p style={{ flex: 1, minWidth: 0, fontSize: 14, color: '#6B4405' }}>
-            <strong>{AVISO_BORRADOR.split('.')[0]}.</strong>
-            {AVISO_BORRADOR.slice(AVISO_BORRADOR.indexOf('.') + 1)}
-          </p>
-        </div>
-
         <div className="lg-cols">
           <nav className="lg-toc" aria-label={`Secciones de ${doc.title}`}>
             <span className="lg-toc-tit">{doc.title.toUpperCase()}</span>

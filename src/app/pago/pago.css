@@ -44,6 +44,15 @@
   }
 }
 
+/* ── Los tres sellos de confianza ─────────────────────────────────────── */
+
+.pg-sellos {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
 /* ── El resumen del pedido ────────────────────────────────────────────── */
 
 .pg-sum-fila {
@@ -61,6 +70,53 @@
 .pg-sum-precio {
   flex: none;
   text-align: right;
+}
+
+/*
+  El renglón del total.
+
+  A lo ancho van enfrentados, y lo que se alinea es la línea base del rótulo
+  con la del número —no el borde de las cajas—, porque bajo el precio va otra
+  línea de texto que desnivelaba los dos lados.
+*/
+.pg-total {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1.5px solid rgb(28 26 23 / 0.12);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pg-total-k {
+  font-family: var(--disp);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.pg-total-v {
+  text-align: right;
+}
+
+/* En el teléfono se apilan a la izquierda: enfrentados quedan desbalanceados. */
+@media (max-width: 460px) {
+  .pg-total {
+    display: block;
+  }
+
+  .pg-total-k {
+    display: block;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+
+  .pg-total-v {
+    display: block;
+    text-align: left;
+    margin-top: 4px;
+  }
 }
 
 /* En el teléfono no caben lado a lado: el precio baja debajo del nombre. */
@@ -108,6 +164,16 @@
   letter-spacing: -0.01em;
   color: var(--ink);
   cursor: pointer;
+}
+
+/*
+  Cuando el botón es un enlace, `.lp a` le ganaba el color y lo pintaba naranja
+  sobre relleno naranja: 3.15:1. La tinta del botón manda.
+*/
+.lp a.pg-pay,
+a.pg-pay {
+  color: var(--ink);
+  text-decoration: none;
 }
 
 .pg-pay:hover:not(:disabled) {
@@ -204,8 +270,12 @@
     font-size: 27px;
   }
 
+  /*
+    En tres columnas de 93px cada sello partía su texto en tres o cuatro
+    renglones. En una columna cabe en uno, con el icono a la izquierda.
+  */
   .pg-sellos {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
