@@ -16,19 +16,8 @@
   padding: 34px 22px 56px;
 }
 
-/* El aviso de que esto es un borrador. */
-.lg-borrador {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 16px 18px;
-  border-radius: 16px;
-  background: var(--amber-xl);
-  border: 1.5px solid #f2dfb6;
-}
-
 .lg-cols {
-  margin-top: 30px;
+  margin-top: 4px;
   display: grid;
   grid-template-columns: minmax(0, 210px) minmax(0, 1fr);
   gap: 36px;

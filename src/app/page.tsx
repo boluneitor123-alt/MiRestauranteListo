@@ -25,6 +25,7 @@ import {
   TOOL_LIST,
   TRUST,
 } from '@/content/landing';
+import { CORREO as CORREO_CONTACTO, TITULAR as TITULAR_LEGAL } from '@/content/legal';
 import { calculate } from '@/domain/landing';
 import { money } from '@/domain/format';
 import { track } from '@/lib/track';
@@ -42,9 +43,25 @@ export default function LandingPage() {
   const [goal] = useState(CALC_DEFAULTS.goal);
   const [ticket, setTicket] = useState(CALC_DEFAULTS.ticket);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  /*
+    La barra fija de compra sólo aparece cuando el botón del héroe ya se fue
+    de la pantalla. Con los dos visibles había dos llamados casi iguales
+    compitiendo en la primera pantalla, y la barra tapaba contenido sin dar
+    nada nuevo.
+  */
+  const ctaHeroe = useRef<HTMLButtonElement>(null);
+  const [barraFija, setBarraFija] = useState(false);
   const [demoOn, setDemoOn] = useState(false);
   const calculatorUsed = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const boton = ctaHeroe.current;
+    if (!boton) return;
+    const ojo = new IntersectionObserver(([e]) => setBarraFija(!e.isIntersecting), { threshold: 0 });
+    ojo.observe(boton);
+    return () => ojo.disconnect();
+  }, []);
 
   // `Purchase` al volver del checkout.
   useEffect(() => {
@@ -146,16 +163,16 @@ export default function LandingPage() {
       </header>
 
       {/* ═══ 1 · ARNOLD Y LA PROMESA ═══ */}
-      <section id="top" className="lp-sec" style={{ paddingTop: 38 }}>
+      <section id="top" className="lp-sec" style={{ paddingTop: 'var(--sp-5)' }}>
         <div className="lp-hero">
-          <div>
-            <div className="lp-hand" style={{ fontSize: 27, lineHeight: 1.18, color: 'var(--ink-2)' }}>
+          <div className="lp-hero-col">
+            <div className="lp-hand" style={{ fontSize: 'var(--t-entrada)', lineHeight: 1.18, color: 'var(--ink-2)' }}>
               Él es Arnold.
               <br />
               También quiere abrir su restaurante.
             </div>
 
-            <h1 style={{ fontSize: 'clamp(38px,5.4vw,66px)', marginTop: 22 }}>
+            <h1 style={{ fontSize: 'clamp(var(--min-hero),5.4vw,66px)', marginTop: 'var(--sp-4)' }}>
               Abre tu negocio
               <br />
               de comida
@@ -168,12 +185,12 @@ export default function LandingPage() {
               </span>
             </h1>
 
-            <p style={{ marginTop: 26, fontSize: 17, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 430 }}>
+            <p style={{ marginTop: 'var(--sp-4)', fontSize: 17, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 430 }}>
               La app que te guía paso a paso con tus números reales para que tomes decisiones claras y abras con
               confianza.
             </p>
 
-            <div className="lp-micro" style={{ marginTop: 26 }}>
+            <div className="lp-micro" style={{ marginTop: 'var(--sp-4)' }}>
               {HERO_MICRO.map(([titulo, texto, tono], i) => (
                 <div key={titulo} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
                   <span className={`lp-tile lp-t-${tono}`}>
@@ -190,9 +207,10 @@ export default function LandingPage() {
             </div>
 
             <button
+              ref={ctaHeroe}
               type="button"
               className="lp-cta"
-              style={{ marginTop: 30, maxWidth: 400 }}
+              style={{ marginTop: 'var(--sp-4)', maxWidth: 400 }}
               onClick={ir('InicioPrueba', 'signup')}
             >
               Empieza gratis {LAUNCH.trialDays} días
@@ -218,7 +236,7 @@ export default function LandingPage() {
 
       {/* ═══ 2 · LAS SEIS HERRAMIENTAS ═══ */}
       <section className="lp-sec">
-        <h2 style={{ fontSize: 'clamp(26px,3.4vw,40px)', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(var(--min-h2-sm),3.4vw,40px)', textAlign: 'center' }}>
           Todo lo que necesitas antes de abrir,
           <br />
           <span className="lp-uwrap">
@@ -227,8 +245,8 @@ export default function LandingPage() {
           </span>
         </h2>
 
-        <div className="lp-prod" style={{ marginTop: 38 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 19 }}>
+        <div className="lp-prod" style={{ marginTop: 'var(--sp-5)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-lista)' }}>
             {TOOL_LIST.map((t, i) => (
               <div key={t.name} style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
                 <span className={`lp-tile lp-t-${t.tone}`}>
@@ -278,7 +296,7 @@ export default function LandingPage() {
           <div className="lp-demo">
             <div>
               <Kick>Mira cómo funciona</Kick>
-              <h2 style={{ fontSize: 'clamp(28px,3.6vw,42px)', marginTop: 14 }}>
+              <h2 style={{ fontSize: 'clamp(var(--min-h2),3.6vw,42px)', marginTop: 14 }}>
                 De la idea
                 <br />
                 a tu restaurante,
@@ -287,11 +305,11 @@ export default function LandingPage() {
                   en un minuto.
                 </span>
               </h2>
-              <p style={{ marginTop: 18, fontSize: 15.5, lineHeight: 1.55, color: 'var(--ink-2)' }}>
+              <p style={{ marginTop: 'var(--sp-3)', fontSize: 15.5, lineHeight: 1.55, color: 'var(--ink-2)' }}>
                 Un recorrido rápido por la app para que veas exactamente cómo MiRestauranteListo te ayuda a pasar de la
                 idea a la apertura.
               </p>
-              <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
                   ['shield', 'Sin registro'],
                   ['clock', 'Dura solo 1 minuto'],
@@ -311,6 +329,7 @@ export default function LandingPage() {
 
             <div style={{ position: 'relative' }}>
               <div
+                className="lp-demo-marco"
                 style={{
                   position: 'relative',
                   border: '8px solid var(--ink)',
@@ -382,7 +401,7 @@ export default function LandingPage() {
               <div className="lp-hand" style={{ fontSize: 31, lineHeight: 1.1 }}>
                 En este demo verás:
               </div>
-              <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 15 }}>
+              <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-lista)' }}>
                 {DEMO_LIST.map(([t, d, tono], i) => (
                   <div key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                     <span className={`lp-tile lp-t-${tono}`}>
@@ -408,7 +427,7 @@ export default function LandingPage() {
           <div className="lp-calchead">
             <div>
               <Kick>Pruébalo antes de creerme</Kick>
-              <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', marginTop: 14 }}>
+              <h2 style={{ fontSize: 'clamp(var(--min-h2),4vw,46px)', marginTop: 14 }}>
                 ¿Cuánto tienes que{' '}
                 <span className="lp-uwrap">
                   vender?
@@ -433,7 +452,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="lp-fields" style={{ marginTop: 26 }}>
+          <div className="lp-fields" style={{ marginTop: 'var(--sp-4)' }}>
             {campos.map(([id, label, hint, icono, value, set]) => (
               <div key={id}>
                 <div className="lp-circ" style={{ margin: '0 auto', background: 'var(--paper)', color: 'var(--ink)' }}>
@@ -461,7 +480,7 @@ export default function LandingPage() {
 
           <div
             className="lp-results"
-            style={{ marginTop: 26, paddingTop: 26, borderTop: '1.5px dashed var(--line)' }}
+            style={{ marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-4)', borderTop: '1.5px dashed var(--line)' }}
           >
             <div className="lp-reslist" style={{ display: 'flex', flexDirection: 'column' }}>
               {filas.map(([k, v, icono, tono, grande], i) => (
@@ -536,7 +555,7 @@ export default function LandingPage() {
                   style={{
                     fontFamily: 'var(--disp)',
                     fontWeight: 900,
-                    fontSize: 'clamp(36px,6vw,62px)',
+                    fontSize: 'clamp(var(--min-cifra),6vw,62px)',
                     letterSpacing: '-.035em',
                     color: 'var(--amber)',
                   }}
@@ -597,11 +616,11 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ 7 · CÓMO FUNCIONA ═══ */}
-      <section id="como" className="lp-sec" style={{ paddingTop: 44 }}>
+      <section id="como" className="lp-sec" style={{ paddingTop: 'var(--sp-6)' }}>
         <div className="lp-split">
           <div>
             <Kick>Cómo funciona</Kick>
-            <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', marginTop: 14 }}>
+            <h2 style={{ fontSize: 'clamp(var(--min-h2),4vw,46px)', marginTop: 14 }}>
               Del «tengo la idea»
               <br />
               al día de la apertura,
@@ -610,7 +629,7 @@ export default function LandingPage() {
                 en 3 movimientos.
               </span>
             </h2>
-            <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 440 }}>
+            <p style={{ marginTop: 'var(--sp-3)', fontSize: 16, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 440 }}>
               Un sistema paso a paso que te guía, te da las herramientas y te dice exactamente qué hacer en cada etapa.
             </p>
           </div>
@@ -626,11 +645,11 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="lp-soft" style={{ marginTop: 26 }}>
+        <div className="lp-soft" style={{ marginTop: 'var(--sp-4)' }}>
           <div className="lp-steps">
             {HOW_STEPS.map((paso, i) => (
-              <div key={paso.n}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <div key={paso.n} className="lp-paso">
+                <div className="lp-paso-cab" style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                   <span
                     style={{
                       display: 'grid',
@@ -652,19 +671,10 @@ export default function LandingPage() {
                     <Ico name={['bulb', 'chef', 'store'][i]} size={26} width={1.9} />
                   </span>
                 </div>
+                <div className="lp-paso-nom">{paso.name}</div>
                 <div
-                  style={{ fontFamily: 'var(--disp)', fontWeight: 900, fontSize: 23, letterSpacing: '-.02em', marginTop: 15 }}
-                >
-                  {paso.name}
-                </div>
-                <div
-                  style={{
-                    width: 68,
-                    height: 5,
-                    borderRadius: 999,
-                    marginTop: 7,
-                    background: ['var(--amber)', 'var(--orange)', 'var(--sage-d)'][i],
-                  }}
+                  className="lp-paso-raya"
+                  style={{ background: ['var(--amber)', 'var(--orange)', 'var(--sage-d)'][i] }}
                 />
                 <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.5, color: 'var(--ink-2)' }}>{paso.desc}</p>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -688,7 +698,7 @@ export default function LandingPage() {
       <section id="temario" className="lp-sec">
         <div className="lp-prod">
           <div>
-            <h2 style={{ fontSize: 'clamp(26px,3.4vw,38px)' }}>
+            <h2 style={{ fontSize: 'clamp(var(--min-h2-sm),3.4vw,38px)' }}>
               Todo lo que necesitas,
               <br />
               <span className="lp-uwrap">
@@ -696,7 +706,7 @@ export default function LandingPage() {
                 <Uline />
               </span>
             </h2>
-            <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <div style={{ marginTop: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 11 }}>
               {TOOL_LIST.map((t, i) => (
                 <div
                   key={t.name}
@@ -733,7 +743,7 @@ export default function LandingPage() {
         <div className="lp-split">
           <div>
             <Kick>Todo listo para abrir tu restaurante</Kick>
-            <h2 style={{ fontSize: 'clamp(30px,4.4vw,50px)', marginTop: 14 }}>
+            <h2 style={{ fontSize: 'clamp(var(--min-h2-lg),4.4vw,50px)', marginTop: 14 }}>
               Deja de adivinar.
               <br />
               <span className="lp-uwrap">
@@ -741,7 +751,7 @@ export default function LandingPage() {
                 <Uline />
               </span>
             </h2>
-            <p style={{ marginTop: 22, fontSize: 16.5, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 450 }}>
+            <p style={{ marginTop: 'var(--sp-4)', fontSize: 16.5, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 450 }}>
               MiRestauranteListo reúne en un solo lugar las herramientas y pasos que necesitas para tomar mejores
               decisiones antes de abrir.
             </p>
@@ -790,19 +800,11 @@ export default function LandingPage() {
                 <span className={`lp-circ lp-t-${tono}`}>
                   <Ico name={['clock', 'bag', 'check', 'chart', 'hands'][i]} size={26} width={2.1} />
                 </span>
-                <div
-                  style={{
-                    fontFamily: 'var(--disp)',
-                    fontWeight: 800,
-                    fontSize: 14,
-                    letterSpacing: '.02em',
-                    textTransform: 'uppercase',
-                    marginTop: 14,
-                  }}
-                >
-                  {t}
+                {/* En teléfono este bloque se va al lado del disco, no debajo. */}
+                <div className="lp-benef-txt">
+                  <div className="lp-benef-k">{t}</div>
+                  <p style={{ marginTop: 9, fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink-2)' }}>{d}</p>
                 </div>
-                <p style={{ marginTop: 9, fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink-2)' }}>{d}</p>
               </div>
             ))}
           </div>
@@ -828,7 +830,7 @@ export default function LandingPage() {
               <Ico name="shield" size={32} width={2.1} />
             </span>
             <div>
-              <h3 style={{ fontSize: 'clamp(20px,2.6vw,27px)', letterSpacing: '-.02em' }}>
+              <h3 style={{ fontSize: 'clamp(var(--min-sub),2.6vw,27px)', letterSpacing: '-.02em' }}>
                 Pruébalo {LAUNCH.trialDays} días sin riesgo
               </h3>
               <p style={{ marginTop: 8, fontSize: 14.5, lineHeight: 1.5, color: 'var(--ink-2)' }}>{GUARANTEE_LINE}</p>
@@ -879,7 +881,7 @@ export default function LandingPage() {
                 style={{
                   fontFamily: 'var(--disp)',
                   fontWeight: 900,
-                  fontSize: 'clamp(46px,8vw,82px)',
+                  fontSize: 'clamp(var(--min-cifra-xl),8vw,82px)',
                   letterSpacing: '-.04em',
                   lineHeight: 1,
                   marginTop: 16,
@@ -906,7 +908,7 @@ export default function LandingPage() {
             </div>
 
             <div className="lp-offerlist">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-lista)' }}>
                 {INCLUDED.map((linea) => (
                   <div key={linea} style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
                     <Check />
@@ -947,7 +949,7 @@ export default function LandingPage() {
           <button
             type="button"
             className="lp-cta"
-            style={{ marginTop: 26, height: 72, fontSize: 'clamp(14px,2.4vw,19px)' }}
+            style={{ marginTop: 'var(--sp-4)', height: 72, fontSize: 'clamp(var(--min-guia),2.4vw,19px)' }}
             onClick={comprar}
           >
             Entrar hoy · pago único · acceso de por vida
@@ -958,7 +960,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="lp-trust" style={{ marginTop: 20, borderRadius: 20 }}>
+        <div className="lp-trust" style={{ marginTop: 'var(--sp-3)', borderRadius: 20 }}>
           {FOOT_TRUST.map(([t, d], i) => (
             <div key={t}>
               <span className="lp-tile lp-t-ink" style={{ width: 36, height: 36, borderRadius: 10 }}>
@@ -975,7 +977,7 @@ export default function LandingPage() {
 
       {/* ═══ 12 · PREGUNTAS ═══ */}
       <section id="faq" className="lp-sec" style={{ maxWidth: 840, paddingBottom: 50 }}>
-        <h2 style={{ fontSize: 'clamp(24px,3.2vw,36px)', textAlign: 'center' }}>Preguntas</h2>
+        <h2 style={{ fontSize: 'clamp(var(--min-h3),3.2vw,36px)', textAlign: 'center' }}>Preguntas</h2>
         <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 11 }}>
           {FAQ.map((item, i) => {
             const abierta = openFaq === i;
@@ -1016,8 +1018,28 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══ PIE ═══ */}
+      <footer className="lp-pie">
+        <div>
+          <div className="lp-pie-marca">
+            <span className="lp-pie-logo">MRL</span>
+            <span>
+              Mi<span style={{ color: 'var(--amber-l)' }}>Restaurante</span>Listo
+            </span>
+          </div>
+
+          <nav className="lp-pie-enlaces" aria-label="Enlaces legales y de contacto">
+            <a href="/terminos">Términos de uso</a>
+            <a href="/privacidad">Aviso de privacidad</a>
+            <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a>
+          </nav>
+
+          <p className="lp-pie-razon">{TITULAR_LEGAL} · Querétaro, México</p>
+        </div>
+      </footer>
+
       {/* ═══ BARRA FIJA ═══ */}
-      <div className="lp-sticky">
+      <div className={barraFija ? 'lp-sticky lp-sticky-on' : 'lp-sticky'} aria-hidden={!barraFija}>
         <div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, flexWrap: 'wrap' }}>
@@ -1080,7 +1102,9 @@ function Barra({ pct, color, alto }: { pct: number; color: string; alto: number 
 /** La maqueta de la app dentro de una laptop, con las cifras de la calculadora. */
 function Laptop({ day, tickets, month, every }: { day: string; tickets: string; month: string; every: string }) {
   return (
-    <div style={{ position: 'relative', paddingBottom: 26 }}>
+    // `lp-laptop-marco` es el asa que usa la hoja para esconderla en teléfono:
+    // como ilustración de apoyo medía más de una pantalla de alto.
+    <div className="lp-laptop-marco" style={{ position: 'relative', paddingBottom: 'var(--sp-4)' }}>
       <div
         style={{
           background: 'var(--ink)',
