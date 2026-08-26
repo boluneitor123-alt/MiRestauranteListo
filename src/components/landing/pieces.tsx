@@ -231,3 +231,17 @@ export function Ilustracion({
     </picture>
   );
 }
+
+/**
+ * La rayita a mano que va debajo de la línea manuscrita del héroe.
+ *
+ * Está en el prototipo de escritorio (`LandingMRL v2.dc.html`, bajo "Él es
+ * Arnold") y se había quedado fuera del port.
+ */
+export function Rayita() {
+  return (
+    <svg width="220" height="12" viewBox="0 0 220 12" fill="none" className="lp-rayita" aria-hidden>
+      <path d="M3 8.4C46 3.6 152 2.4 217 6.2" stroke="#F5A623" strokeWidth="4.5" strokeLinecap="round" />
+    </svg>
+  );
+}

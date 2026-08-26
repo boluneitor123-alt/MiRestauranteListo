@@ -29,7 +29,7 @@ import { CORREO as CORREO_CONTACTO, TITULAR as TITULAR_LEGAL } from '@/content/l
 import { calculate } from '@/domain/landing';
 import { money } from '@/domain/format';
 import { track } from '@/lib/track';
-import { Arrow, Check, Ico, Ilustracion, Kick, Uline } from '@/components/landing/pieces';
+import { Arrow, Check, Ico, Ilustracion, Kick, Rayita, Uline } from '@/components/landing/pieces';
 
 const digits = (value: string) => value.replace(/[^0-9]/g, '');
 const num = (value: string) => parseInt(digits(value) || '0', 10) || 0;
@@ -171,8 +171,9 @@ export default function LandingPage() {
               <br />
               También quiere abrir su restaurante.
             </div>
+            <Rayita />
 
-            <h1 style={{ fontSize: 'clamp(var(--min-hero),5.4vw,66px)', marginTop: 'var(--sp-4)' }}>
+            <h1 className="lp-hero-h1" style={{ fontSize: 'clamp(var(--min-hero),5.4vw,66px)' }}>
               Abre tu negocio
               <br />
               de comida

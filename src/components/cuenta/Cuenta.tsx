@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, Eye, EyeOff, Laptop, Lock, Mail, Smartphone, Tablet, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useStore } from '@/state/store';
 import { GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
+import { Arrow, Check, Ilustracion, Uline } from '@/components/landing/pieces';
 
 /**
  * Crear cuenta · iniciar sesión · recuperar acceso (entrega-v2 § "Flujo de
@@ -12,6 +13,15 @@ import { GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
  * Vive en su propia ruta, fuera de la app: antes era una pantalla interna de
  * `/app`, y eso hacía que salir con el botón de atrás dejara al usuario dentro
  * de la sesión anterior.
+ *
+ * Habla el idioma visual de la landing —crema, borde de tinta, sombra dura,
+ * display Archivo y notas a mano— y por eso reutiliza `landing.css` en vez de
+ * los tokens de la app: quien llega aquí viene de la página de venta y no
+ * debería sentir que cambió de sitio.
+ *
+ * Crear cuenta e iniciar sesión no son pestañas dentro de una tarjeta: son dos
+ * estados de la misma página, y el cambio entre uno y otro vive en el
+ * encabezado.
  *
  * Sólo correo. Google y Apple entran cuando haya OAuth de verdad configurado;
  * un botón que no lleva a ningún lado es peor que no tenerlo.
@@ -32,24 +42,47 @@ export function passwordStrength(pass: string): number {
 }
 
 const STRENGTH: Array<[string, string]> = [
-  ['Muy corta', 'var(--color-danger)'],
-  ['Débil', 'var(--color-danger)'],
-  ['Aceptable', 'var(--color-warn-700)'],
-  ['Buena', 'var(--color-accent-2-700)'],
-  ['Excelente', 'var(--color-accent-2-700)'],
+  ['Muy corta', 'var(--rose-d)'],
+  ['Débil', 'var(--rose-d)'],
+  ['Aceptable', 'var(--amber-d)'],
+  ['Buena', 'var(--sage-d)'],
+  ['Excelente', 'var(--sage-d)'],
 ];
 
-const VENTAJAS = [
-  [`${LAUNCH.trialDays} DÍAS SIN RIESGO`, 'Pruébala completa antes de pagar nada.'],
-  ['SIN TARJETA', 'No pedimos tarjeta para la prueba.'],
-  ['ACCESO INMEDIATO', 'Empieza a usarlo al instante.'],
-] as const;
+/** Los tres pasos que faltan para estar dentro. El primero es esta pantalla. */
+const PASOS = ['Cuenta', 'Tu restaurante', 'Tu ruta'] as const;
 
-const EQUIPOS = [
-  { label: 'Celular', icon: Smartphone },
-  { label: 'Tablet', icon: Tablet },
-  { label: 'Computadora', icon: Laptop },
-] as const;
+/** Lo que Arnold ya trae resuelto en su libreta, al lado del dibujo. */
+const PALOMEOS = ['Tengo la idea', 'Hacer mis números', 'Preparar mi apertura'] as const;
+
+/**
+ * Lo que cambia entre un estado y otro: el rótulo, el titular con su palabra
+ * subrayada, la línea de apoyo y la nota a mano de Arnold. El esqueleto es el
+ * mismo en los tres.
+ */
+const TEXTOS: Record<CuentaVista, { etiqueta: string; titulo: string; palabra: string; apoyo: string; nota: string }> = {
+  signup: {
+    etiqueta: 'Bienvenido a tu ruta',
+    titulo: 'Tu restaurante empieza',
+    palabra: 'aquí.',
+    apoyo: `Crea tu cuenta y empieza tu prueba de ${LAUNCH.trialDays} días, sin tarjeta de crédito.`,
+    nota: 'Vamos paso a paso.',
+  },
+  login: {
+    etiqueta: 'Qué bueno verte de nuevo',
+    titulo: 'Continúa donde',
+    palabra: 'lo dejaste.',
+    apoyo: 'Entra con tu correo y tu contraseña.',
+    nota: 'Seguimos donde lo dejamos.',
+  },
+  reset: {
+    etiqueta: 'Recuperar mi acceso',
+    titulo: 'Recupera tu',
+    palabra: 'acceso.',
+    apoyo: 'Escríbenos con el correo de tu cuenta y te ayudamos a recuperarla a mano.',
+    nota: 'Vamos paso a paso.',
+  },
+};
 
 export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
   const { register, login, user, authReady } = useStore();
@@ -130,199 +163,204 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
   };
 
   const fuerza = passwordStrength(pass);
+  const t = TEXTOS[vista];
 
   return (
-    <div className="cta-page">
-      <div className="cta-wrap">
-        <section className="cta-hero">
-          <a href="/" className="cta-marca">
-            <span className="cta-logo">MRL</span>
+    <div className="lp cta-page">
+      <header className="lp-head">
+        <div>
+          <a href="/" className="lp-marca">
+            <span>MRL</span>
             <span>
-              Mi<b>Restaurante</b>Listo
+              Mi<span style={{ color: 'var(--orange-texto)' }}>Restaurante</span>Listo
             </span>
           </a>
 
-          <h1 className="cta-h1">
-            Tu restaurante
-            <br />
-            empieza aquí.
-          </h1>
-          <p className="cta-sub">
-            Crea tu cuenta y accede a todas las herramientas, calculadoras y pasos para abrir tu negocio de comida con
-            números reales.
-          </p>
-
-          <ul className="cta-ventajas">
-            {VENTAJAS.map(([titulo, texto]) => (
-              <li key={titulo}>
-                <span className="cta-check">
-                  <Check size={14} strokeWidth={3.4} />
-                </span>
-                <span>
-                  <b>{titulo}</b>
-                  <span>{texto}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <p className="cta-garantia">{GUARANTEE_SHORT}</p>
-        </section>
-
-        <section className="cta-card">
-          <div className="cta-tabs">
-            <button type="button" className={esSignup ? 'on' : ''} onClick={() => ir('signup')}>
-              Crear cuenta
-            </button>
-            <button type="button" className={esLogin ? 'on' : ''} onClick={() => ir('login')}>
-              Iniciar sesión
-            </button>
-          </div>
-
-          <form onSubmit={enviar} className="cta-form">
-            <h2 className="cta-h2">
-              {esSignup ? 'Crea tu cuenta' : esLogin ? 'Bienvenido de vuelta' : 'Recupera tu acceso'}
-            </h2>
-            <p className="cta-h2-sub">
-              {esSignup
-                ? `Empieza tu prueba gratuita de ${LAUNCH.trialDays} días, sin tarjeta de crédito.`
-                : esLogin
-                  ? 'Entra con tu correo y tu contraseña.'
-                  : 'Escríbenos con el correo de tu cuenta y te ayudamos a recuperarla a mano.'}
-            </p>
-
+          {/*
+            El cambio de estado vive aquí, no en unas pestañas dentro de la
+            tarjeta: la página entera cambia, no una parte de ella.
+          */}
+          <div className="cta-cambio">
+            <span>{esSignup ? '¿Ya tienes cuenta?' : '¿Aún no tienes cuenta?'}</span>
             {esSignup ? (
-              <Campo
-                id="cta-nombre"
-                icono={<User size={20} />}
-                type="text"
-                autoComplete="name"
-                label="Nombre completo"
-                value={nombre}
-                error={errNombre}
-                onChange={setNombre}
-                onBlur={() => setTocado((t) => ({ ...t, nombre: true }))}
-              />
-            ) : null}
-
-            <Campo
-              id="cta-correo"
-              icono={<Mail size={20} />}
-              type="email"
-              autoComplete="email"
-              label="Correo electrónico"
-              value={correo}
-              error={errCorreo}
-              onChange={setCorreo}
-              onBlur={() => setTocado((t) => ({ ...t, correo: true }))}
-            />
-
-            {!esReset ? (
-              <Campo
-                id="cta-pass"
-                icono={<Lock size={20} />}
-                type={verPass ? 'text' : 'password'}
-                autoComplete={esSignup ? 'new-password' : 'current-password'}
-                label={esSignup ? 'Crea una contraseña' : 'Contraseña'}
-                value={pass}
-                error={errPass}
-                onChange={setPass}
-                onBlur={() => setTocado((t) => ({ ...t, pass: true }))}
-                accion={
-                  <button
-                    type="button"
-                    aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="cta-ojo"
-                    onClick={() => setVerPass((v) => !v)}
-                  >
-                    {verPass ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                }
-              />
-            ) : null}
-
-            {esSignup && pass ? (
-              <div className="cta-fuerza">
-                <span>
-                  Seguridad: <b style={{ color: STRENGTH[fuerza][1] }}>{STRENGTH[fuerza][0]}</b>
-                </span>
-                <span className="cta-barras">
-                  {[0, 1, 2, 3].map((i) => (
-                    <span key={i} style={{ background: i < fuerza ? STRENGTH[fuerza][1] : 'var(--color-neutral-300)' }} />
-                  ))}
-                </span>
-              </div>
-            ) : null}
-
-            {esLogin ? (
-              <button type="button" className="cta-link" onClick={() => ir('reset')}>
-                ¿Olvidaste tu contraseña?
+              <button type="button" className="lp-btn" onClick={() => ir('login')}>
+                Iniciar sesión
               </button>
-            ) : null}
-
-            {error ? (
-              <div role="alert" className="cta-error">
-                {error}
-              </div>
-            ) : null}
-
-            <button type="submit" className="cta-cta" disabled={busy}>
-              {busy
-                ? esSignup
-                  ? 'Creando tu cuenta…'
-                  : 'Entrando…'
-                : esSignup
-                  ? 'Crear mi cuenta'
-                  : esLogin
-                    ? 'Iniciar sesión'
-                    : 'Escribir a soporte'}
-              {busy ? null : <ArrowRight size={19} strokeWidth={2.8} />}
-            </button>
-
-            {esReset ? (
-              <button type="button" className="cta-link cta-centro" onClick={() => ir('login')}>
-                Volver a iniciar sesión
-              </button>
-            ) : null}
-          </form>
-
-          {esSignup ? (
-            <p className="cta-legal">
-              {/* Enlaces dentro de una línea de texto: la excepción documentada al mínimo de 44px. */}
-              Al crear tu cuenta aceptas nuestros{' '}
-              <a className="mrl-inline" href="/terminos">
-                Términos de uso
-              </a>{' '}
-              y la{' '}
-              <a className="mrl-inline" href="/privacidad">
-                Política de privacidad
-              </a>
-              .
-            </p>
-          ) : null}
-
-          <div className="cta-equipos">
-            <div className="cta-equipos-t">Accede desde cualquier dispositivo:</div>
-            <div className="cta-equipos-l">
-              {EQUIPOS.map(({ label, icon: Icono }) => (
-                <div key={label}>
-                  <Icono size={30} strokeWidth={1.7} />
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {esLogin ? (
-            <p className="cta-pie">
-              ¿Aún no tienes cuenta?{' '}
-              <button type="button" className="cta-link mrl-inline" onClick={() => ir('signup')}>
+            ) : (
+              <button type="button" className="lp-btn lp-btn-amber" onClick={() => ir('signup')}>
                 Crear cuenta
               </button>
-            </p>
-          ) : null}
-        </section>
-      </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <section className="lp-sec cta-sec">
+        <p className="cta-etiqueta">{t.etiqueta}</p>
+
+        <h1 className="cta-h1">
+          {t.titulo}{' '}
+          <span className="lp-uwrap" style={{ color: 'var(--orange-display)' }}>
+            {t.palabra}
+            <Uline color="#1C1A17" />
+          </span>
+        </h1>
+
+        <p className="cta-apoyo">{t.apoyo}</p>
+
+        {/* El camino completo, para que se vea que esto es el primer paso de tres. */}
+        <ol className="cta-pasos" aria-label="Pasos para entrar">
+          {PASOS.map((paso, i) => (
+            <li key={paso} className={i === 0 ? 'on' : ''} aria-current={i === 0 ? 'step' : undefined}>
+              {paso}
+            </li>
+          ))}
+        </ol>
+
+        <div className="cta-split">
+          <div className="cta-card">
+            <form onSubmit={enviar} className="cta-form">
+              {esSignup ? (
+                <Campo
+                  id="cta-nombre"
+                  icono={<User size={20} />}
+                  type="text"
+                  autoComplete="name"
+                  label="Nombre completo"
+                  value={nombre}
+                  error={errNombre}
+                  onChange={setNombre}
+                  onBlur={() => setTocado((t) => ({ ...t, nombre: true }))}
+                />
+              ) : null}
+
+              <Campo
+                id="cta-correo"
+                icono={<Mail size={20} />}
+                type="email"
+                autoComplete="email"
+                label="Correo electrónico"
+                value={correo}
+                error={errCorreo}
+                onChange={setCorreo}
+                onBlur={() => setTocado((t) => ({ ...t, correo: true }))}
+              />
+
+              {!esReset ? (
+                <Campo
+                  id="cta-pass"
+                  icono={<Lock size={20} />}
+                  type={verPass ? 'text' : 'password'}
+                  autoComplete={esSignup ? 'new-password' : 'current-password'}
+                  label={esSignup ? 'Crea una contraseña' : 'Contraseña'}
+                  value={pass}
+                  error={errPass}
+                  onChange={setPass}
+                  onBlur={() => setTocado((t) => ({ ...t, pass: true }))}
+                  accion={
+                    <button
+                      type="button"
+                      aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      className="cta-ojo"
+                      onClick={() => setVerPass((v) => !v)}
+                    >
+                      {verPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  }
+                />
+              ) : null}
+
+              {esSignup && pass ? (
+                <div className="cta-fuerza">
+                  <span>
+                    Seguridad: <b style={{ color: STRENGTH[fuerza][1] }}>{STRENGTH[fuerza][0]}</b>
+                  </span>
+                  <span className="cta-barras">
+                    {[0, 1, 2, 3].map((i) => (
+                      <span key={i} style={{ background: i < fuerza ? STRENGTH[fuerza][1] : 'var(--cream-2)' }} />
+                    ))}
+                  </span>
+                </div>
+              ) : null}
+
+              {esLogin ? (
+                <button type="button" className="cta-link" onClick={() => ir('reset')}>
+                  ¿Olvidaste tu contraseña?
+                </button>
+              ) : null}
+
+              {error ? (
+                <div role="alert" className="cta-error">
+                  {error}
+                </div>
+              ) : null}
+
+              <button type="submit" className="lp-cta" disabled={busy}>
+                {busy
+                  ? esSignup
+                    ? 'Creando tu cuenta…'
+                    : 'Entrando…'
+                  : esSignup
+                    ? 'Crear mi cuenta'
+                    : esLogin
+                      ? 'Iniciar sesión'
+                      : 'Escribir a soporte'}
+                {busy ? null : <Arrow size={19} />}
+              </button>
+
+              {esReset ? (
+                <button type="button" className="cta-link" onClick={() => ir('login')}>
+                  Volver a iniciar sesión
+                </button>
+              ) : null}
+            </form>
+
+            {esSignup ? (
+              <p className="cta-legal">
+                {/* Enlaces dentro de una frase: la excepción documentada al mínimo de 44px. */}
+                Al crear tu cuenta aceptas nuestros{' '}
+                <a className="mrl-inline" href="/terminos">
+                  Términos de uso
+                </a>{' '}
+                y la{' '}
+                <a className="mrl-inline" href="/privacidad">
+                  Política de privacidad
+                </a>
+                .
+              </p>
+            ) : null}
+          </div>
+
+          <aside className="cta-arnold">
+            <div className="cta-arnold-fila">
+              {/*
+                El envoltorio no sobra: `Ilustracion` monta un `<picture>` con
+                `display: contents`, y dentro de una rejilla eso convierte a
+                sus `<source>` en celdas vacías que corren el dibujo de lugar.
+              */}
+              <div className="cta-arnold-ilo">
+                <Ilustracion
+                  nombre="arnold-hero"
+                  alt="Arnold con su libreta, listo para empezar su plan"
+                  ancho={1000}
+                  alto={833}
+                  sizes="(max-width: 560px) 34vw, 120px"
+                />
+              </div>
+              <ul className="cta-palomeos">
+                {PALOMEOS.map((texto) => (
+                  <li key={texto}>
+                    <Check size={19} />
+                    {texto}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p className="lp-hand cta-nota">{t.nota}</p>
+            <p className="cta-garantia">{GUARANTEE_SHORT}</p>
+          </aside>
+        </div>
+      </section>
     </div>
   );
 }
@@ -352,7 +390,7 @@ function Campo({
 }) {
   return (
     <div>
-      <div className="cta-campo" style={error ? { borderColor: 'var(--color-danger)' } : undefined}>
+      <div className="cta-campo" style={error ? { borderColor: 'var(--rose-d)' } : undefined}>
         <span className="cta-campo-i">{icono}</span>
         <input
           id={id}

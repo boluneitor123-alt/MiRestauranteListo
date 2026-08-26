@@ -221,7 +221,12 @@ export function Pago() {
                 ancho={800}
                 alto={840}
                 sizes="250px"
-                style={{ display: 'block', width: '56%', maxWidth: 250, height: 'auto' }}
+                /*
+                  `minWidth: 0` no sobra: sin él la figura aporta 250px de
+                  ancho mínimo a la fila, la fila pide 387 y a 390px la
+                  columna entera se salía 13px de la pantalla.
+                */
+                style={{ display: 'block', width: '56%', maxWidth: 250, minWidth: 0, height: 'auto' }}
               />
               <div style={{ flex: 1, minWidth: 0, marginBottom: 34 }}>
                 <div style={{ padding: '22px 24px', border: '2.5px solid var(--ink)', borderRadius: 38, background: 'var(--paper)' }}>

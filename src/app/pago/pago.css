@@ -25,8 +25,13 @@
 }
 
 @media (max-width: 1000px) {
+  /*
+    `minmax(0, 1fr)`, no `1fr` a secas: una pista de `1fr` no baja del
+    min-content de lo que lleva dentro, y por eso a 390px la columna medía
+    387px dentro de un hueco de 358 y todo el bloque se salía 13px.
+  */
   .pg-split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 26px;
   }
 

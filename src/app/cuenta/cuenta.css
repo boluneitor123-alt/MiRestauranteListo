@@ -1,228 +1,199 @@
 /**
- * Pantalla de acceso (`CuentaMRL.dc.html` de la entrega v2).
+ * Pantalla de acceso. Referencia: `entrega-v2/app/CuentaMRL.dc.html`.
  *
- * Dos columnas en escritorio —el saludo a la izquierda y el formulario a la
- * derecha— y una sola en teléfono, con el formulario primero: quien llega
- * aquí viene a entrar, no a leer.
+ * Ojo con los márgenes: `landing.css` pone `margin: 0` a `.lp p` y a
+ * `.lp h1`, y eso le gana a una clase suelta. Por eso las reglas de los
+ * párrafos y del titular van compuestas con `.cta-page`.
+ *
+ * Hereda el idioma visual de la landing —crema, tinta, borde de 2px, sombra
+ * dura, display Archivo y notas a mano—: la página cuelga de `.lp`, así que
+ * los tokens y la escala de teléfono son exactamente los mismos que los de la
+ * página de venta. Aquí sólo va lo propio de esta pantalla.
+ *
+ * Crear cuenta e iniciar sesión son dos estados de la misma página, no dos
+ * pestañas dentro de una tarjeta: el cambio vive en el encabezado.
  */
 
 .cta-page {
   min-height: 100dvh;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
 }
 
-.cta-wrap {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 28px 22px 48px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
-  gap: 46px;
-  align-items: start;
-}
-
-@media (max-width: 899px) {
-  .cta-wrap {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 26px;
-  }
-
-  /* El formulario primero; el saludo, después. */
-  .cta-hero {
-    order: 2;
-  }
-
-  .cta-card {
-    order: 1;
-  }
-}
-
-/* ── Columna del saludo ───────────────────────────────────────────────── */
-
-.cta-marca {
-  display: inline-flex;
+/* El encabezado no lleva navegación: la marca a la izquierda, el cambio de
+   estado empujado a la derecha. */
+.cta-cambio {
+  display: flex;
   align-items: center;
-  gap: 11px;
-  color: var(--color-text);
-  text-decoration: none;
-  font-family: var(--font-heading);
-  font-size: 17px;
-  letter-spacing: -0.02em;
-  min-height: 44px;
+  gap: 12px;
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
 }
 
-.cta-marca b {
-  color: var(--color-accent-800);
-  font-weight: inherit;
+/* El rótulo del botón no se parte en dos renglones: "Iniciar / sesión" duplica
+   el alto del encabezado y se lee como dos cosas. */
+.cta-cambio .lp-btn {
+  white-space: nowrap;
 }
 
-.cta-logo {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  background: var(--color-text);
-  color: var(--color-neutral-100);
-  font-size: 13px;
+/* La pregunta es de escritorio: en un teléfono el botón se explica solo y
+   robaba el ancho que necesita el nombre de la marca. */
+@media (max-width: 700px) {
+  .cta-cambio > span {
+    display: none;
+  }
 }
 
-.cta-h1 {
-  margin: 26px 0 0;
-  font-family: var(--font-heading);
-  font-size: clamp(34px, 6vw, 52px);
-  line-height: 1.04;
-  letter-spacing: -0.035em;
+/*
+  A 360px el nombre de la marca y "Iniciar sesión" no caben con el relleno de
+  escritorio: el botón se salía 4px. Se aprieta el relleno del encabezado y el
+  del botón, sin bajar de los 44px de alto tocable ni partir el nombre.
+*/
+@media (max-width: 400px) {
+  .cta-page .lp-head > div {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+
+  .cta-cambio .lp-btn {
+    padding-inline: 13px;
+    font-size: 13.5px;
+  }
 }
 
-.cta-sub {
-  margin: 14px 0 0;
+.cta-sec {
+  max-width: 980px;
+  padding-top: var(--sp-5);
+  padding-bottom: var(--sp-6);
+}
+
+/* ── Rótulo, titular y apoyo ──────────────────────────────────────────── */
+
+.cta-page .cta-etiqueta {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange-texto);
+}
+
+.cta-page .cta-h1 {
+  margin-top: 12px;
+  font-size: clamp(var(--min-hero), 5vw, 52px);
+  /* El titular no se centra nunca: manda el borde izquierdo. */
+  text-align: left;
+}
+
+.cta-page .cta-apoyo {
+  /* El subrayado a mano del titular baja 11px por debajo de su renglón: con
+     el ritmo normal se cruzaba con la primera línea de este párrafo. */
+  margin-top: calc(var(--sp-4) + 10px);
   max-width: 46ch;
   font-size: 16px;
   line-height: 1.55;
-  color: var(--color-text-2);
-  text-wrap: pretty;
+  color: var(--ink-2);
 }
 
-.cta-ventajas {
-  margin: 26px 0 0;
+/* ── Los tres pasos ───────────────────────────────────────────────────── */
+
+.cta-pasos {
+  margin: var(--sp-4) 0 0;
   padding: 0;
   list-style: none;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.cta-ventajas li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.cta-ventajas li > span:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cta-ventajas b {
-  font-size: 11.5px;
-  letter-spacing: 0.09em;
-  font-weight: 800;
-}
-
-.cta-ventajas span span {
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--color-text-2);
-}
-
-.cta-check {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--color-accent-2-200);
-  color: var(--color-accent-2-800);
-}
-
-.cta-garantia {
-  margin: 24px 0 0;
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-accent-800);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-/* ── Tarjeta del formulario ───────────────────────────────────────────── */
+/* La flecha entre pasos es decoración: va en el CSS, no en el texto, para que
+   un lector de pantalla lea "Cuenta, Tu restaurante, Tu ruta" y no flechas. */
+.cta-pasos li + li::before {
+  content: '→';
+  margin-right: 10px;
+  color: var(--ink-3);
+}
+
+.cta-pasos li.on {
+  color: var(--ink);
+}
+
+/* ── Las dos columnas ─────────────────────────────────────────────────── */
+
+.cta-split {
+  margin-top: var(--sp-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 34px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .cta-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-5);
+  }
+}
+
+/* ── La tarjeta del formulario ────────────────────────────────────────── */
 
 .cta-card {
-  padding: 30px 28px 26px;
-  border: 1px solid var(--color-border);
-  border-radius: 22px;
-  background: var(--color-surface);
+  padding: 26px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
-.cta-tabs {
-  display: flex;
-  border-bottom: 1.5px solid var(--color-border);
-}
-
-.cta-tabs button {
-  flex: 1;
-  min-width: 0;
-  height: 52px;
-  border: none;
-  border-bottom: 2.5px solid transparent;
-  background: none;
-  color: var(--color-text-2);
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.cta-tabs button.on {
-  color: var(--color-text);
-  border-bottom-color: var(--color-accent);
+@media (max-width: 560px) {
+  .cta-card {
+    padding: 18px 16px;
+    /* La sombra dura se acorta en el teléfono: 6px de tinta fuera del borde
+       derecho se comían el aire que queda a los lados. */
+    box-shadow: 4px 4px 0 var(--ink);
+  }
 }
 
 .cta-form {
-  padding-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.cta-h2 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 27px;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-}
-
-.cta-h2-sub {
-  margin: -6px 0 4px;
-  font-size: 14.5px;
-  line-height: 1.5;
-  color: var(--color-text-2);
-  text-wrap: pretty;
-}
+/* ── Campos ───────────────────────────────────────────────────────────── */
 
 .cta-campo {
   display: flex;
   align-items: center;
   gap: 12px;
   height: 58px;
-  padding: 0 8px 0 16px;
-  border: 1.5px solid var(--color-border);
+  padding: 0 8px 0 14px;
+  border: 2px solid var(--ink);
   border-radius: 12px;
-  background: var(--color-bg);
+  background: #ffffff;
 }
 
 /*
-  El anillo de foco del campo.
-
-  El input trae `outline: none` para que el borde lo dibuje la caja, así que la
-  caja tiene que dar una señal inequívoca: con sólo cambiar el borde 1.5px a un
-  ámbar claro, quien navega con teclado no distinguía dónde estaba parado.
+  El anillo de foco. El input trae `outline: none` para que el borde lo dibuje
+  la caja, así que la caja tiene que dar una señal inequívoca: sobre un borde
+  que ya es negro, el aviso es el halo ámbar de alrededor.
 */
 .cta-campo:focus-within {
-  border-color: var(--color-accent-600);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 34%, transparent);
+  box-shadow: 0 0 0 4px var(--amber);
 }
 
 .cta-campo-i {
   display: grid;
   place-items: center;
   flex: none;
-  color: var(--color-neutral-500);
+  color: var(--ink-3);
 }
 
 .cta-campo input {
@@ -232,15 +203,17 @@
   border: none;
   outline: none;
   background: none;
+  font-family: var(--body);
   font-size: 16px;
-  color: var(--color-text);
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .cta-campo-err {
   margin-top: 7px;
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-danger);
+  font-weight: 700;
+  color: var(--rose-d);
 }
 
 .cta-ojo {
@@ -252,16 +225,18 @@
   border: none;
   border-radius: 9px;
   background: none;
-  color: var(--color-neutral-500);
+  color: var(--ink-3);
   cursor: pointer;
 }
+
+/* ── Fuerza de la contraseña ──────────────────────────────────────────── */
 
 .cta-fuerza {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 13px;
-  color: var(--color-text-2);
+  color: var(--ink-2);
 }
 
 .cta-barras {
@@ -271,9 +246,12 @@
 }
 
 .cta-barras span {
-  height: 5px;
+  height: 6px;
+  border: 1.5px solid var(--ink);
   border-radius: 999px;
 }
+
+/* ── Enlaces de dentro del formulario ─────────────────────────────────── */
 
 .cta-link {
   align-self: flex-start;
@@ -281,8 +259,8 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-accent-800);
-  font-family: var(--font-body);
+  color: var(--orange-texto);
+  font-family: var(--body);
   font-size: 14.5px;
   font-weight: 700;
   cursor: pointer;
@@ -290,105 +268,98 @@
   text-underline-offset: 3px;
 }
 
-.cta-centro {
-  align-self: center;
-}
-
 .cta-error {
   display: flex;
   gap: 10px;
   padding: 13px 15px;
+  border: 2px solid var(--rose-d);
   border-radius: 13px;
-  background: var(--color-danger-100);
-  color: var(--color-danger-700);
+  background: var(--rose);
+  color: #7a2f24;
   font-size: 14px;
+  font-weight: 600;
   line-height: 1.45;
 }
 
-.cta-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  height: 58px;
-  border: none;
-  border-radius: 14px;
-  background: var(--color-accent);
-  color: var(--on-accent);
-  font-family: var(--font-heading);
-  font-size: 16.5px;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-}
-
-.cta-cta:disabled {
+.cta-page .lp-cta:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.cta-legal {
-  margin: 18px 0 0;
-  text-align: center;
+.cta-page .cta-legal {
+  /* La sombra dura del botón asoma 5px: el aire va medido desde ahí. */
+  margin-top: 22px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--color-text-2);
+  color: var(--ink-3);
 }
 
 .cta-legal a {
-  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.cta-equipos {
-  margin-top: 20px;
-  padding: 20px 22px;
-  border-radius: 16px;
-  background: var(--color-accent-100);
+/* ── La columna de Arnold ─────────────────────────────────────────────── */
+
+/* El dibujo a la izquierda y sus tres palomeos al lado, como en la libreta. */
+.cta-arnold-fila {
+  display: grid;
+  /* 120px de dibujo dejan renglón entero para "Preparar mi apertura". */
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
 }
 
-.cta-equipos-t {
-  text-align: center;
-  font-family: var(--font-heading);
-  font-size: 16px;
-  color: var(--color-accent-900);
+.cta-arnold-ilo img {
+  display: block;
+  /* Gana al `width: auto !important` que la escala de teléfono le pone a toda
+     ilustración de la landing: aquí el ancho lo manda la columna. */
+  width: 100% !important;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
 }
 
-.cta-equipos-l {
-  margin-top: 14px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 34px;
-}
-
-.cta-equipos-l > div {
+.cta-palomeos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
+  gap: var(--gap-lista);
+}
+
+.cta-palomeos li {
+  display: flex;
   align-items: center;
-  gap: 7px;
-  color: var(--color-accent-900);
-  font-size: 13px;
-  font-weight: 600;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
-.cta-pie {
-  margin: 18px 0 0;
-  text-align: center;
-  font-size: 14.5px;
-  color: var(--color-text-2);
+.cta-page .cta-nota {
+  margin-top: 14px;
+  font-size: var(--t-entrada);
+  line-height: 1.2;
+  color: var(--ink-2);
 }
 
-/*
-  Va dentro de una frase, así que no puede medir 44px de alto sin abrir un
-  hueco en el renglón. El área que se toca sí llega a 44: el relleno crece
-  hacia afuera y el margen negativo lo devuelve, así que se puede tocar sin
-  que se mueva nada de sitio. Es la puerta al registro desde el login: dejarla
-  en 22px era pedirle puntería a alguien con el teléfono en una mano.
-*/
-.cta-pie .cta-link {
-  align-self: auto;
-  min-height: 0;
-  display: inline-block;
-  padding: 11px 6px;
-  margin: -11px -6px;
+.cta-page .cta-garantia {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+@media (max-width: 560px) {
+  /* A 360px el dibujo se lleva un tercio del ancho y los tres palomeos el
+     resto: es el mismo acomodo que el héroe de la landing. */
+  .cta-arnold-fila {
+    grid-template-columns: 34% minmax(0, 1fr);
+    gap: 12px;
+  }
 }

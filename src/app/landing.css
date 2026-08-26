@@ -158,7 +158,7 @@
 
 @media (max-width: 560px) {
   .lp {
-    --min-hero: 31px;
+    --min-hero: 30px;
     --min-h2: 23px;
     --min-h2-sm: 22px;
     --min-h2-lg: 25px;
@@ -425,6 +425,16 @@
 .lp-hand {
   font-family: var(--hand);
   font-weight: 700;
+}
+
+/* La rayita bajo la línea manuscrita del héroe: ella da el aire hasta el h1. */
+.lp-rayita {
+  display: block;
+  margin: 2px 0 22px;
+}
+
+.lp-hero-h1 {
+  margin-top: 0;
 }
 
 .lp-kick {
@@ -1321,13 +1331,14 @@
   }
 
   /*
-    Los sangrados con margen negativo son una decisión de escritorio: a
-    360px cortan el dibujo y se leen como error. Aquí la figura va completa.
+    Arnold ya no va debajo del titular sino a su derecha: llena la columna
+    del 37% que le toca. Los sangrados con margen negativo eran una decisión
+    de escritorio; aquí la figura va completa y dentro de su columna.
   */
   .lp-arnold img {
-    width: 65vw;
-    max-width: none;
-    margin: 0 auto;
+    width: 100% !important;
+    max-width: 100%;
+    margin: 0;
   }
 
   /*
@@ -1340,23 +1351,52 @@
   }
 
   /*
-    El héroe: el botón caía en y=656 de una pantalla de 640, o sea fuera del
-    primer golpe de vista. Las dos micro-promesas bajan debajo del botón —son
-    apoyo, no la promesa— y con eso el botón entra en la primera pantalla.
+    El héroe en teléfono: el titular y Arnold comparten el primer renglón.
+
+    `display: contents` disuelve la columna de texto para que el h1 y la
+    figura sean celdas de la misma rejilla —dos columnas, 1fr y 37%— sin
+    duplicar el marcado. El h1 y Arnold se fijan al renglón 1; todo lo demás
+    baja a ancho completo en el orden en que está escrito: manuscrito,
+    rayita, párrafo, micro-beneficios, botón y la nota de "sin tarjeta".
   */
+  .lp-hero {
+    grid-template-columns: minmax(0, 1fr) 37%;
+    gap: 0 12px;
+    align-items: start;
+  }
+
   .lp-hero-col {
-    display: flex;
-    flex-direction: column;
+    display: contents;
   }
 
-  .lp-hero-col > .lp-cta,
-  .lp-hero-col > .lp-cta + p {
-    order: 1;
+  /* Los hermanos de texto ocupan las dos columnas. */
+  .lp-hero-col > * {
+    grid-column: 1 / -1;
   }
 
-  .lp-hero-col > .lp-micro {
-    order: 2;
-    margin-top: var(--sp-3);
+  .lp-hero-col > .lp-hero-h1 {
+    grid-column: 1;
+    grid-row: 1;
+    line-height: 1.06;
+  }
+
+  .lp-arnold {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  /* El manuscrito ya no abre la sección: necesita su propio aire arriba. */
+  .lp-hero-col > .lp-hand {
+    margin-top: var(--sp-4);
+  }
+
+  /*
+    Aquí la rayita no separa del titular sino del párrafo, y el párrafo trae
+    su propio margen: el de abajo sobra.
+  */
+  .lp-hero-col > .lp-rayita {
+    margin-bottom: 0;
   }
 
   /*
