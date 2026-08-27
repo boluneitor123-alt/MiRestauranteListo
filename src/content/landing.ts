@@ -205,14 +205,30 @@ export const MOCK_NAV = [
 ] as const;
 
 /** La maqueta de la ruta: 1 = hecha, 2 = en curso, 0 = pendiente. */
-export const MOCK_ROUTE: ReadonlyArray<[string, 0 | 1 | 2]> = [
-  ['Define tu concepto', 1],
-  ['Números y costos', 1],
-  ['Menú rentable', 1],
-  ['Permisos y trámites', 2],
-  ['Proveedores y compras', 0],
-  ['Equipo y operación', 0],
-  ['Apertura y primeros clientes', 0],
+/** Las tres etapas de la ruta, como las agrupa `HOW_STEPS` aquí arriba. */
+export type EtapaMock = 'define' | 'construye' | 'abre';
+
+/**
+ * Los pasos de la ruta que se ven en las maquetas, cada uno con su etapa.
+ *
+ * La etapa no es adorno: de aquí salen las tres tarjetas de `MOCK_STAGES`, y
+ * por eso las dos maquetas cuentan lo mismo. Antes eran dos listas sueltas y
+ * la página acababa diciendo 47% en una pantalla y 43% en otra, las dos
+ * tituladas "Tu ruta de apertura". Nadie que lo lea sabe que una contaba
+ * tareas y la otra pasos: sólo ve que el sitio se contradice.
+ *
+ * El reparto sigue lo que `HOW_STEPS` dice que cubre cada etapa: los números
+ * van en Define —"aclaras tu concepto… y haces tus números"— y el menú, los
+ * permisos y los proveedores en Construye.
+ */
+export const MOCK_ROUTE: ReadonlyArray<readonly [string, 0 | 1 | 2, EtapaMock]> = [
+  ['Define tu concepto', 1, 'define'],
+  ['Números y costos', 1, 'define'],
+  ['Menú rentable', 1, 'construye'],
+  ['Permisos y trámites', 2, 'construye'],
+  ['Proveedores y compras', 0, 'construye'],
+  ['Equipo y operación', 0, 'abre'],
+  ['Apertura y primeros clientes', 0, 'abre'],
 ];
 
 /** La maqueta del plan de marketing. */
@@ -240,8 +256,23 @@ export const MOCK_DISH = {
 };
 
 /** Las tres etapas de la maqueta, con su avance. */
-export const MOCK_STAGES: ReadonlyArray<[string, string, number, string]> = [
-  ['1. Define', '4/6', 66, 'sage'],
-  ['2. Construye', '3/7', 43, 'amber'],
-  ['3. Abre', '2/6', 33, 'ink'],
+const ETAPAS_MOCK: ReadonlyArray<readonly [EtapaMock, string, string]> = [
+  ['define', '1. Define', 'sage'],
+  ['construye', '2. Construye', 'amber'],
+  ['abre', '3. Abre', 'ink'],
 ];
+
+/**
+ * Las tres etapas de la maqueta: nombre, fracción, porcentaje y tono.
+ *
+ * Se calcula de `MOCK_ROUTE`, no se teclea. Así la maqueta de la laptop y la
+ * del teléfono cuentan los mismos siete pasos y no pueden discrepar.
+ */
+export const MOCK_STAGES: ReadonlyArray<readonly [string, string, number, string]> = ETAPAS_MOCK.map(
+  ([id, nombre, tono]) => {
+    const suyos = MOCK_ROUTE.filter(([, , etapa]) => etapa === id);
+    const hechos = suyos.filter(([, estado]) => estado === 1).length;
+    const pct = suyos.length ? Math.round((hechos / suyos.length) * 100) : 0;
+    return [nombre, `${hechos}/${suyos.length}`, pct, tono] as const;
+  },
+);

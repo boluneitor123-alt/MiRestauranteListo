@@ -1107,32 +1107,13 @@ function Barra({ pct, color, alto }: { pct: number; color: string; alto: number 
 }
 
 /**
- * El avance de la ruta, sacado de las mismas etapas que se dibujan.
- *
- * Estaba escrito a mano como `72%` mientras las etapas de al lado sumaban 9 de
- * 19 pasos, o sea 47%: la maqueta se contradecía a sí misma en la misma
- * pantalla. Ahora sale del dato, y las dos maquetas —laptop y teléfono— dicen
- * lo mismo porque leen de aquí.
- */
-function avanceDeLaRuta(): number {
-  const [hechos, total] = MOCK_STAGES.reduce(
-    ([h, t], [, frac]) => {
-      const [hecho, de] = frac.split('/').map(Number);
-      return [h + hecho, t + de];
-    },
-    [0, 0],
-  );
-  return total ? Math.round((hechos / total) * 100) : 0;
-}
-
-/**
  * El avance de una lista de pasos, contando los que están palomeados.
  *
  * Las maquetas dibujan la lista y el porcentaje juntos, así que el porcentaje
  * tiene que salir de la lista: escrito a mano se desfasa en cuanto alguien
  * toca el contenido, y queda un número que la misma pantalla desmiente.
  */
-function avanceDeLaLista(pasos: ReadonlyArray<readonly [string, 0 | 1 | 2]>): {
+function avanceDeLaLista(pasos: ReadonlyArray<readonly [string, 0 | 1 | 2, ...unknown[]]>): {
   hechos: number;
   total: number;
   pct: number;
@@ -1207,10 +1188,10 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
                 Tu ruta de apertura
               </div>
               <div style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 16, color: 'var(--sage-d)' }}>
-                {avanceDeLaRuta()}%
+                {avanceDeLaLista(MOCK_ROUTE).pct}%
               </div>
             </div>
-            <Barra pct={avanceDeLaRuta()} color="var(--sage-d)" alto={9} />
+            <Barra pct={avanceDeLaLista(MOCK_ROUTE).pct} color="var(--sage-d)" alto={9} />
 
             <div className="lp-laptop-tres lp-laptop-etapas" style={{ marginTop: 16 }}>
               {MOCK_STAGES.map(([name, frac, pct, tono]) => {
@@ -1294,7 +1275,7 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
  * escrito a mano que se desfase.
  */
 function TelefonoRuta() {
-  const avance = avanceDeLaRuta();
+  const avance = avanceDeLaLista(MOCK_ROUTE).pct;
   const siguiente = MOCK_ROUTE.find(([, estado]) => estado === 2)?.[0] ?? MOCK_ROUTE[0][0];
 
   return (
