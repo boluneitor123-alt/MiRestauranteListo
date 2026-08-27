@@ -160,19 +160,53 @@ describe('activación automática al volver del checkout', () => {
     // El equipo ya venía usando la prueba.
     await service.entitlement({ deviceId: 'eq-1' });
 
-    // Llega el webhook del cobro.
-    const { code } = await service.issue({ email: 'ana@correo.com', paymentRef: 'pi_1' });
+    // Llega el webhook del cobro, con la cuenta que compró.
+    const { code } = await service.issue({
+      email: 'ana@correo.com',
+      userId: 'u-ana',
+      originDeviceId: 'eq-1',
+      paymentRef: 'pi_1',
+    });
 
-    // La app pregunta al volver del checkout: se reclama sola.
-    expect(await service.claim({ deviceId: 'eq-1' })).toEqual({ ok: true, code });
+    // La app pregunta al volver del pago: se reclama sola.
+    expect(await service.claim({ deviceId: 'eq-1', userId: 'u-ana', email: 'ana@correo.com' })).toEqual({
+      ok: true,
+      code,
+    });
     const entitlement = await service.entitlement({ deviceId: 'eq-1' });
     expect(entitlement.level).toBe('licencia');
     expect(entitlement.licensed).toBe(true);
   });
 
+  it('el acceso sigue a la cuenta: se paga en un equipo y entra en otro', async () => {
+    const { service } = setup();
+    await service.issue({ email: 'ana@correo.com', userId: 'u-ana', originDeviceId: 'celular', paymentRef: 'pi_1' });
+    await service.claim({ deviceId: 'celular', userId: 'u-ana', email: 'ana@correo.com' });
+
+    // La laptop nunca pagó, pero es de la misma persona.
+    const laptop = await service.entitlement({ deviceId: 'laptop', userId: 'u-ana', email: 'ana@correo.com' });
+    expect(laptop.licensed).toBe(true);
+  });
+
+  it('sin identidad no se entrega nada, aunque haya una licencia esperando', async () => {
+    const { service } = setup();
+    await service.issue({ email: 'ana@correo.com', userId: 'u-ana', paymentRef: 'pi_1' });
+    // Éste es el reclamo cruzado: un equipo cualquiera pidiendo sin decir quién es.
+    expect(await service.claim({ deviceId: 'eq-1' })).toEqual({ ok: false });
+  });
+
+  it('no le entrega a una persona la licencia que pagó otra', async () => {
+    const { service } = setup();
+    await service.issue({ email: 'ana@correo.com', userId: 'u-ana', paymentRef: 'pi_1' });
+
+    expect(await service.claim({ deviceId: 'eq-2', userId: 'u-beto', email: 'beto@correo.com' })).toEqual({
+      ok: false,
+    });
+  });
+
   it('no reclama nada si no hay licencia pagada esperando', async () => {
     const { service } = setup();
-    expect(await service.claim({ deviceId: 'eq-1' })).toEqual({ ok: false });
+    expect(await service.claim({ deviceId: 'eq-1', userId: 'u-ana', email: 'ana@correo.com' })).toEqual({ ok: false });
   });
 
   it('no roba la licencia de otro equipo ya activada', async () => {
@@ -180,7 +214,9 @@ describe('activación automática al volver del checkout', () => {
     const { code } = await service.issue({ email: 'ana@correo.com' });
     await service.activate({ code, deviceId: 'eq-1' });
 
-    expect(await service.claim({ deviceId: 'intruso' })).toEqual({ ok: false });
+    expect(await service.claim({ deviceId: 'intruso', userId: 'u-otro', email: 'otro@correo.com' })).toEqual({
+      ok: false,
+    });
   });
 
   it('respeta el switch de activación automática del panel', async () => {

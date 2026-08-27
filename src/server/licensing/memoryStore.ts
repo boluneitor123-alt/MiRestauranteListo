@@ -51,10 +51,13 @@ export class MemoryLicenseStore implements LicenseStore {
     return [...this.licenses.values()].find((l) => l.devices.includes(deviceId));
   }
 
-  async findClaimableLicense(email?: string): Promise<License | undefined> {
+  /* Sin dueño no se devuelve nada: ver la nota del contrato en `store.ts`. */
+  async findClaimableLicense(owner: { userId?: string; email?: string }): Promise<License | undefined> {
+    const correo = owner.email?.trim().toLowerCase();
+    if (!owner.userId && !correo) return undefined;
     return [...this.licenses.values()]
       .filter((l) => l.status === 'nueva' && l.devices.length === 0)
-      .filter((l) => (email ? l.email === email : true))
+      .filter((l) => (owner.userId && l.userId === owner.userId) || (!!correo && l.email === correo))
       // La más reciente: es la del pago que acaba de ocurrir.
       .sort((a, b) => b.createdAt - a.createdAt)[0];
   }

@@ -67,6 +67,10 @@ export class LicenseService {
   async issue(input: {
     email: string;
     name?: string;
+    /** Cuenta que compró, cuando el pago se hizo con sesión abierta. */
+    userId?: string;
+    /** Equipo desde el que se pagó. */
+    originDeviceId?: string;
     source?: string;
     amount?: number;
     paymentRef?: string;
@@ -81,6 +85,8 @@ export class LicenseService {
       code: await this.uniqueCode(),
       email: input.email.trim().toLowerCase(),
       name: input.name?.trim(),
+      userId: input.userId,
+      originDeviceId: input.originDeviceId,
       source: input.source || 'checkout',
       amount: input.amount ?? settings.price,
       paymentRef: input.paymentRef,
@@ -155,7 +161,12 @@ export class LicenseService {
    * `POST /licenses/claim` — activación automática: al volver del checkout la
    * app busca una licencia pagada sin equipos y la reclama sola.
    */
-  async claim(input: { deviceId: string; email?: string }): Promise<{ ok: boolean; code?: string }> {
+  /*
+    La identidad no es opcional y no viene del navegador: la ruta la saca de la
+    sesión. Antes bastaba con mandar un `deviceId` y el servidor entregaba la
+    licencia sin dueño más reciente, fuera de quien fuera.
+  */
+  async claim(input: { deviceId: string; userId?: string; email?: string }): Promise<{ ok: boolean; code?: string }> {
     const settings = await this.store.getSettings();
 
     // Si este equipo ya tiene licencia, no hay nada que reclamar.
@@ -163,12 +174,38 @@ export class LicenseService {
     if (mine && grantsAccess(mine)) return { ok: true, code: mine.code };
 
     if (!settings.autoActivation) return { ok: false };
+    if (!input.userId && !input.email) return { ok: false };
 
-    const claimable = await this.store.findClaimableLicense(input.email?.trim().toLowerCase());
+    // Primero la que este equipo pagó; si no, cualquiera de esta persona que
+    // todavía tenga lugar. Así el acceso sigue a la cuenta y no al aparato.
+    const claimable =
+      (await this.store.findClaimableLicense({ userId: input.userId, email: input.email })) ??
+      (await this.suyaConLugar(input, settings.maxDevices));
     if (!claimable) return { ok: false };
 
     const result = await this.activate({ code: claimable.code, deviceId: input.deviceId });
     return result.ok ? { ok: true, code: result.code } : { ok: false };
+  }
+
+  /**
+   * Una licencia de esta persona que todavía admita otro equipo.
+   *
+   * Es lo que hace que pagar en el celular desbloquee también la laptop, sin
+   * que nadie teclee el código: el acceso es de por vida en hasta N equipos.
+   */
+  private async suyaConLugar(
+    owner: { userId?: string; email?: string },
+    maxDevices: number,
+  ): Promise<License | undefined> {
+    if (!owner.userId && !owner.email) return undefined;
+    const correo = owner.email?.trim().toLowerCase();
+    const todas = await this.store.listLicenses({});
+    return todas.find(
+      (l) =>
+        ((owner.userId && l.userId === owner.userId) || (!!correo && l.email === correo)) &&
+        (l.status === 'activada' || l.status === 'nueva') &&
+        l.devices.length < maxDevices,
+    );
   }
 
   /** `POST /licenses/:code/revoke` */
@@ -217,7 +254,7 @@ export class LicenseService {
    * Estado de acceso de un equipo, resuelto en el servidor. Es lo único que la
    * app necesita para decidir qué muestra: nunca calcula el acceso por su cuenta.
    */
-  async entitlement(input: { deviceId: string; code?: string }): Promise<{
+  async entitlement(input: { deviceId: string; code?: string; userId?: string; email?: string }): Promise<{
     level: AccessLevel;
     licensed: boolean;
     code?: string;
@@ -232,6 +269,16 @@ export class LicenseService {
     const trialRecord = await this.store.startTrial(input.deviceId, now);
     const sealed = { ...trialRecord, ...sealTrial(trialRecord, now, settings.trialDays) };
     if (sealed.expiredAt !== trialRecord.expiredAt) await this.store.saveTrial(sealed);
+
+    /*
+      Si este equipo todavía no tiene licencia pero la persona sí compró, se
+      activa aquí mismo. Es lo que hace que el acceso siga a la cuenta: pagas
+      en el celular y la laptop entra sola, sin teclear el código. El tope de
+      equipos lo sigue poniendo `canActivate`.
+    */
+    if (!(await this.store.findLicenseByDevice(input.deviceId)) && (input.userId || input.email)) {
+      await this.claim({ deviceId: input.deviceId, userId: input.userId, email: input.email });
+    }
 
     const license =
       (await this.store.findLicenseByDevice(input.deviceId)) ??

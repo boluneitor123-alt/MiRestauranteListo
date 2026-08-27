@@ -34,7 +34,13 @@ DATABASE_URL="tu-cadena-de-neon" npx prisma studio
 En el panel de Stripe (modo **Live**, no Test):
 
 1. **Developers → Webhooks → Add endpoint.**
-2. URL: `https://TU-DOMINIO/api/webhooks/stripe`
+2. URL: `https://TU-DOMINIO/api/webhooks/stripe` — y tiene que ser el dominio
+   **canónico**, el que responde sin redirigir. Si tu dominio manda del apex al
+   `www` (o al revés), registra el de destino. **Stripe no sigue
+   redirecciones:** la entrega muere con `308 ERR`, el cobro entra y la licencia
+   nunca se emite. Para comprobarlo, abre esa misma URL en el navegador: si ves
+   un JSON con `"ok": true`, es la buena; si el navegador cambia la dirección,
+   no lo es.
 3. Eventos a escuchar: `payment_intent.succeeded` y `charge.refunded`. Son los
    dos únicos que el servidor atiende; cualquier otro se ignora.
 4. Copia el **Signing secret** que te da (empieza con `whsec_`): ese es
