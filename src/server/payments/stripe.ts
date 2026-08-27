@@ -68,16 +68,20 @@ export interface IntentResult {
  * que sirve para confirmar ese cobro y nada más. Mandar otro precio desde la
  * pantalla no cambia lo que se cobra.
  *
- * `payment_method_types: ['card']` es a propósito: los meses sin intereses de
- * México sólo existen en tarjeta, y pedirlos explícitamente hace que Stripe
- * muestre el selector de plazos dentro del Payment Element.
+ * `automatic_payment_methods` deja que Stripe decida qué métodos ofrecer según
+ * lo que esté prendido en el panel. Sin él el intent quedaba con
+ * `automatic_payment_methods: null` y el Payment Element podía montarse sin un
+ * método válido detrás.
+ *
+ * Los meses sin intereses siguen: viven en `payment_method_options.card`, que
+ * se aplica a la tarjeta venga de donde venga la lista de métodos.
  */
 export async function createPaymentIntent(input: IntentInput): Promise<IntentResult> {
   const stripe = getStripe();
   const intent = await stripe.paymentIntents.create({
     amount: Math.round(input.price * 100),
     currency: CURRENCY,
-    payment_method_types: ['card'],
+    automatic_payment_methods: { enabled: true },
     payment_method_options: {
       card: { installments: { enabled: true } },
     },
