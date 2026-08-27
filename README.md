@@ -51,3 +51,14 @@ npm run build      # build de producción
 Ninguna llave vive en el código: todas se leen de variables de entorno. El
 archivo `.env` está en `.gitignore` y nunca se sube; `.env.example` sólo lleva
 los nombres, con los valores vacíos. Ver [`DESPLIEGUE.md`](DESPLIEGUE.md).
+
+### La URL del webhook de Stripe
+
+Va en el dominio **canónico** —el que responde sin redirigir— y con la ruta
+exacta `/api/webhooks/stripe`. Stripe no sigue redirecciones: si el dominio
+manda del apex al `www`, la entrega falla con `308 ERR`, el cobro entra y la
+licencia nunca se emite. No se ve desde la aplicación, porque el redirect pasa
+en el borde antes de que corra nuestro código.
+
+Para comprobar cuál es la canónica, abre la URL en el navegador: la correcta
+responde un JSON con `"ok": true` y no cambia la dirección.

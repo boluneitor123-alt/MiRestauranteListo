@@ -12,6 +12,14 @@ export const dynamic = 'force-dynamic';
  * Es la puerta del producto: sin firma válida no se emite nada. Al confirmarse
  * el pago se emite la licencia y, si el cobro trae el equipo que pagó, se activa
  * ahí mismo — el usuario no teclea ningún código.
+ *
+ * **La URL que se registre en Stripe tiene que ser la canónica.** Stripe no
+ * sigue redirecciones: si el dominio manda de `mirestaurantelisto.com` a
+ * `www.mirestaurantelisto.com`, la entrega muere en un 308 y nunca se emite la
+ * licencia, aunque el cobro haya entrado. Eso pasó una vez y no se ve por
+ * ningún lado desde la aplicación: el redirect ocurre en el borde, antes de
+ * que esta función exista. El `GET` de abajo sirve para comprobarlo de un
+ * vistazo.
  */
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -49,6 +57,11 @@ export async function POST(request: Request) {
   const { code, alreadyIssued } = await service.issue({
     email: payment.email,
     name: payment.name,
+    // De quién es la compra y desde dónde se pagó. Los dos venían en el
+    // `metadata` del intent y se estaban tirando: la licencia quedaba atada
+    // sólo al aparato, así que pagar en el celular dejaba la laptop afuera.
+    userId: payment.userId,
+    originDeviceId: payment.deviceId,
     source: 'stripe',
     amount: payment.amount,
     paymentRef: payment.paymentRef,
@@ -63,4 +76,22 @@ export async function POST(request: Request) {
   }
 
   return json({ ok: true, code, alreadyIssued, activated });
+}
+
+
+/**
+ * `GET /api/webhooks/stripe` — comprobación de que la URL es la buena.
+ *
+ * Abrirla en el navegador responde 200 con este JSON si es la canónica, o
+ * enseña el 308 si el dominio redirige. Es la forma más barata de no repetir
+ * la entrega fallida: pega en Stripe la URL que devuelva 200 aquí.
+ */
+export async function GET() {
+  return json({
+    ok: true,
+    destino: 'webhook de Stripe',
+    escucha: ['payment_intent.succeeded', 'charge.refunded'],
+    configurado: stripeConfigured() && !!process.env.STRIPE_WEBHOOK_SECRET,
+    nota: 'Registra en Stripe exactamente esta URL. Stripe no sigue redirecciones.',
+  });
 }

@@ -32,6 +32,8 @@ function toDomain(row: DbLicenseWithDevices): License {
     devices: row.devices.map((d) => d.deviceId),
     email: row.email,
     name: row.name ?? undefined,
+    userId: row.userId ?? undefined,
+    originDeviceId: row.originDeviceId ?? undefined,
     source: row.source,
     amount: row.amount,
     paymentRef: row.paymentRef ?? undefined,
@@ -101,9 +103,19 @@ export class PrismaLicenseStore implements LicenseStore {
     return row ? toDomain(row) : undefined;
   }
 
-  async findClaimableLicense(email?: string): Promise<License | undefined> {
+  /*
+    Sin dueño no se devuelve nada. El filtro es lo único que separa "reclamar
+    mi licencia recién pagada" de "quedarme con la del que compró antes".
+  */
+  async findClaimableLicense(owner: { userId?: string; email?: string }): Promise<License | undefined> {
+    const suyas = [
+      ...(owner.userId ? [{ userId: owner.userId }] : []),
+      ...(owner.email ? [{ email: owner.email.trim().toLowerCase() }] : []),
+    ];
+    if (!suyas.length) return undefined;
+
     const row = await this.db.license.findFirst({
-      where: { status: 'nueva', devices: { none: {} }, ...(email ? { email } : {}) },
+      where: { status: 'nueva', devices: { none: {} }, OR: suyas },
       orderBy: { createdAt: 'desc' },
       include: { devices: true },
     });
@@ -139,6 +151,8 @@ export class PrismaLicenseStore implements LicenseStore {
         code: data.code,
         email: data.email,
         name: data.name,
+        userId: data.userId,
+        originDeviceId: data.originDeviceId,
         source: data.source,
         amount: data.amount,
         paymentRef: data.paymentRef,

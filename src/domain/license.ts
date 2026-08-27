@@ -30,6 +30,14 @@ export interface License {
   devices: string[];
   email?: string;
   name?: string;
+  /**
+   * Cuenta dueña de la licencia, cuando la compra se hizo con sesión abierta.
+   * Es lo que permite que el acceso siga a la persona y no al aparato: sin
+   * esto, pagar en el celular dejaba la laptop bloqueada.
+   */
+  userId?: string;
+  /** Equipo desde el que se pagó. Sirve para activar solo, sin teclear nada. */
+  originDeviceId?: string;
   /** Origen de la venta (checkout, manual, referido…). */
   source?: string;
   amount?: number;

@@ -48,6 +48,8 @@ export interface NewLicense {
   code: string;
   email: string;
   name?: string;
+  userId?: string;
+  originDeviceId?: string;
   source: string;
   amount: number;
   paymentRef?: string;
@@ -67,8 +69,14 @@ export interface LicenseStore {
   findLicense(code: string): Promise<License | undefined>;
   findLicenseByPaymentRef(ref: string): Promise<License | undefined>;
   findLicenseByDevice(deviceId: string): Promise<License | undefined>;
-  /** Licencia pagada, sin equipos y sin revocar: la que reclama la activación automática. */
-  findClaimableLicense(email?: string): Promise<License | undefined>;
+  /**
+   * Licencia pagada, sin equipos y sin revocar, **de un dueño concreto**.
+   *
+   * Pide identidad a propósito. Antes recibía un correo opcional y, sin él,
+   * devolvía la licencia sin dueño más reciente de quien fuera: dos compras
+   * seguidas y un equipo podía reclamar la licencia de otra persona.
+   */
+  findClaimableLicense(owner: { userId?: string; email?: string }): Promise<License | undefined>;
   listLicenses(filter?: LicenseFilter): Promise<License[]>;
   createLicense(data: NewLicense): Promise<License>;
   saveLicense(license: License): Promise<License>;
