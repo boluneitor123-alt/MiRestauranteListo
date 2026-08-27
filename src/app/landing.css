@@ -78,6 +78,13 @@
   /* Aire entre los renglones de una lista larga. */
   --gap-lista: 19px;
 
+  /*
+    El aire entre los bloques del héroe. Es su propia variable porque el héroe
+    se aprieta en teléfono más que el resto de la página: ahí compite con el
+    botón por la primera pantalla.
+  */
+  --sp-heroe: var(--sp-4);
+
   /* Ritmo vertical. Del más apretado al más aireado. */
   --sp-3: 18px;
   --sp-4: 26px;
@@ -101,15 +108,16 @@
   misma hoja se reutiliza y ahí un hueco al final sería un vacío sin motivo.
 
   El alto medido de la barra en un teléfono es 80px con el área segura en
-  cero. Se reserva ese alto, un margen de 12 y el área segura del equipo, que
-  es lo que la barra misma añade a su relleno de abajo.
+  cero. Se reservan ese alto, 32px de aire y el área segura del equipo, que es
+  lo que la barra misma añade a su relleno de abajo: 112px en total. Con los
+  12px de antes el último bloque quedaba lamiendo la barra.
 */
 .lp {
   --barra-alto: 80px;
 }
 
 .lp-conbarra {
-  padding-bottom: calc(var(--barra-alto) + 12px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--barra-alto) + 32px + env(safe-area-inset-bottom, 0px));
 }
 
 .lp h1,
@@ -170,6 +178,10 @@
 
     --t-entrada: 21px;
     --gap-lista: 13px;
+
+    /* El héroe, más apretado que el resto: compite con el botón por la
+       primera pantalla. 14 contra los 18 del ritmo general. */
+    --sp-heroe: 14px;
 
     --sp-3: 14px;
     --sp-4: 18px;
@@ -602,6 +614,24 @@
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+
+/* ── La maqueta en teléfono ───────────────────────────────────────────── */
+
+/* De 561px para arriba manda la laptop: ésta no existe. */
+.lp-telruta {
+  display: none;
+}
+
+.lp-telruta-marco {
+  width: 68%;
+  min-width: 210px;
+  margin: 0 auto;
+  border: 6px solid var(--ink);
+  border-radius: 26px;
+  background: var(--paper);
+  overflow: hidden;
+  box-shadow: 0 14px 32px rgb(28 26 23 / 0.2);
 }
 
 /* ── Tira de confianza ────────────────────────────────────────────────── */
@@ -1331,9 +1361,9 @@
   }
 
   /*
-    Arnold ya no va debajo del titular sino a su derecha: llena la columna
-    del 37% que le toca. Los sangrados con margen negativo eran una decisión
-    de escritorio; aquí la figura va completa y dentro de su columna.
+    Arnold cierra el héroe a todo el ancho, después del botón. Los sangrados
+    con margen negativo eran una decisión de escritorio; aquí la figura va
+    completa y dentro de la columna.
   */
   .lp-arnold img {
     width: 100% !important;
@@ -1342,61 +1372,41 @@
   }
 
   /*
-    La maqueta de la computadora medía 846px de alto —más de una pantalla
-    entera— para ser una ilustración de apoyo. En un teléfono el contenido
-    de esa sección son las seis herramientas, no el dibujo del tablero.
+    En teléfono la foto del producto va en un teléfono, no en una laptop: la
+    laptop medía 846px de alto y no cabía, pero esconderla dejaba la sección
+    sin la única imagen de la app. Se cambia el marco, no se quita la foto.
   */
   .lp-laptop-marco {
     display: none;
   }
 
+  .lp-telruta {
+    display: block;
+  }
+
   /*
-    El héroe en teléfono: el titular y Arnold comparten el primer renglón.
+    El héroe en teléfono: una sola columna y en este orden — manuscrito,
+    titular a todo el ancho, párrafo, los dos micro-beneficios, el botón y
+    Arnold hasta abajo.
 
-    `display: contents` disuelve la columna de texto para que el h1 y la
-    figura sean celdas de la misma rejilla —dos columnas, 1fr y 37%— sin
-    duplicar el marcado. El h1 y Arnold se fijan al renglón 1; todo lo demás
-    baja a ancho completo en el orden en que está escrito: manuscrito,
-    rayita, párrafo, micro-beneficios, botón y la nota de "sin tarjeta".
+    Arnold va después del botón a propósito: cuando iba antes, empujaba
+    "Empieza gratis" fuera de la primera pantalla. Y a 121px, metido en una
+    columna del 37%, dejaba de ser una ilustración y volvía adorno mientras el
+    titular se partía en cinco renglones dentro de 195px. Los dos perdían.
+
+    La rejilla de dos columnas se queda arriba de 900px, donde sí hay ancho
+    para las dos cosas.
   */
-  .lp-hero {
-    grid-template-columns: minmax(0, 1fr) 37%;
-    gap: 0 12px;
-    align-items: start;
-  }
-
-  .lp-hero-col {
-    display: contents;
-  }
-
-  /* Los hermanos de texto ocupan las dos columnas. */
-  .lp-hero-col > * {
-    grid-column: 1 / -1;
-  }
-
   .lp-hero-col > .lp-hero-h1 {
-    grid-column: 1;
-    grid-row: 1;
     line-height: 1.06;
   }
 
-  .lp-arnold {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
-  }
-
-  /* El manuscrito ya no abre la sección: necesita su propio aire arriba. */
-  .lp-hero-col > .lp-hand {
-    margin-top: var(--sp-4);
-  }
-
   /*
-    Aquí la rayita no separa del titular sino del párrafo, y el párrafo trae
-    su propio margen: el de abajo sobra.
+    La rayita separaba con 22px, el aire de escritorio. Con el ritmo del héroe
+    el botón entra en la primera pantalla; con 22 se quedaba justo afuera.
   */
   .lp-hero-col > .lp-rayita {
-    margin-bottom: 0;
+    margin-bottom: var(--sp-heroe);
   }
 
   /*

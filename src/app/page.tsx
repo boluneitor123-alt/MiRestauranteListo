@@ -186,12 +186,12 @@ export default function LandingPage() {
               </span>
             </h1>
 
-            <p style={{ marginTop: 'var(--sp-4)', fontSize: 17, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 430 }}>
+            <p style={{ marginTop: 'var(--sp-heroe)', fontSize: 17, lineHeight: 1.55, color: 'var(--ink-2)', maxWidth: 430 }}>
               La app que te guía paso a paso con tus números reales para que tomes decisiones claras y abras con
               confianza.
             </p>
 
-            <div className="lp-micro" style={{ marginTop: 'var(--sp-4)' }}>
+            <div className="lp-micro" style={{ marginTop: 'var(--sp-heroe)' }}>
               {HERO_MICRO.map(([titulo, texto, tono], i) => (
                 <div key={titulo} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
                   <span className={`lp-tile lp-t-${tono}`}>
@@ -211,7 +211,7 @@ export default function LandingPage() {
               ref={ctaHeroe}
               type="button"
               className="lp-cta"
-              style={{ marginTop: 'var(--sp-4)', maxWidth: 400 }}
+              style={{ marginTop: 'var(--sp-heroe)', maxWidth: 400 }}
               onClick={ir('InicioPrueba', 'signup')}
             >
               Empieza gratis {LAUNCH.trialDays} días
@@ -263,12 +263,18 @@ export default function LandingPage() {
             ))}
           </div>
 
+          {/*
+            La misma foto del producto en dos marcos: laptop en escritorio,
+            teléfono en teléfono. La hoja enseña uno y esconde el otro — no es
+            un árbol distinto, es el mismo dato en el marco que corresponde.
+          */}
           <Laptop
             day={money(result.dailySales)}
             tickets={`${result.ticketsPerDay}`}
             month={money(result.monthlySales)}
             every={`1 cliente cada ${result.minutesBetweenCustomersAtBreakeven} min`}
           />
+          <TelefonoRuta />
         </div>
       </section>
 
@@ -1100,6 +1106,25 @@ function Barra({ pct, color, alto }: { pct: number; color: string; alto: number 
   );
 }
 
+/**
+ * El avance de la ruta, sacado de las mismas etapas que se dibujan.
+ *
+ * Estaba escrito a mano como `72%` mientras las etapas de al lado sumaban 9 de
+ * 19 pasos, o sea 47%: la maqueta se contradecía a sí misma en la misma
+ * pantalla. Ahora sale del dato, y las dos maquetas —laptop y teléfono— dicen
+ * lo mismo porque leen de aquí.
+ */
+function avanceDeLaRuta(): number {
+  const [hechos, total] = MOCK_STAGES.reduce(
+    ([h, t], [, frac]) => {
+      const [hecho, de] = frac.split('/').map(Number);
+      return [h + hecho, t + de];
+    },
+    [0, 0],
+  );
+  return total ? Math.round((hechos / total) * 100) : 0;
+}
+
 /** La maqueta de la app dentro de una laptop, con las cifras de la calculadora. */
 function Laptop({ day, tickets, month, every }: { day: string; tickets: string; month: string; every: string }) {
   return (
@@ -1164,9 +1189,11 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
               <div style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 19, letterSpacing: '-.02em' }}>
                 Tu ruta de apertura
               </div>
-              <div style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 16, color: 'var(--sage-d)' }}>72%</div>
+              <div style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 16, color: 'var(--sage-d)' }}>
+                {avanceDeLaRuta()}%
+              </div>
             </div>
-            <Barra pct={72} color="var(--sage-d)" alto={9} />
+            <Barra pct={avanceDeLaRuta()} color="var(--sage-d)" alto={9} />
 
             <div className="lp-laptop-tres lp-laptop-etapas" style={{ marginTop: 16 }}>
               {MOCK_STAGES.map(([name, frac, pct, tono]) => {
@@ -1232,6 +1259,97 @@ function Laptop({ day, tickets, month, every }: { day: string; tickets: string; 
           boxShadow: '0 12px 22px rgb(28 26 23 / 0.16)',
         }}
       />
+    </div>
+  );
+}
+
+/**
+ * La misma maqueta, en teléfono: la pantalla de Mi Ruta.
+ *
+ * En un teléfono la laptop medía 846px de alto y por eso se escondía, pero
+ * esconderla era peor: es la única foto del producto y el teléfono es donde
+ * llega la mayoría de la gente. Aquí va lo que de verdad importa de esa
+ * pantalla —la barra de avance, las tres etapas y la siguiente acción— en el
+ * marco en el que la van a ver.
+ *
+ * Los datos salen de `MOCK_STAGES` y `MOCK_ROUTE`, los mismos que usa la
+ * laptop: la siguiente acción es el paso marcado como en curso, no un texto
+ * escrito a mano que se desfase.
+ */
+function TelefonoRuta() {
+  const avance = avanceDeLaRuta();
+  const siguiente = MOCK_ROUTE.find(([, estado]) => estado === 2)?.[0] ?? MOCK_ROUTE[0][0];
+
+  return (
+    <div className="lp-telruta" aria-hidden>
+      <div className="lp-telruta-marco">
+        <div style={{ padding: '13px 13px 15px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 15, letterSpacing: '-.02em' }}>
+              Tu ruta de apertura
+            </span>
+            <span style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 14, color: 'var(--sage-d)' }}>
+              {avance}%
+            </span>
+          </div>
+          <Barra pct={avance} color="var(--sage-d)" alto={8} />
+
+          <div style={{ marginTop: 13, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {MOCK_STAGES.map(([nombre, frac, pct, tono]) => {
+              const col = tono === 'sage' ? 'var(--sage-d)' : tono === 'amber' ? 'var(--amber-d)' : 'var(--ink-3)';
+              return (
+                <div
+                  key={nombre}
+                  style={{
+                    padding: '9px 10px',
+                    borderRadius: 10,
+                    border: '1px solid var(--line)',
+                    background: 'var(--cream)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ display: 'block', width: 15, height: 15, borderRadius: 5, background: col, flex: 'none' }} />
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 800 }}>{nombre}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>{frac}</span>
+                  </div>
+                  <Barra pct={pct} color={col} alto={4} />
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            style={{
+              marginTop: 11,
+              padding: '10px 11px',
+              borderRadius: 10,
+              background: 'var(--amber-xl)',
+              border: '1px solid var(--amber)',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: '.09em',
+                textTransform: 'uppercase',
+                /* `--amber-d` sobre `--amber-xl` da 2.64:1 y esto es texto de
+                   9.5px: le toca el naranja de texto, no el de relleno. */
+                color: 'var(--orange-texto)',
+              }}
+            >
+              Tu siguiente paso
+            </div>
+            <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 800, flex: 1, minWidth: 0 }}>{siguiente}</span>
+              <span style={{ color: 'var(--ink)', display: 'grid', flex: 'none' }}>
+                <Arrow size={15} />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
