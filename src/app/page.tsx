@@ -1125,6 +1125,23 @@ function avanceDeLaRuta(): number {
   return total ? Math.round((hechos / total) * 100) : 0;
 }
 
+/**
+ * El avance de una lista de pasos, contando los que están palomeados.
+ *
+ * Las maquetas dibujan la lista y el porcentaje juntos, así que el porcentaje
+ * tiene que salir de la lista: escrito a mano se desfasa en cuanto alguien
+ * toca el contenido, y queda un número que la misma pantalla desmiente.
+ */
+function avanceDeLaLista(pasos: ReadonlyArray<readonly [string, 0 | 1 | 2]>): {
+  hechos: number;
+  total: number;
+  pct: number;
+} {
+  const hechos = pasos.filter(([, estado]) => estado === 1).length;
+  const total = pasos.length;
+  return { hechos, total, pct: total ? Math.round((hechos / total) * 100) : 0 };
+}
+
 /** La maqueta de la app dentro de una laptop, con las cifras de la calculadora. */
 function Laptop({ day, tickets, month, every }: { day: string; tickets: string; month: string; every: string }) {
   return (
@@ -1430,9 +1447,11 @@ function TresTelefonos({ onOpen }: { onOpen: () => void }) {
             <span style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 14, letterSpacing: '-.02em' }}>
               Tu ruta de apertura
             </span>
-            <span style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 12.5, color: 'var(--sage-d)' }}>72%</span>
+            <span style={{ fontFamily: 'var(--disp)', fontWeight: 800, fontSize: 12.5, color: 'var(--sage-d)' }}>
+              {avanceDeLaLista(MOCK_ROUTE).pct}%
+            </span>
           </div>
-          <Barra pct={72} color="var(--sage-d)" alto={7} />
+          <Barra pct={avanceDeLaLista(MOCK_ROUTE).pct} color="var(--sage-d)" alto={7} />
           <div style={{ marginTop: 11, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {MOCK_ROUTE.map(([name, estado]) => (
               <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 2px' }}>
@@ -1532,9 +1551,11 @@ function TresTelefonos({ onOpen }: { onOpen: () => void }) {
             <div style={{ fontSize: 9.5, color: 'var(--ink-3)' }}>Tu próximo plan</div>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginTop: 2 }}>
               <span style={{ fontSize: 11.5, fontWeight: 800 }}>Mes 1 – Apertura</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--ink-3)' }}>3/7</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--ink-3)' }}>
+                {avanceDeLaLista(MOCK_MKT).hechos}/{avanceDeLaLista(MOCK_MKT).total}
+              </span>
             </div>
-            <Barra pct={43} color="var(--sage-d)" alto={5} />
+            <Barra pct={avanceDeLaLista(MOCK_MKT).pct} color="var(--sage-d)" alto={5} />
           </div>
           <div style={{ marginTop: 9, display: 'flex', flexDirection: 'column', gap: 5 }}>
             {MOCK_MKT.map(([name, estado]) => (
