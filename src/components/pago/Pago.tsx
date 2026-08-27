@@ -129,8 +129,14 @@ export function Pago() {
     [cobro],
   );
 
-  const listo = useCallback(() => {
-    setEstadoFinal('listo');
+  /*
+    Lo llama el formulario en cuanto Stripe confirma, con lo que dijo la
+    confirmación: 'listo' si el cobro ya pasó, 'confirmando' si el método tarda
+    en liquidar. La pantalla no espera al webhook para moverse; el webhook
+    emite la licencia por su lado.
+  */
+  const listo = useCallback((estado: EstadoDeCobro) => {
+    setEstadoFinal(estado);
     setFase('listo');
   }, []);
 

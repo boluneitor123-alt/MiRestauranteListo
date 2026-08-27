@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { correoValido, errorDeCorreo, mensajeDeError } from '@/domain/pago';
+import type { EstadoDeCobro } from '@/domain/pago';
+import { FALLO_GENERICO, correoValido, errorDeCorreo, mensajeDeError, parametrosDeConfirmacion } from '@/domain/pago';
 import { money } from '@/domain/format';
 import { getDeviceId } from '@/lib/device';
 import { track } from '@/lib/track';
@@ -24,7 +25,7 @@ export function FormaDePago({
   intentId: string;
   precio: number;
   correoInicial: string;
-  onListo: () => void;
+  onListo: (estado: EstadoDeCobro) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -62,27 +63,40 @@ export function FormaDePago({
       return;
     }
 
-    const { error: fallo, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: `${window.location.origin}/pago?volver=1` },
-      // Sin redirección cuando el banco no la pide: la persona se queda en la
-      // pantalla y ve el éxito aquí mismo.
-      redirect: 'if_required',
-    });
+    try {
+      const { error: fallo, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        // El correo va aquí porque el Payment Element se monta con
+        // `billingDetails.email: 'never'`; ver `parametrosDeConfirmacion`.
+        confirmParams: parametrosDeConfirmacion(email, window.location.origin),
+        // Sin redirección cuando el banco no la pide: la persona se queda en la
+        // pantalla y ve el éxito aquí mismo.
+        redirect: 'if_required',
+      });
 
-    if (fallo) {
+      if (fallo) {
+        setError(mensajeDeError(fallo));
+        return;
+      }
+
+      // La pantalla avanza con lo que dice la confirmación, no esperando al
+      // webhook: el webhook emite la licencia del lado del servidor, y si se
+      // usara para desbloquear la interfaz, un webhook lento o caído dejaría a
+      // la persona mirando un botón que gira.
+      if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'processing') {
+        onListo(paymentIntent.status === 'succeeded' ? 'listo' : 'confirmando');
+        return;
+      }
+
+      setError(mensajeDeError(undefined));
+    } catch (error) {
+      // Un error de integración de Stripe.js se lanza, no se devuelve. Sin este
+      // `catch` la promesa quedaba rota y el botón giraba para siempre.
+      console.error('[pago] la confirmación no se pudo hacer', error);
+      setError(FALLO_GENERICO);
+    } finally {
       setCobrando(false);
-      setError(mensajeDeError(fallo));
-      return;
     }
-
-    if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'processing') {
-      onListo();
-      return;
-    }
-
-    setCobrando(false);
-    setError(mensajeDeError(undefined));
   };
 
   const cargando = !stripe || !elements || !listoElemento;

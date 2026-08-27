@@ -26,6 +26,13 @@ export interface FalloDeStripe {
 }
 
 /**
+ * Lo que se dice cuando el fallo no le pertenece a quien paga: no hubo cargo y
+ * hay algo que hacer. Sirve también para un error inesperado del navegador.
+ */
+export const FALLO_GENERICO =
+  'No pudimos completar el cobro y no se hizo ningún cargo. Inténtalo otra vez o usa otra tarjeta.';
+
+/**
  * Traduce un fallo de Stripe a algo que se entienda.
  *
  * Los errores de tarjeta y de validación vienen redactados por Stripe en
@@ -34,7 +41,7 @@ export interface FalloDeStripe {
  * necesita leer un código, necesita saber que no le cobraron y qué hacer.
  */
 export function mensajeDeError(fallo: FalloDeStripe | undefined): string {
-  const generico = 'No pudimos completar el cobro y no se hizo ningún cargo. Inténtalo otra vez o usa otra tarjeta.';
+  const generico = FALLO_GENERICO;
   if (!fallo) return generico;
 
   if (fallo.code === 'payment_intent_authentication_failure') {
@@ -44,6 +51,28 @@ export function mensajeDeError(fallo: FalloDeStripe | undefined): string {
   const suyo = fallo.type === 'card_error' || fallo.type === 'validation_error';
   const texto = fallo.message?.trim();
   return suyo && texto ? texto : generico;
+}
+
+/**
+ * Lo que se le pasa a `stripe.confirmPayment` además de los elementos.
+ *
+ * El correo va aquí a la fuerza, no por gusto: el Payment Element se monta con
+ * `fields.billingDetails.email: 'never'` para no pedir dos veces el mismo dato,
+ * y cuando se declara `never` Stripe.js exige recibirlo en la confirmación. Si
+ * falta, `confirmPayment` **lanza** un `IntegrationError` en vez de devolver un
+ * error: la promesa se rompe, nadie la atrapa y el botón se queda girando en
+ * "Procesando tu pago…" para siempre, sin que se llegue a pedir el cobro.
+ *
+ * Por eso vive aquí y tiene prueba: es la clase de detalle que se pierde de
+ * vista al mover el formulario de sitio.
+ */
+export function parametrosDeConfirmacion(email: string, origen: string) {
+  return {
+    return_url: `${origen}/pago?volver=1`,
+    payment_method_data: {
+      billing_details: { email: email.trim() },
+    },
+  };
 }
 
 /** Los estados en los que puede quedar un cobro al volver del banco. */

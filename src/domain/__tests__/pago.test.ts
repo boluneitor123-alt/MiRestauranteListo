@@ -5,6 +5,7 @@ import {
   errorDeCorreo,
   estadoDeCobro,
   mensajeDeError,
+  parametrosDeConfirmacion,
   TEMA_ELEMENTS,
 } from '../pago';
 
@@ -81,5 +82,23 @@ describe('el tema del formulario de Stripe', () => {
 
   it('marca el foco con el mismo naranja, no con el azul de fábrica', () => {
     expect(TEMA_ELEMENTS.rules['.Input:focus'].border).toContain('#F5A623');
+  });
+});
+
+describe('los parámetros con los que se confirma el cobro', () => {
+  /*
+    La regresión que costó un pago ciclado: el Payment Element se monta con
+    `billingDetails.email: 'never'`, y si el correo no viaja en la confirmación
+    Stripe.js lanza un error de integración en vez de devolverlo. La promesa se
+    rompe, el botón gira para siempre y no se llega ni a pedir el cobro.
+  */
+  it('siempre lleva el correo, que es lo que el Payment Element ya no pide', () => {
+    const p = parametrosDeConfirmacion('  ana@ejemplo.mx ', 'https://mirestaurantelisto.com');
+    expect(p.payment_method_data.billing_details.email).toBe('ana@ejemplo.mx');
+  });
+
+  it('vuelve a la pantalla de pago del mismo sitio, no a otro dominio', () => {
+    const p = parametrosDeConfirmacion('ana@ejemplo.mx', 'https://mirestaurantelisto.com');
+    expect(p.return_url).toBe('https://mirestaurantelisto.com/pago?volver=1');
   });
 });
