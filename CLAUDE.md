@@ -68,6 +68,21 @@ me lo digas a que lo implementes mal por obedecer.
 - Si tocaste dinero, prueba el cobro de punta a punta.
 - Dime en una línea qué quedó y qué no.
 
+## Al abrir y al fusionar un PR
+
+Tres veces seguidas la fusión se llevó el primer commit y dejó el segundo en la
+rama (#6, #9, #10). El botón de GitHub dice "fusionado" aunque falte trabajo.
+
+- Antes de decir "listo, fusiona": espera a que GitHub refresque la rama y
+  confirma que el PR trae todos los commits que hiciste, no solo el primero.
+- Después de cada fusión, verifica el árbol de `main` sin que te lo pidan. No
+  la respuesta del merge: el árbol.
+  `git fetch origin main`, `git merge-base --is-ancestor <sha> origin/main`,
+  contar `git log origin/main..origin/<rama>`, y confirmar archivo por archivo
+  con `git show origin/main:<archivo>`.
+- Si quedó algo fuera, ábrelo en un PR nuevo y dilo. Un PR ya fusionado no se
+  reusa.
+
 ## Lo que sigue pendiente
 
 - Videos del mini curso de Meta Ads (los graba el dueño)
