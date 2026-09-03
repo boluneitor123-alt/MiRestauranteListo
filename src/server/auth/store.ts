@@ -12,6 +12,8 @@ export interface AuthUser {
   passwordHash: string;
   role: UserRole;
   createdAt: number;
+  /** Última entrada. Ausente en las cuentas anteriores a que se registrara. */
+  lastLoginAt?: number;
 }
 
 export interface AuthSession {
@@ -27,6 +29,8 @@ export interface AuthStore {
   createUser(data: { email: string; name: string; passwordHash: string; role?: UserRole }): Promise<AuthUser>;
   updatePassword(userId: string, passwordHash: string): Promise<void>;
   updateRole(userId: string, role: UserRole): Promise<void>;
+  /** Marca la entrada. Es lo único que llena `lastLoginAt`. */
+  touchLogin(userId: string, at: number): Promise<void>;
 
   createSession(session: AuthSession): Promise<AuthSession>;
   findSession(token: string): Promise<AuthSession | undefined>;

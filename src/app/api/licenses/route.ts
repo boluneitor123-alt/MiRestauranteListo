@@ -17,9 +17,15 @@ export async function POST(request: Request) {
   if (!email || !email.includes('@')) return badRequest('Falta el correo del cliente.');
 
   const service = await getLicenseService();
+  /*
+    El `userId` importa: una licencia atada a la cuenta desbloquea a la persona
+    en todos sus equipos. Sin él, el desbloqueo manual sólo alcanza a quien
+    escriba el código a mano, que es justo lo que se quería evitar.
+  */
   const { code, alreadyIssued } = await service.issue({
     email,
     name: str(body.name),
+    userId: str(body.userId),
     source: str(body.source) ?? 'manual',
     amount: num(body.amount),
     paymentRef: str(body.paymentRef),

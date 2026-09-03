@@ -234,3 +234,52 @@ describe('el rol se revisa en cada entrada, no sólo al registrarse', () => {
     expect((await registrarYEntrar('otra@x.mx', 'otra@x.mx')).guardado).toBe('owner');
   });
 });
+
+describe('último acceso', () => {
+  /*
+    Antes no se guardaba en ninguna parte, así que el panel no podía decir
+    cuándo entró alguien por última vez. Se marca al entrar y al registrarse,
+    que es cuando de verdad hay un acceso.
+  */
+  const CUENTA = { name: 'Rosa', email: 'rosa@mirestaurantelisto.com', password: 'contrasena-larga' };
+
+  it('se marca al registrarse: registrarse abre sesión', async () => {
+    const store = new MemoryAuthStore();
+    const reloj = { t: 1_000 };
+    const service = new AuthService(store, () => reloj.t);
+
+    await service.register(CUENTA);
+    expect((await store.findUserByEmail(CUENTA.email))?.lastLoginAt).toBe(1_000);
+  });
+
+  it('se mueve en cada entrada', async () => {
+    const store = new MemoryAuthStore();
+    const reloj = { t: 1_000 };
+    const service = new AuthService(store, () => reloj.t);
+
+    await service.register(CUENTA);
+    reloj.t = 500_000;
+    const entrada = await service.login({ email: CUENTA.email, password: CUENTA.password });
+
+    expect(entrada.ok).toBe(true);
+    expect((await store.findUserByEmail(CUENTA.email))?.lastLoginAt).toBe(500_000);
+  });
+
+  it('una contraseña equivocada no cuenta como acceso', async () => {
+    const store = new MemoryAuthStore();
+    const reloj = { t: 1_000 };
+    const service = new AuthService(store, () => reloj.t);
+
+    await service.register(CUENTA);
+    reloj.t = 500_000;
+    await service.login({ email: CUENTA.email, password: 'equivocada' });
+
+    expect((await store.findUserByEmail(CUENTA.email))?.lastLoginAt).toBe(1_000);
+  });
+
+  it('una cuenta que nunca entró no tiene fecha: queda vacía, no en cero', async () => {
+    const store = new MemoryAuthStore();
+    const user = await store.createUser({ email: 'vieja@ejemplo.mx', name: 'Vieja', passwordHash: 'x' });
+    expect(user.lastLoginAt).toBeUndefined();
+  });
+});
