@@ -79,8 +79,20 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | `STRIPE_SECRET_KEY` | Llave secreta de Stripe (`sk_live_…`). | Sí, para cobrar |
 | `STRIPE_WEBHOOK_SECRET` | Firma del webhook (`whsec_…`). | Sí, para cobrar |
 | `RESEND_API_KEY` | Correos de compra y de acceso. Sin ella, no se manda correo pero todo lo demás funciona. | No |
-| `META_PIXEL_ID` | Medición de la landing. | No |
-| `META_CAPI_TOKEN` | API de Conversiones de Meta. | No |
+| `FB_CAPI_ACCESS_TOKEN` | Token de la API de Conversiones de Meta. Sin él no se manda la compra a Meta; el cobro y el acceso funcionan igual. | No |
+
+**Sobre la medición de Meta.** Aquí va sólo el token, que es secreto. El id del
+píxel no: viaja en cada carga de la página, así que queda escrito en el código
+y no hay que capturarlo. Si algún día quieres cambiarlo sin tocar el código,
+`NEXT_PUBLIC_FB_PIXEL_ID` lo sustituye — el prefijo `NEXT_PUBLIC_` es
+obligatorio para que llegue al navegador.
+
+El token **nunca** lleva ese prefijo. Si lo llevara, quedaría dentro del código
+que descarga cualquiera y con él se pueden mandar eventos falsos a tu píxel.
+
+> Antes aquí decían `META_PIXEL_ID` y `META_CAPI_TOKEN`. Nunca las leyó ningún
+> código y además el id sin `NEXT_PUBLIC_` no habría llegado al navegador. Si
+> las tienes capturadas en Vercel, bórralas: no hacen nada.
 
 **Cómo se entra al panel.** Captura tu correo en `OWNER_EMAIL` y entra a la app
 con ese mismo correo. Al iniciar sesión, el servidor compara tu correo contra
