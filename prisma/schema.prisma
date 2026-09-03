@@ -86,6 +86,9 @@ model Project {
   name        String  @default("Mi negocio")
   giro        String  @default("Otro")
   budgetCap   Int     @default(250000)
+  /// Cuándo la persona fijó su presupuesto. Nulo mientras traiga el de fábrica:
+  /// enseñar $250,000 en el panel diría que ella dio ese dato, y no lo dio.
+  budgetCapSetAt DateTime?
   targetDate  String?
   headcount   String?
   /// Respuestas del onboarding: { giro, etapa, nombre, localq, ... }.

@@ -170,3 +170,27 @@ describe('el hueco honesto del diagnóstico', () => {
     expect(fila.pasoPendiente).toBe(CATS[0].tasks[0].t);
   });
 });
+
+describe('el presupuesto sólo cuenta si la persona lo fijó', () => {
+  /*
+    Arranca en el de fábrica y nadie obliga a cambiarlo. Enseñar esa cifra en
+    la lista diría que la persona la dio, y no la dio: el presupuesto no es una
+    pregunta del diagnóstico, vive en la pantalla de Más. El lector sólo lo
+    pasa cuando hay marca de que lo fijó.
+  */
+  it('sin fijar, la celda va vacía', () => {
+    expect(buildAccount({ ...base, presupuesto: undefined }, OPTS).presupuesto).toBeUndefined();
+  });
+
+  it('fijado, se conserva tal cual, incluso si coincide con el de fábrica', () => {
+    expect(buildAccount({ ...base, presupuesto: 250000 }, OPTS).presupuesto).toBe(250000);
+    expect(buildAccount({ ...base, presupuesto: 80000 }, OPTS).presupuesto).toBe(80000);
+  });
+
+  it('el giro y el presupuesto son independientes: uno puede estar y el otro no', () => {
+    // Contestó el diagnóstico pero nunca tocó su presupuesto.
+    const fila = buildAccount({ ...base, giro: 'Taquería', presupuesto: undefined }, OPTS);
+    expect(fila.giro).toBe('Taquería');
+    expect(fila.presupuesto).toBeUndefined();
+  });
+});

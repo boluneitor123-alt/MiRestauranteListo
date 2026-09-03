@@ -14,6 +14,9 @@ import type { Ingredient } from '@/domain/types';
 import type { UnitCode } from '@/domain/units';
 import { BUDGET_CONCEPTS, FIXED_CONCEPTS } from '@/content/catalog';
 
+/** El presupuesto de fábrica, leído del estado inicial y no tecleado aquí. */
+const DEFAULT_BUDGET_CAP = emptyProjectState().project.budgetCap;
+
 export interface ProjectRepository {
   load(userId: string): Promise<ProjectState | undefined>;
   save(userId: string, state: ProjectState): Promise<void>;
@@ -209,9 +212,25 @@ export class PrismaProjectRepository implements ProjectRepository {
 
   async save(userId: string, state: ProjectState): Promise<void> {
     await this.db.$transaction(async (tx) => {
+      /*
+        El presupuesto arranca en el de fábrica y nadie lo obliga a cambiarlo.
+        Para el panel importa la diferencia entre «puso esta cifra» y «nunca la
+        tocó», así que se marca la primera vez que difiere de lo guardado. Sin
+        esta marca, la lista enseñaría $250,000 como si la persona lo hubiera
+        dicho.
+      */
+      const previo = await tx.project.findUnique({
+        where: { userId },
+        select: { budgetCap: true, budgetCapSetAt: true },
+      });
+      const presupuesto = Math.round(state.project.budgetCap);
+      const anterior = previo?.budgetCap ?? DEFAULT_BUDGET_CAP;
+      const loFijo = previo?.budgetCapSetAt ?? (presupuesto !== anterior ? new Date() : null);
+
       const project = await tx.project.upsert({
         where: { userId },
         update: {
+          budgetCapSetAt: loFijo,
           name: state.project.name,
           giro: state.project.giro,
           budgetCap: Math.round(state.project.budgetCap),
@@ -241,6 +260,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         },
         create: {
           userId,
+          budgetCapSetAt: loFijo,
           name: state.project.name,
           giro: state.project.giro,
           budgetCap: Math.round(state.project.budgetCap),
