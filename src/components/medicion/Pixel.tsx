@@ -3,7 +3,7 @@
 import Script from 'next/script';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { FB_PIXEL_ID } from '@/content/medicion';
+import { FB_PIXEL_ID, recordarFbclid } from '@/content/medicion';
 
 /**
  * `PageView` en cada cambio de ruta.
@@ -19,6 +19,15 @@ export function PixelPageView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const primera = useRef(true);
+
+  /*
+    El `fbclid` llega en la landing y se pierde al navegar, pero la compra
+    ocurre varias pantallas después. Se guarda en cuanto aparece para poder
+    armar `_fbc` en el checkout aunque Meta no haya escrito su cookie.
+  */
+  useEffect(() => {
+    recordarFbclid();
+  }, [searchParams]);
 
   useEffect(() => {
     if (primera.current) {

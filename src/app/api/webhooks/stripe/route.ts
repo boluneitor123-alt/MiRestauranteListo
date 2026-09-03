@@ -2,6 +2,7 @@ import type Stripe from 'stripe';
 import { getLicenseService } from '@/server/licensing';
 import { getStripe, interpretEvent, stripeConfigured } from '@/server/payments/stripe';
 import { json } from '@/server/http';
+import { mandarCompraAMeta } from '@/server/medicion/compra';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -75,7 +76,20 @@ export async function POST(request: Request) {
     activated = result.ok;
   }
 
-  return json({ ok: true, code, alreadyIssued, activated });
+  /*
+    La compra a Meta va al final y aparte, después de que la licencia ya quedó
+    emitida. Si Meta falla o se tarda, `mandarCompraAMeta` lo dice y sigue: sin
+    el 200 de abajo, Stripe reintentaría y se emitiría la licencia otra vez.
+    Una sola vez por evento, garantizado por su propia tabla.
+  */
+  const medicion = await mandarCompraAMeta({
+    eventId: event.id,
+    intent: event.data.object as Stripe.PaymentIntent,
+    email: payment.email,
+    nombre: payment.name,
+  });
+
+  return json({ ok: true, code, alreadyIssued, activated, medicion });
 }
 
 

@@ -52,6 +52,16 @@ export interface IntentInput {
   email?: string;
   userId?: string;
   maxDevices?: number;
+  /**
+   * Atribución de Meta. Viaja en el `metadata` porque al webhook lo llaman los
+   * servidores de Stripe: ahí no hay cookies, ni IP del cliente, ni URL. Sin
+   * esto la compra llega a Meta pero no se atribuye a ninguna campaña.
+   */
+  fbp?: string;
+  fbc?: string;
+  clientIp?: string;
+  clientUa?: string;
+  eventSourceUrl?: string;
 }
 
 export interface IntentResult {
@@ -76,6 +86,11 @@ export interface IntentResult {
  * Los meses sin intereses siguen: viven en `payment_method_options.card`, que
  * se aplica a la tarjeta venga de donde venga la lista de métodos.
  */
+/** Fuera las llaves vacías: Stripe topa en 50 y no vale gastarlas en nada. */
+function limpiarMetadata(campos: Record<string, string | undefined>): Record<string, string> {
+  return Object.fromEntries(Object.entries(campos).filter(([, v]) => !!v)) as Record<string, string>;
+}
+
 export async function createPaymentIntent(input: IntentInput): Promise<IntentResult> {
   const stripe = getStripe();
   const intent = await stripe.paymentIntents.create({
@@ -92,6 +107,16 @@ export async function createPaymentIntent(input: IntentInput): Promise<IntentRes
       deviceId: input.deviceId,
       producto: productName(),
       ...(input.userId ? { userId: input.userId } : {}),
+      // Sólo lo que Meta necesita. Ni correo ni nombre: esos se buscan en
+      // nuestra base dentro del webhook, para no replicarlos en Stripe.
+      // Stripe corta a 500 caracteres por valor y el user agent se acerca.
+      ...limpiarMetadata({
+        fbp: input.fbp,
+        fbc: input.fbc,
+        client_ip: input.clientIp,
+        client_ua: input.clientUa?.slice(0, 500),
+        event_source_url: input.eventSourceUrl?.slice(0, 500),
+      }),
     },
   });
 
