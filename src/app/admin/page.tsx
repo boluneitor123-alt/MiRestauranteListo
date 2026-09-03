@@ -5,12 +5,14 @@ import { money } from '@/domain/format';
 import { LICENSE_STATUS_LABELS, type License, type LicenseStatus } from '@/domain/license';
 import { PERIODS, PERIOD_LABELS, type PeriodId } from '@/domain/period';
 import type { AdminSummary } from '@/server/admin/metrics';
+import { ESTADO_LABELS, type AccountRow, type EstadoCuenta } from '@/server/admin/accounts';
 import type { AdminEvent, AdminSettings } from '@/server/licensing/store';
 
-type Page = 'resumen' | 'licencias' | 'clientes' | 'ajustes' | 'registro';
+type Page = 'resumen' | 'cuentas' | 'licencias' | 'clientes' | 'ajustes' | 'registro';
 
 const NAV: Array<{ id: Page; label: string }> = [
   { id: 'resumen', label: 'Resumen' },
+  { id: 'cuentas', label: 'Cuentas' },
   { id: 'licencias', label: 'Licencias' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'ajustes', label: 'Ajustes' },
@@ -22,6 +24,13 @@ const STATUS_COLOR: Record<LicenseStatus, string> = {
   nueva: '#e8a317',
   revocada: '#d63a26',
   reembolsada: '#7b756e',
+};
+
+const ESTADO_COLOR: Record<EstadoCuenta, string> = {
+  pago: '#1f8a5a',
+  'en-prueba': '#e8a317',
+  'prueba-vencida': '#d63a26',
+  'sin-actividad': '#7b756e',
 };
 
 const TOKEN_KEY = 'mrl.admin.token';
@@ -42,6 +51,11 @@ export default function AdminPage() {
   const [issuing, setIssuing] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', source: 'manual', amount: '' });
   const [message, setMessage] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<AccountRow[]>([]);
+  const [accountsTotal, setAccountsTotal] = useState(0);
+  const [accountQuery, setAccountQuery] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState<EstadoCuenta | 'todas'>('todas');
+  const [soloAbandonadas, setSoloAbandonadas] = useState(false);
 
   /**
    * El acceso al panel lo decide el servidor con el `role` de la cuenta.
@@ -91,6 +105,52 @@ export default function AdminPage() {
       return response.json();
     },
     [token],
+  );
+
+  const loadAccounts = useCallback(async () => {
+    if (!authed) return;
+    try {
+      const params = new URLSearchParams();
+      if (accountQuery.trim()) params.set('q', accountQuery.trim());
+      if (estadoFilter !== 'todas') params.set('estado', estadoFilter);
+      if (soloAbandonadas) params.set('abandonadas', '1');
+      const data = await call(`/api/admin/accounts?${params}`);
+      setAccounts(data.accounts ?? []);
+      setAccountsTotal(data.total ?? 0);
+    } catch {
+      // El 401 ya devolvió al formulario de acceso.
+    }
+  }, [authed, call, accountQuery, estadoFilter, soloAbandonadas]);
+
+  useEffect(() => {
+    const t = setTimeout(loadAccounts, 200);
+    return () => clearTimeout(t);
+  }, [loadAccounts]);
+
+  /** Desbloquea a mano: emite una licencia atada a esa cuenta. */
+  const desbloquear = useCallback(
+    async (fila: AccountRow) => {
+      const ok = window.confirm(
+        `¿Desbloquear el acceso de ${fila.email}? Se le emite una licencia atada a su cuenta, ` +
+          'como si hubiera pagado. Queda registrada con origen "manual".',
+      );
+      if (!ok) return;
+      try {
+        const data = await call('/api/licenses', {
+          method: 'POST',
+          body: JSON.stringify({ email: fila.email, name: fila.name, userId: fila.userId, source: 'manual' }),
+        });
+        setMessage(
+          data.alreadyIssued
+            ? `${fila.email} ya tenía la licencia ${data.code}.`
+            : `Listo: ${fila.email} queda con la licencia ${data.code}.`,
+        );
+        await loadAccounts();
+      } catch {
+        setMessage('No se pudo desbloquear. Vuelve a intentar.');
+      }
+    },
+    [call, loadAccounts],
   );
 
   const load = useCallback(async () => {
@@ -220,6 +280,7 @@ export default function AdminPage() {
             }}
           >
             {item.label}
+            {item.id === 'cuentas' ? <span>{accountsTotal || ''}</span> : null}
             {item.id === 'licencias' ? <span>{licenses.length}</span> : null}
             {item.id === 'registro' ? <span>{events.length}</span> : null}
           </button>
@@ -243,6 +304,8 @@ export default function AdminPage() {
             <p style={{ fontSize: 13, color: 'var(--color-neutral-600)', margin: '4px 0 0' }}>
               {page === 'resumen'
                 ? (summary?.period.description ?? 'Cargando…')
+                : page === 'cuentas'
+                ? 'Todas las personas registradas, hayan pagado o no'
                 : page === 'licencias'
                   ? 'Códigos emitidos, equipos y estado'
                   : page === 'clientes'
@@ -328,6 +391,20 @@ export default function AdminPage() {
             range={range}
             onPeriod={setPeriod}
             onRange={setRange}
+          />
+        ) : null}
+
+        {page === 'cuentas' ? (
+          <Cuentas
+            filas={accounts}
+            total={accountsTotal}
+            query={accountQuery}
+            setQuery={setAccountQuery}
+            estado={estadoFilter}
+            setEstado={setEstadoFilter}
+            soloAbandonadas={soloAbandonadas}
+            setSoloAbandonadas={setSoloAbandonadas}
+            onDesbloquear={desbloquear}
           />
         ) : null}
 
@@ -828,3 +905,189 @@ const dateInput: React.CSSProperties = {
   borderRadius: 999,
   border: '1.5px solid var(--color-divider)',
 };
+
+/** Vacío de verdad: un guion tenue, no un cero ni una fecha inventada. */
+function Vacio() {
+  return <span style={{ color: 'var(--color-neutral-600)', opacity: 0.55 }}>—</span>;
+}
+
+const fechaCorta = (ms: number): string =>
+  new Date(ms).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+
+/**
+ * Cuentas: una fila por persona registrada, haya pagado o no.
+ *
+ * El panel se armaba sólo con licencias y pruebas, así que quien se registraba
+ * y no compraba no existía para el dueño. Aquí la lista sale de la tabla de
+ * cuentas. Las celdas sin dato van vacías a propósito.
+ */
+function Cuentas({
+  filas,
+  total,
+  query,
+  setQuery,
+  estado,
+  setEstado,
+  soloAbandonadas,
+  setSoloAbandonadas,
+  onDesbloquear,
+}: {
+  filas: AccountRow[];
+  total: number;
+  query: string;
+  setQuery: (v: string) => void;
+  estado: EstadoCuenta | 'todas';
+  setEstado: (v: EstadoCuenta | 'todas') => void;
+  soloAbandonadas: boolean;
+  setSoloAbandonadas: (v: boolean) => void;
+  onDesbloquear: (fila: AccountRow) => void;
+}) {
+  const exportar = () => {
+    const encabezados = [
+      'correo',
+      'nombre',
+      'registro',
+      'estado',
+      'avance_hechos',
+      'avance_total',
+      'paso_pendiente',
+      'giro',
+      'presupuesto',
+      'ultimo_acceso',
+      'abandonada',
+      'licencia',
+    ];
+    const rows = [
+      encabezados,
+      ...filas.map((f) => [
+        f.email,
+        f.name,
+        new Date(f.createdAt).toISOString(),
+        ESTADO_LABELS[f.estado],
+        String(f.hechos),
+        String(f.total),
+        f.pasoPendiente ?? '',
+        f.giro ?? '',
+        f.presupuesto === undefined ? '' : String(f.presupuesto),
+        f.lastLoginAt ? new Date(f.lastLoginAt).toISOString() : '',
+        f.abandonada ? 'si' : 'no',
+        f.code ?? '',
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'cuentas.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <section style={{ marginTop: 20 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por correo o nombre"
+          style={{ height: 42, padding: '0 14px', borderRadius: 999, border: '1.5px solid var(--color-divider)', minWidth: 280 }}
+        />
+        {(['todas', 'pago', 'en-prueba', 'prueba-vencida', 'sin-actividad'] as const).map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => setEstado(e)}
+            style={{
+              ...chip,
+              background: estado === e ? 'var(--color-accent-100)' : 'transparent',
+              borderColor: estado === e ? 'var(--color-accent)' : 'var(--color-divider)',
+            }}
+          >
+            {e === 'todas' ? 'Todas' : ESTADO_LABELS[e]}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setSoloAbandonadas(!soloAbandonadas)}
+          style={{
+            ...chip,
+            background: soloAbandonadas ? 'var(--color-accent-100)' : 'transparent',
+            borderColor: soloAbandonadas ? 'var(--color-accent)' : 'var(--color-divider)',
+          }}
+        >
+          Abandonaron
+        </button>
+        <button type="button" onClick={exportar} style={secondaryButton}>
+          Exportar CSV
+        </button>
+      </div>
+
+      <p style={{ fontSize: 12.5, color: 'var(--color-neutral-600)', margin: '10px 2px 0' }}>
+        {filas.length} de {total} cuentas. «Abandonaron» son las que se les venció la prueba sin pagar y sin
+        terminar la ruta; la columna de avance dice en qué paso se quedaron. Una celda vacía es un dato que no
+        existe todavía, no un cero.
+      </p>
+
+      <div style={{ ...card, marginTop: 14, padding: 0, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: 'var(--color-neutral-200)', textAlign: 'left' }}>
+              {['Persona', 'Registro', 'Estado', 'Avance', 'Giro', 'Presupuesto', 'Último acceso', ''].map((h) => (
+                <th key={h} style={{ padding: '12px 14px', fontSize: 11.5, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f) => (
+              <tr key={f.userId} style={{ borderTop: '1px solid var(--color-divider)' }}>
+                <td style={cell}>
+                  <div style={{ fontWeight: 700 }}>{f.name || <Vacio />}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{f.email}</div>
+                </td>
+                <td style={cell}>{fechaCorta(f.createdAt)}</td>
+                <td style={cell}>
+                  <span style={{ color: ESTADO_COLOR[f.estado], fontWeight: 800 }}>{ESTADO_LABELS[f.estado]}</span>
+                  {f.abandonada ? (
+                    <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>Abandonó</div>
+                  ) : null}
+                  {f.code ? <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>{f.code}</div> : null}
+                </td>
+                <td style={cell}>
+                  <div style={{ fontWeight: 700 }}>
+                    {f.hechos} de {f.total}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', maxWidth: 220 }}>
+                    {!f.pasoPendiente
+                      ? 'Terminó la ruta'
+                      : f.hechos === 0
+                        ? 'No empezó la ruta'
+                        : `Se quedó en: ${f.pasoPendiente}`}
+                  </div>
+                </td>
+                <td style={cell}>{f.giro ?? <Vacio />}</td>
+                <td style={cell}>{f.presupuesto === undefined ? <Vacio /> : money(f.presupuesto)}</td>
+                <td style={cell}>{f.lastLoginAt ? fechaCorta(f.lastLoginAt) : <Vacio />}</td>
+                <td style={cell}>
+                  {f.estado === 'pago' ? null : (
+                    <button type="button" onClick={() => onDesbloquear(f)} style={{ ...chip, height: 32 }}>
+                      Desbloquear
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {filas.length === 0 ? (
+              <tr>
+                <td style={{ ...cell, textAlign: 'center', color: 'var(--color-neutral-600)' }} colSpan={8}>
+                  Nadie coincide con lo que buscas.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}

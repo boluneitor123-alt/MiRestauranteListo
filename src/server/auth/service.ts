@@ -102,7 +102,11 @@ export class AuthService {
       passwordHash: await hashPassword(input.password),
       role: roleForEmail(email),
     });
-    return this.startSession(user, input.deviceId);
+    // Registrarse deja la sesión abierta: es un acceso, y contarlo evita que
+    // alguien recién llegado aparezca en el panel sin último acceso.
+    const at = this.now();
+    await this.store.touchLogin(user.id, at);
+    return this.startSession({ ...user, lastLoginAt: at }, input.deviceId);
   }
 
   async login(input: { email: string; password: string; deviceId?: string }): Promise<AuthResult> {
@@ -118,12 +122,15 @@ export class AuthService {
     // El rol se revisa contra OWNER_EMAIL en cada entrada, no sólo al crear la
     // cuenta: si no, cambiar la variable no sirve de nada.
     const role = roleSync(email, user.role);
-    if (role) {
-      await this.store.updateRole(user.id, role);
-      return this.startSession({ ...user, role }, input.deviceId);
-    }
+    if (role) await this.store.updateRole(user.id, role);
 
-    return this.startSession(user, input.deviceId);
+    // El último acceso se guarda aquí, que es el único punto por el que pasa
+    // todo el mundo al entrar. Las cuentas que nunca han vuelto desde que
+    // existe el campo se quedan sin fecha, y así se muestran.
+    const at = this.now();
+    await this.store.touchLogin(user.id, at);
+
+    return this.startSession({ ...user, ...(role ? { role } : {}), lastLoginAt: at }, input.deviceId);
   }
 
   async logout(token: string): Promise<void> {

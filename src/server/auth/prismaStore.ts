@@ -6,7 +6,15 @@ import type { PrismaClient } from '@prisma/client';
 import { getPrisma } from '../licensing/prismaStore';
 import type { AuthSession, AuthStore, AuthUser, UserRole } from './store';
 
-type DbUser = { id: string; email: string; name: string; passwordHash: string; role: string; createdAt: Date };
+type DbUser = {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  role: string;
+  createdAt: Date;
+  lastLoginAt: Date | null;
+};
 
 const toUser = (row: DbUser): AuthUser => ({
   id: row.id,
@@ -15,6 +23,7 @@ const toUser = (row: DbUser): AuthUser => ({
   passwordHash: row.passwordHash,
   role: row.role === 'admin' ? 'admin' : 'owner',
   createdAt: row.createdAt.getTime(),
+  lastLoginAt: row.lastLoginAt ? row.lastLoginAt.getTime() : undefined,
 });
 
 export class PrismaAuthStore implements AuthStore {
@@ -45,6 +54,10 @@ export class PrismaAuthStore implements AuthStore {
 
   async updateRole(userId: string, role: UserRole): Promise<void> {
     await this.db.user.update({ where: { id: userId }, data: { role } });
+  }
+
+  async touchLogin(userId: string, at: number): Promise<void> {
+    await this.db.user.update({ where: { id: userId }, data: { lastLoginAt: new Date(at) } });
   }
 
   async createSession(session: AuthSession): Promise<AuthSession> {
