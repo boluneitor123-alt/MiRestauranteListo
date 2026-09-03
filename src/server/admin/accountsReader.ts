@@ -21,6 +21,7 @@ export async function readAccounts(opts: { now: number; trialDays: number }): Pr
         userId: true,
         giro: true,
         budgetCap: true,
+        budgetCapSetAt: true,
         answers: true,
         trialStartedAt: true,
         completedTasks: { select: { taskKey: true } },
@@ -67,6 +68,12 @@ export async function readAccounts(opts: { now: number; trialDays: number }): Pr
     */
     const respuestas = (proyecto?.answers ?? {}) as Record<string, unknown>;
     const contesto = Object.keys(respuestas).length > 0;
+    /*
+      El presupuesto va aparte del diagnóstico: no es una pregunta, vive en la
+      pantalla de Más y arranca en el de fábrica. Sólo hay dato si la persona lo
+      fijó, y de eso se encarga `budgetCapSetAt`.
+    */
+    const fijoPresupuesto = proyecto?.budgetCapSetAt != null;
     return {
       userId: u.id,
       email: u.email,
@@ -76,7 +83,7 @@ export async function readAccounts(opts: { now: number; trialDays: number }): Pr
       license: porId.get(u.id) ?? porCorreo.get(u.email.trim().toLowerCase()),
       doneKeys: proyecto?.completedTasks.map((t) => t.taskKey) ?? [],
       giro: contesto ? proyecto?.giro : undefined,
-      presupuesto: contesto ? proyecto?.budgetCap : undefined,
+      presupuesto: fijoPresupuesto ? proyecto?.budgetCap : undefined,
       trialStartedAt: prueba,
     };
   });

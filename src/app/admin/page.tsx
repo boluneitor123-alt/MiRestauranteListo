@@ -1024,8 +1024,9 @@ function Cuentas({
 
       <p style={{ fontSize: 12.5, color: 'var(--color-neutral-600)', margin: '10px 2px 0' }}>
         {filas.length} de {total} cuentas. «Abandonaron» son las que se les venció la prueba sin pagar y sin
-        terminar la ruta; la columna de avance dice en qué paso se quedaron. Una celda vacía es un dato que no
-        existe todavía, no un cero.
+        terminar la ruta; la columna de avance dice en qué paso se quedaron. Una celda vacía es un dato que la
+        persona no ha dado: el giro sale del diagnóstico y el presupuesto sólo cuando ella lo fija. Vacío nunca
+        significa cero.
       </p>
 
       <div style={{ ...card, marginTop: 14, padding: 0, overflowX: 'auto' }}>
