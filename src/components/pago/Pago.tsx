@@ -10,6 +10,7 @@ import { getDeviceId } from '@/lib/device';
 import { track } from '@/lib/track';
 import { Arrow, Check, Ico, Ilustracion } from '@/components/landing/pieces';
 import { FormaDePago } from './FormaDePago';
+import { datosDeAtribucion, evento } from '@/content/medicion';
 
 /**
  * Pantalla de pago (`PagoMRL.dc.html` de la entrega v2).
@@ -66,6 +67,14 @@ export function Pago() {
     if (abierto.current) return;
     abierto.current = true;
 
+    /*
+      Llegó a la pantalla de pago. Va aquí, dentro de la guarda de `abierto`,
+      para que StrictMode no lo cuente doble en desarrollo. Si alguien recarga
+      la pantalla se dispara otra vez, y así es como Meta espera este evento.
+      El precio sale del servidor, así que aquí todavía no se conoce: lo lleva
+      `InitiateCheckout` en cuanto el cobro abre.
+    */
+
     const params = new URLSearchParams(window.location.search);
     const secretoDeVuelta = params.get('payment_intent_client_secret');
 
@@ -96,7 +105,7 @@ export function Pago() {
         const respuesta = await fetch('/api/pago/intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ deviceId: getDeviceId() }),
+          body: JSON.stringify({ deviceId: getDeviceId(), ...datosDeAtribucion() }),
         });
         const datos = await respuesta.json();
 
@@ -107,6 +116,14 @@ export function Pago() {
         }
 
         setPrecio(datos.price);
+        evento('InitiateCheckout', {
+          // El monto sale de lo que fijó el servidor, nunca de una constante.
+          value: datos.price,
+          currency: 'MXN',
+          content_name: 'MiRestauranteListo · Acceso de por vida',
+          content_ids: ['mrl-lifetime'],
+          content_type: 'product',
+        });
         setCobro({
           clientSecret: datos.clientSecret,
           intentId: datos.intentId,

@@ -385,6 +385,24 @@ model Trial {
   @@map("trials")
 }
 
+/// Eventos que ya se mandaron a Meta, por el id del evento de Stripe.
+///
+/// Stripe garantiza entrega *al menos una vez*, no exactamente una. El mismo
+/// webhook puede llegar dos veces, y si el reintento cae después de 48 horas la
+/// deduplicación de Meta ya no cubre. Esta tabla es lo que evita contar una
+/// compra dos veces.
+model MetaEvent {
+  /// `event.id` de Stripe.
+  id        String   @id
+  eventName String
+  sentAt    DateTime @default(now())
+  /// Qué contestó Meta. Se guarda el fallo para poder reintentar a mano.
+  ok        Boolean  @default(true)
+  detail    String?
+
+  @@map("meta_events")
+}
+
 /// Ajustes del panel del dueño (una sola fila).
 model AdminSetting {
   id                  String  @id @default("default")

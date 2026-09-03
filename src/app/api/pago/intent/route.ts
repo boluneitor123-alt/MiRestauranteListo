@@ -58,6 +58,13 @@ export async function POST(request: Request) {
       userId: user?.id,
       email: email && correoValido(email) ? email : undefined,
       maxDevices: settings.maxDevices,
+      // Atribución de Meta. Las cookies las manda el navegador; la IP y el
+      // agente los lee el servidor de la petición, que es donde son de fiar.
+      fbp: str(body.fbp),
+      fbc: str(body.fbc),
+      eventSourceUrl: str(body.eventSourceUrl),
+      clientIp: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined,
+      clientUa: request.headers.get('user-agent') ?? undefined,
     });
 
     return json({

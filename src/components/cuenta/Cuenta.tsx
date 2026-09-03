@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useStore } from '@/state/store';
 import { GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
 import { Arrow, Check, Ilustracion, Rayita, Uline } from '@/components/landing/pieces';
+import { EVENTOS_PROPIOS, datosDeAtribucion, evento, eventoPropio } from '@/content/medicion';
 
 /**
  * Crear cuenta · iniciar sesión · recuperar acceso (entrega-v2 § "Flujo de
@@ -104,6 +105,18 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
   }, [authReady, user]);
 
   const esSignup = vista === 'signup';
+
+  /*
+    Abrió el formulario de crear cuenta. Se cuenta una vez por visita, no cada
+    vez que alternan entre entrar y registrarse: son dos estados de la misma
+    página y el ir y venir no es intención nueva.
+  */
+  const registroContado = useRef(false);
+  useEffect(() => {
+    if (vista !== 'signup' || registroContado.current) return;
+    registroContado.current = true;
+    eventoPropio(EVENTOS_PROPIOS.registroIniciado);
+  }, [vista]);
   const esLogin = vista === 'login';
   const esReset = vista === 'reset';
 
@@ -155,6 +168,26 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
       setError(r.message ?? 'No pudimos entrar. Inténtalo otra vez.');
       return;
     }
+    /*
+      Registro terminado. Va por el navegador y por el servidor con el MISMO
+      `eventId`: Meta los une y cuenta uno. Dos ids distintos serían dos
+      registros. El del servidor rescata a quien trae bloqueador, y no se
+      espera su respuesta: la persona ya se ganó su pantalla.
+    */
+    if (esSignup) {
+      const eventId = crypto.randomUUID();
+      const atribucion = datosDeAtribucion();
+      evento('CompleteRegistration', {}, { eventID: eventId });
+      void fetch('/api/capi/registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // `keepalive` es lo que hace que sobreviva: la línea de abajo cambia de
+        // página y sin esto el navegador cancelaría la petición en vuelo.
+        keepalive: true,
+        body: JSON.stringify({ eventId, fbc: atribucion.fbc, eventSourceUrl: atribucion.eventSourceUrl }),
+      }).catch(() => undefined);
+    }
+
     // El servidor decide: una cuenta de administración va al panel.
     window.location.href = r.redirectTo && r.redirectTo !== '/app' ? r.redirectTo : '/app';
   };

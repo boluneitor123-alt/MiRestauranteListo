@@ -80,6 +80,7 @@ propósito: nadie puede fabricarse un acceso llamando al webhook.
 | `STRIPE_WEBHOOK_SECRET` | Firma del webhook (`whsec_…`). | Sí, para cobrar |
 | `RESEND_API_KEY` | Correos de compra y de acceso. Sin ella, no se manda correo pero todo lo demás funciona. | No |
 | `FB_CAPI_ACCESS_TOKEN` | Token de la API de Conversiones de Meta. Sin él no se manda la compra a Meta; el cobro y el acceso funcionan igual. | No |
+| `FB_CAPI_TEST_CODE` | Sólo para probar: manda los eventos a la pestaña «Probar eventos» de Meta en vez de a los datos reales. **Quítala antes de abrir al público.** | No |
 
 **Sobre la medición de Meta.** Aquí va sólo el token, que es secreto. El id del
 píxel no: viaja en cada carga de la página, así que queda escrito en el código
