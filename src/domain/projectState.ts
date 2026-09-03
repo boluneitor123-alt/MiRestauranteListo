@@ -88,6 +88,15 @@ export interface AppSettings {
   tourDone: boolean;
   /** Ya decidió qué hacer con los platillos de ejemplo de la plantilla. */
   exampleHidden: boolean;
+  /**
+   * Ya se contó el fin del diagnóstico en la medición.
+   *
+   * El diagnóstico se puede rehacer, y sin esta marca cada vez mandaría otro
+   * evento a Meta: la tasa de conversión se inflaría sola. Vive aquí y no en
+   * el navegador porque el proyecto es de la cuenta, así que la marca viaja
+   * entre el celular y la laptop.
+   */
+  diagnosticoMedido: boolean;
 }
 
 export interface ProjectState {
@@ -213,6 +222,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dark: false,
   tourDone: false,
   exampleHidden: false,
+  diagnosticoMedido: false,
 };
 
 /** Estado inicial de un proyecto nuevo: sin tareas hechas y sin platillos. */
@@ -510,6 +520,9 @@ export function importBackup(input: unknown): ProjectState {
       dark: asBoolean(settings.dark, DEFAULT_SETTINGS.dark),
       tourDone: asBoolean(settings.tourDone, DEFAULT_SETTINGS.tourDone),
       exampleHidden: asBoolean(settings.exampleHidden, DEFAULT_SETTINGS.exampleHidden),
+      // Si este renglón falta, la bandera se descarta al cargar y el evento
+      // vuelve a dispararse en cada recarga, sin que nada falle.
+      diagnosticoMedido: asBoolean(settings.diagnosticoMedido, DEFAULT_SETTINGS.diagnosticoMedido),
     },
   };
 

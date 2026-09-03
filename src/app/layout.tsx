@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
+import { PixelBase, PixelPageView } from '@/components/medicion/Pixel';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -30,7 +32,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Archivo:wght@400;600;700;800;900&family=Caveat:wght@600;700&family=Space+Mono:wght@400;700&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PixelBase />
+        {/*
+          `useSearchParams` fuerza renderizado dinámico: sin este Suspense se
+          rompe el prerenderizado estático de todas las páginas públicas.
+        */}
+        <Suspense fallback={null}>
+          <PixelPageView />
+        </Suspense>
+      </body>
     </html>
   );
 }

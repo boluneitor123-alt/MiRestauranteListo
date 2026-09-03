@@ -25,6 +25,7 @@ import { Numeros, type NumbersView } from './tabs/Numeros';
 import { Mas, type SubScreen } from './tabs/Mas';
 import { DishEditor } from './costeador/DishEditor';
 import { SubrecipeEditor } from './costeador/SubrecipeEditor';
+import { EVENTOS_PROPIOS, eventoPropio } from '@/content/medicion';
 
 type Screen = 'onboarding' | 'result' | 'app' | 'dish' | 'subedit' | 'paywall';
 export type Tab = 'inicio' | 'ruta' | 'costeador' | 'numeros' | 'mas';
@@ -313,8 +314,16 @@ export function App() {
             else setObStep((n) => n - 1);
           }}
           onNext={() => {
-            if (obStep === ONBOARDING_QUESTIONS.length - 1) setScreen('result');
-            else setObStep((n) => n + 1);
+            if (obStep === ONBOARDING_QUESTIONS.length - 1) {
+              // Fin del diagnóstico. Se cuenta una sola vez por cuenta: el
+              // diagnóstico se puede rehacer desde Más, y sin la bandera cada
+              // repetición mandaría otro evento e inflaría la conversión.
+              if (!state.settings.diagnosticoMedido) {
+                eventoPropio(EVENTOS_PROPIOS.diagnosticoCompletado);
+                patch({ settings: { ...state.settings, diagnosticoMedido: true } });
+              }
+              setScreen('result');
+            } else setObStep((n) => n + 1);
           }}
         />
       );
