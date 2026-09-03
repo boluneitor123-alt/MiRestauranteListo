@@ -15,7 +15,7 @@ export const CORREO = 'hola@mirestaurantelisto.com';
  * Fecha de la versión publicada. Va escrita a mano y no se calcula: un
  * documento legal dice cuándo se actualizó, no "hoy".
  */
-export const ACTUALIZADO = '23 de agosto de 2026';
+export const ACTUALIZADO = '3 de septiembre de 2026';
 
 const PRECIO = `${money(LICENSE_DEFAULTS.price)} MXN`;
 const PRUEBA = LICENSE_DEFAULTS.trialDays;
@@ -200,6 +200,7 @@ const PRIVACIDAD: LegalSection[] = [
       'Stripe, para procesar pagos.',
       'Nuestro proveedor de alojamiento y base de datos, para guardar tu cuenta y tu proyecto.',
       'Nuestro proveedor de correo, para enviarte mensajes del servicio.',
+      'Meta (Facebook e Instagram), para medir si nuestros anuncios funcionan. Le compartimos qué pasos diste en el sitio y, cuando compras, el monto de la venta. Tu correo y tu nombre viajan convertidos en una huella cifrada e irreversible: Meta puede usarla para reconocerte si ya tenías cuenta con ellos, pero no puede leer tus datos a partir de ella.',
       'Autoridades, cuando exista una obligación legal.',
     ],
   },
@@ -233,7 +234,8 @@ const PRIVACIDAD: LegalSection[] = [
     title: 'Cookies',
     body: [
       'Usamos cookies necesarias para mantener tu sesión abierta y recordar tus preferencias en la aplicación. Sin ellas el servicio no funciona.',
-      'Si en el futuro usamos cookies de análisis o publicidad, te lo informaremos y pediremos tu consentimiento.',
+      'También usamos cookies de publicidad del píxel de Meta, la empresa de Facebook e Instagram. Son dos: «_fbp» y «_fbc». Sirven para saber qué anuncios traen a las personas que se registran y compran, y así no gastar en los que no funcionan.',
+      'Estas cookies se activan cuando entras al sitio, sin pedirte permiso antes. Si prefieres no tenerlas, puedes bloquearlas desde la configuración de tu navegador o con una extensión que bloquee rastreadores: el producto sigue funcionando igual, y tú sigues pudiendo registrarte, pagar y usar todo.',
     ],
   },
   {
