@@ -207,3 +207,32 @@ describe('color de la app', () => {
     }
   });
 });
+
+describe('la bandera de la medición del diagnóstico', () => {
+  /*
+    `settings` se lee con un analizador que sólo deja pasar los campos que
+    conoce. Un campo nuevo que no se agregue ahí se descarta al cargar, y la
+    bandera se perdería en cada ida y vuelta: el evento volvería a dispararse
+    en cada recarga sin que nada falle. Esto lo comprueba de punta a punta.
+  */
+  it('sobrevive a exportar e importar', () => {
+    const marcado = emptyProjectState();
+    marcado.settings.diagnosticoMedido = true;
+
+    const vuelta = importBackup(JSON.parse(JSON.stringify(exportBackup(marcado))));
+    expect(vuelta.settings.diagnosticoMedido).toBe(true);
+  });
+
+  it('un proyecto nuevo arranca sin marcar', () => {
+    expect(emptyProjectState().settings.diagnosticoMedido).toBe(false);
+  });
+
+  it('un respaldo viejo, sin el campo, se lee como no marcado', () => {
+    // Las cuentas que ya existen no tienen la bandera: cuentan la primera vez
+    // que terminen el diagnóstico, y una sola.
+    const viejo = JSON.parse(JSON.stringify(exportBackup(emptyProjectState())));
+    delete viejo.state.settings.diagnosticoMedido;
+
+    expect(importBackup(viejo).settings.diagnosticoMedido).toBe(false);
+  });
+});
