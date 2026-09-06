@@ -71,8 +71,11 @@ describe('Meta no puede tumbar un cobro', () => {
   */
   const conFetch = async (impl: typeof fetch, fn: () => Promise<unknown>) => {
     const previoToken = process.env.FB_CAPI_ACCESS_TOKEN;
+    const previoId = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
     const previoFetch = globalThis.fetch;
     process.env.FB_CAPI_ACCESS_TOKEN = 'token-de-prueba';
+    // Aquí lo que se prueba es qué pasa cuando Meta falla, no la falta de id.
+    process.env.NEXT_PUBLIC_FB_PIXEL_ID = '000000000000000';
     globalThis.fetch = impl;
     try {
       return await fn();
@@ -80,6 +83,8 @@ describe('Meta no puede tumbar un cobro', () => {
       globalThis.fetch = previoFetch;
       if (previoToken === undefined) delete process.env.FB_CAPI_ACCESS_TOKEN;
       else process.env.FB_CAPI_ACCESS_TOKEN = previoToken;
+      if (previoId === undefined) delete process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+      else process.env.NEXT_PUBLIC_FB_PIXEL_ID = previoId;
     }
   };
 
@@ -115,4 +120,35 @@ describe('Meta no puede tumbar un cobro', () => {
     );
     expect(r).toMatchObject({ ok: false, motivo: 'sin-red' });
   }, 15_000);
+});
+
+describe('sin id de píxel no se mide', () => {
+  /*
+    El id venía escrito en el código con un valor por omisión, y resultó ser de
+    otro portafolio: durante días el sitio le habría mandado datos a un
+    desconocido si la variable hubiera faltado. Ahora sale sólo de la variable,
+    y sin ella no se manda nada.
+  */
+  const sinId = async (fn: () => Promise<unknown>) => {
+    const previo = process.env.FB_CAPI_ACCESS_TOKEN;
+    process.env.FB_CAPI_ACCESS_TOKEN = 'token-de-prueba';
+    try {
+      return await fn();
+    } finally {
+      if (previo === undefined) delete process.env.FB_CAPI_ACCESS_TOKEN;
+      else process.env.FB_CAPI_ACCESS_TOKEN = previo;
+    }
+  };
+
+  it('con token pero sin id, la API de Conversiones queda apagada', async () => {
+    // En las pruebas NEXT_PUBLIC_FB_PIXEL_ID no está definida, así que este es
+    // el caso real de un despliegue al que le falta la variable.
+    await sinId(async () => {
+      expect(capiConfigurada()).toBe(false);
+      expect(await enviarACapi({ nombre: 'Purchase', eventId: 'x', cuando: Date.now(), persona: {} })).toEqual({
+        ok: false,
+        motivo: 'sin-token',
+      });
+    });
+  });
 });

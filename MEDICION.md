@@ -8,7 +8,7 @@
 ## Contexto
 
 - Sitio: `www.mirestaurantelisto.com`, app de **Next.js** (App Router, código en `src/`)
-- Píxel de Meta: **`1291572841589508`** (nombre "MiRestauranteListo Web")
+- Píxel de Meta: el id vive **sólo** en `NEXT_PUBLIC_FB_PIXEL_ID`. No hay valor escrito en el código: el que había resultó ser de otro portafolio.
 - Cobro: **Stripe Elements** en una pantalla de pago propia, con **PaymentIntents**. No hay Stripe Checkout hospedado.
 - Webhook que escuchamos: **`payment_intent.succeeded`** (y `charge.refunded`, ver §5)
 - Producto: acceso de por vida, precio actual **$2,450 MXN**, pago único
@@ -33,17 +33,17 @@ La revisión 1 nombraba tres archivos que no existen. Estas son las buenas:
 ## Variables de entorno
 
 ```
-NEXT_PUBLIC_FB_PIXEL_ID=1291572841589508     # queda escrito en el código
+NEXT_PUBLIC_FB_PIXEL_ID=<el id de tu píxel>   # sin él, no se mide nada
 FB_CAPI_ACCESS_TOKEN=<se configura en Vercel>
 ```
 
 `FB_CAPI_ACCESS_TOKEN` **no lleva** el prefijo `NEXT_PUBLIC_`. Si lo lleva, el token queda expuesto en el bundle del navegador y cualquiera puede mandar eventos falsos al píxel. Solo se usa en código de servidor.
 
-**El pixel ID va escrito en el código,** con la variable de entorno como anulación opcional. No es un secreto —viaja en cada carga de la página— y dejarlo con valor por omisión evita que el píxel se apague por una variable que se olvidó de poner:
+**El pixel ID sale sólo de la variable, sin valor por omisión.** Hubo uno escrito en el código y resultó pertenecer al portafolio de otra persona: si la variable faltaba o venía mal escrita, el sitio le habría mandado el comportamiento de nuestros visitantes a un desconocido, sin que nada fallara. Sin id no se pinta el píxel y la API de Conversiones queda apagada, que es el fallo correcto:
 
 ```ts
 // src/content/medicion.ts
-export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || '1291572841589508';
+export const pixelId = (): string => (process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? '').trim();
 ```
 
 **El token no.** Ese sí es un secreto y va en Vercel, marcado en Production. Sin él, la API de Conversiones queda apagada y el sitio sigue funcionando igual: los eventos de navegador se mandan y `Purchase` no. El código tiene que aguantar su ausencia sin romper el cobro — un pago no puede fallar porque Meta no contestó.
@@ -286,7 +286,7 @@ Los dos hacen falta y no se estorban: la rama de reembolso sale antes de llegar 
 ### Payload
 
 ```
-POST https://graph.facebook.com/v21.0/1291572841589508/events
+POST https://graph.facebook.com/v21.0/<NEXT_PUBLIC_FB_PIXEL_ID>/events
      ?access_token=${process.env.FB_CAPI_ACCESS_TOKEN}
 ```
 
