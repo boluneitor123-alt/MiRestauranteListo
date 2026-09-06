@@ -1,16 +1,20 @@
 /**
  * Medición de Meta (píxel + API de Conversiones). Ver `MEDICION.md`.
  *
- * El id del píxel va escrito aquí: no es un secreto —viaja en cada carga de la
- * página— y con valor por omisión la medición no se apaga porque a alguien se
- * le haya olvidado capturar una variable. `NEXT_PUBLIC_FB_PIXEL_ID` lo
- * sustituye si algún día hay que cambiarlo sin tocar el código.
+ * El id del píxel sale **sólo** de la variable de entorno, sin valor por
+ * omisión. Antes había uno escrito aquí, y resultó pertenecer al portafolio de
+ * otra persona: si la variable faltaba o venía mal escrita, el sitio le habría
+ * mandado el comportamiento de nuestros visitantes a un desconocido, en
+ * silencio. Sin id no se mide, que es el fallo correcto.
  *
  * El token de la API de Conversiones NO va aquí: es secreto, vive sólo en el
  * servidor y nunca lleva el prefijo `NEXT_PUBLIC_`.
  */
 
-export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || '1291572841589508';
+export const pixelId = (): string => (process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? '').trim();
+
+/** Sin id no hay a dónde medir. */
+export const pixelConfigurado = (): boolean => pixelId().length > 0;
 
 /** Eventos personalizados. Renombrarlos rompe el historial acumulado en Meta. */
 export const EVENTOS_PROPIOS = {

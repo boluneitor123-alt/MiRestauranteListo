@@ -12,7 +12,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { FB_PIXEL_ID } from '@/content/medicion';
+import { pixelConfigurado, pixelId } from '@/content/medicion';
 
 const VERSION = 'v21.0';
 
@@ -70,7 +70,11 @@ export type ResultadoCapi =
   | { ok: true }
   | { ok: false; motivo: 'sin-token' | 'error-de-meta' | 'sin-red'; detalle?: string };
 
-export const capiConfigurada = (): boolean => !!process.env.FB_CAPI_ACCESS_TOKEN;
+/**
+ * Hacen falta las dos: el token y el id del píxel. El id va en la URL, así que
+ * sin él la llamada iría a `/events` de ningún lado.
+ */
+export const capiConfigurada = (): boolean => !!process.env.FB_CAPI_ACCESS_TOKEN && pixelConfigurado();
 
 /** Los campos vacíos se omiten: mandarlos en blanco empeora el emparejamiento. */
 function sinVacios<T extends Record<string, unknown>>(objeto: T): Record<string, unknown> {
@@ -104,7 +108,7 @@ function userData(p: DatosDePersona): Record<string, unknown> {
  */
 export async function enviarACapi(evento: EventoCapi): Promise<ResultadoCapi> {
   const token = process.env.FB_CAPI_ACCESS_TOKEN;
-  if (!token) return { ok: false, motivo: 'sin-token' };
+  if (!token || !pixelConfigurado()) return { ok: false, motivo: 'sin-token' };
 
   const cuerpo = {
     data: [
@@ -123,7 +127,7 @@ export async function enviarACapi(evento: EventoCapi): Promise<ResultadoCapi> {
 
   try {
     const respuesta = await fetch(
-      `https://graph.facebook.com/${VERSION}/${FB_PIXEL_ID}/events?access_token=${encodeURIComponent(token)}`,
+      `https://graph.facebook.com/${VERSION}/${pixelId()}/events?access_token=${encodeURIComponent(token)}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

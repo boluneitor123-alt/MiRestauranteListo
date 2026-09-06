@@ -3,7 +3,7 @@
 import Script from 'next/script';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { FB_PIXEL_ID, recordarFbclid } from '@/content/medicion';
+import { pixelConfigurado, pixelId, recordarFbclid } from '@/content/medicion';
 
 /**
  * `PageView` en cada cambio de ruta.
@@ -52,6 +52,11 @@ export function PixelPageView() {
  * unos 70 KB. Nada de la página depende de que cargue.
  */
 export function PixelBase() {
+  // Sin id no se inyecta nada: ni el script, ni el <noscript>. Un píxel a
+  // medias sería peor que ninguno.
+  if (!pixelConfigurado()) return null;
+  const id = pixelId();
+
   return (
     <>
       <Script id="fb-pixel" strategy="afterInteractive">
@@ -63,7 +68,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${FB_PIXEL_ID}');
+fbq('init', '${id}');
 fbq('track', 'PageView');`}
       </Script>
       <noscript>
@@ -73,7 +78,7 @@ fbq('track', 'PageView');`}
           width="1"
           style={{ display: 'none' }}
           alt=""
-          src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+          src={`https://www.facebook.com/tr?id=${id}&ev=PageView&noscript=1`}
         />
       </noscript>
     </>
