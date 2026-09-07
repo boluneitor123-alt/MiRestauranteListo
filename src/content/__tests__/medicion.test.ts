@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EVENTOS, esEstandar } from '@/content/medicion';
+import { EVENTOS, esEstandar, marcarIntencion, vieneDeIntencion } from '@/content/medicion';
 
 /*
   Un estándar mandado con `trackCustom` queda como personalizado aunque se
@@ -49,5 +49,64 @@ describe('el catálogo de eventos', () => {
   it('un nombre inventado no se cuela como estándar', () => {
     expect(esEstandar('CompraFinalizada')).toBe(false);
     expect(esEstandar('purchase')).toBe(false);
+  });
+});
+
+describe('una sola señal de «empezó a registrarse»', () => {
+  /*
+    `StartTrial` sale del clic en la landing y `RegistroIniciado` de que se vea
+    el formulario, medio segundo después: el mismo momento contado dos veces.
+    Un embudo con un paso que siempre pasa al 100% no dice nada. La marca hace
+    que `/cuenta` se calle cuando ya hubo clic, sin perder a quien llega directo.
+  */
+  const conVentana = (almacen: Map<string, string> | null, fn: () => void) => {
+    const global = globalThis as { window?: unknown };
+    const previo = global.window;
+    const ventana = {};
+    Object.defineProperty(ventana, 'sessionStorage', {
+      get() {
+        // Ventana privada o almacenamiento bloqueado: lanza al tocarlo, que es
+        // como se comporta el navegador de verdad.
+        if (!almacen) throw new Error('bloqueado');
+        return {
+          getItem: (k: string) => almacen.get(k) ?? null,
+          setItem: (k: string, v: string) => void almacen.set(k, v),
+        };
+      },
+    });
+    global.window = ventana;
+    try {
+      fn();
+    } finally {
+      if (previo === undefined) delete global.window;
+      else global.window = previo;
+    }
+  };
+
+  it('tras marcar, la pantalla de cuenta se calla', () => {
+    const almacen = new Map<string, string>();
+    conVentana(almacen, () => {
+      expect(vieneDeIntencion()).toBe(false);
+      marcarIntencion();
+      expect(vieneDeIntencion()).toBe(true);
+    });
+  });
+
+  it('la marca caduca: una visita de mañana vuelve a contar', () => {
+    const almacen = new Map<string, string>([['mrl.intencion', String(Date.now() - 10 * 60_000)]]);
+    conVentana(almacen, () => expect(vieneDeIntencion()).toBe(false));
+  });
+
+  it('una marca corrupta no se cree', () => {
+    conVentana(new Map([['mrl.intencion', 'mañana']]), () => expect(vieneDeIntencion()).toBe(false));
+    conVentana(new Map([['mrl.intencion', '']]), () => expect(vieneDeIntencion()).toBe(false));
+  });
+
+  it('sin sessionStorage se cuenta de más, no de menos', () => {
+    // Ventana privada: perder el evento sería peor que repetirlo.
+    conVentana(null, () => {
+      expect(() => marcarIntencion()).not.toThrow();
+      expect(vieneDeIntencion()).toBe(false);
+    });
   });
 });

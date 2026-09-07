@@ -5,7 +5,7 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useStore } from '@/state/store';
 import { GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
 import { Arrow, Check, Ilustracion, Rayita, Uline } from '@/components/landing/pieces';
-import { EVENTOS, datosDeAtribucion, medir } from '@/content/medicion';
+import { EVENTOS, datosDeAtribucion, medir, vieneDeIntencion } from '@/content/medicion';
 
 /**
  * Crear cuenta · iniciar sesión · recuperar acceso (entrega-v2 § "Flujo de
@@ -110,12 +110,16 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
     Abrió el formulario de crear cuenta. Se cuenta una vez por visita, no cada
     vez que alternan entre entrar y registrarse: son dos estados de la misma
     página y el ir y venir no es intención nueva.
+
+    Y no se cuenta si viene de pulsar una entrada en la landing: ese clic ya
+    mandó `StartTrial` o `Lead` medio segundo antes. Aquí sólo se mide a quien
+    llega directo a esta pantalla.
   */
   const registroContado = useRef(false);
   useEffect(() => {
     if (vista !== 'signup' || registroContado.current) return;
     registroContado.current = true;
-    medir(EVENTOS.registroIniciado);
+    if (!vieneDeIntencion()) medir(EVENTOS.registroIniciado);
   }, [vista]);
   const esLogin = vista === 'login';
   const esReset = vista === 'reset';
