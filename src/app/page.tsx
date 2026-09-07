@@ -28,7 +28,7 @@ import {
 import { CORREO as CORREO_CONTACTO, TITULAR as TITULAR_LEGAL } from '@/content/legal';
 import { calculate } from '@/domain/landing';
 import { money } from '@/domain/format';
-import { track } from '@/lib/track';
+import { EVENTOS, medir, type EventoMedicion } from '@/content/medicion';
 import { Arrow, Check, Ico, Ilustracion, Kick, Rayita, Uline } from '@/components/landing/pieces';
 
 const digits = (value: string) => value.replace(/[^0-9]/g, '');
@@ -63,12 +63,11 @@ export default function LandingPage() {
     return () => ojo.disconnect();
   }, []);
 
-  // `Purchase` al volver del checkout.
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('pago') === 'ok') {
-      track('Purchase', { value: LAUNCH.price, currency: 'MXN' }, true);
-    }
-  }, []);
+  /*
+    Aquí NO va `Purchase`. Lo manda el webhook desde el servidor: esta vuelta
+    del checkout es una URL que se puede recargar o compartir, y cada visita
+    contaba una compra más. Ver MEDICION.md § 6.
+  */
 
   const result = useMemo(
     () =>
@@ -88,19 +87,20 @@ export default function LandingPage() {
     set(digits(value));
     if (!calculatorUsed.current) {
       calculatorUsed.current = true;
-      track('CalculadoraUsada');
+      medir(EVENTOS.calculadoraUsada);
     }
   };
 
   /** Las dos entradas al producto: van a la página de acceso, no a la app. */
-  const ir = (evento: 'Lead' | 'LeadIntent' | 'InicioPrueba', vista: 'signup' | 'login') => () => {
-    track(evento);
+  const ir = (evento: EventoMedicion, vista: 'signup' | 'login') => () => {
+    medir(evento);
     window.location.href = `/cuenta#${vista}`;
   };
 
   /** El pago pasa por la pantalla previa, que resume el pedido. */
   const comprar = () => {
-    track('InitiateCheckout', { value: LAUNCH.price, currency: 'MXN' });
+    // `InitiateCheckout` lo manda `/pago` al montar, con el precio que fija el
+    // servidor. Mandarlo también aquí lo contaba dos veces por intento.
     window.location.href = '/pago';
   };
 
@@ -152,10 +152,10 @@ export default function LandingPage() {
             <a href="#faq">Preguntas</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button type="button" className="lp-btn lp-login" onClick={ir('LeadIntent', 'login')}>
+            <button type="button" className="lp-btn lp-login" onClick={ir(EVENTOS.leadIntent, 'login')}>
               Iniciar sesión
             </button>
-            <button type="button" className="lp-btn lp-btn-amber" onClick={ir('Lead', 'signup')}>
+            <button type="button" className="lp-btn lp-btn-amber" onClick={ir(EVENTOS.lead, 'signup')}>
               Crear cuenta
             </button>
           </div>
@@ -212,7 +212,7 @@ export default function LandingPage() {
               type="button"
               className="lp-cta"
               style={{ marginTop: 'var(--sp-heroe)', maxWidth: 400 }}
-              onClick={ir('InicioPrueba', 'signup')}
+              onClick={ir(EVENTOS.startTrial, 'signup')}
             >
               Empieza gratis {LAUNCH.trialDays} días
               <Arrow />
@@ -741,7 +741,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <TresTelefonos onOpen={ir('InicioPrueba', 'signup')} />
+          <TresTelefonos onOpen={ir(EVENTOS.startTrial, 'signup')} />
         </div>
       </section>
 
@@ -1066,7 +1066,7 @@ export default function LandingPage() {
             type="button"
             className="lp-cta"
             style={{ flex: 'none', width: 'auto', height: 52, paddingInline: 26, fontSize: 15, boxShadow: 'none' }}
-            onClick={ir('InicioPrueba', 'signup')}
+            onClick={ir(EVENTOS.startTrial, 'signup')}
           >
             Empezar gratis
             <Arrow size={17} />

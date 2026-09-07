@@ -5,7 +5,7 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useStore } from '@/state/store';
 import { GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
 import { Arrow, Check, Ilustracion, Rayita, Uline } from '@/components/landing/pieces';
-import { EVENTOS_PROPIOS, datosDeAtribucion, evento, eventoPropio } from '@/content/medicion';
+import { EVENTOS, datosDeAtribucion, medir } from '@/content/medicion';
 
 /**
  * Crear cuenta · iniciar sesión · recuperar acceso (entrega-v2 § "Flujo de
@@ -115,7 +115,7 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
   useEffect(() => {
     if (vista !== 'signup' || registroContado.current) return;
     registroContado.current = true;
-    eventoPropio(EVENTOS_PROPIOS.registroIniciado);
+    medir(EVENTOS.registroIniciado);
   }, [vista]);
   const esLogin = vista === 'login';
   const esReset = vista === 'reset';
@@ -177,7 +177,7 @@ export function Cuenta({ vistaInicial }: { vistaInicial: CuentaVista }) {
     if (esSignup) {
       const eventId = crypto.randomUUID();
       const atribucion = datosDeAtribucion();
-      evento('CompleteRegistration', {}, { eventID: eventId });
+      medir(EVENTOS.completeRegistration, {}, { eventID: eventId });
       void fetch('/api/capi/registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

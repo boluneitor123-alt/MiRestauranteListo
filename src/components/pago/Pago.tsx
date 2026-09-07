@@ -7,10 +7,9 @@ import { GUARANTEE_LINE, GUARANTEE_SHORT, LAUNCH } from '@/content/landing';
 import { AVISO_DE_ESTADO, estadoDeCobro, FUENTE_ELEMENTS, TEMA_ELEMENTS, type EstadoDeCobro } from '@/domain/pago';
 import { money } from '@/domain/format';
 import { getDeviceId } from '@/lib/device';
-import { track } from '@/lib/track';
 import { Arrow, Check, Ico, Ilustracion } from '@/components/landing/pieces';
 import { FormaDePago } from './FormaDePago';
-import { datosDeAtribucion, evento } from '@/content/medicion';
+import { EVENTOS, datosDeAtribucion, medir } from '@/content/medicion';
 
 /**
  * Pantalla de pago (`PagoMRL.dc.html` de la entrega v2).
@@ -116,7 +115,7 @@ export function Pago() {
         }
 
         setPrecio(datos.price);
-        evento('InitiateCheckout', {
+        medir(EVENTOS.initiateCheckout, {
           // El monto sale de lo que fijó el servidor, nunca de una constante.
           value: datos.price,
           currency: 'MXN',
@@ -157,12 +156,12 @@ export function Pago() {
     setFase('listo');
   }, []);
 
-  /* Al terminar bien, la medición y nada más: la licencia la emite el webhook. */
-  useEffect(() => {
-    if (fase === 'listo' && estadoFinal === 'listo') {
-      track('Purchase', { value: precio, currency: 'MXN' }, true);
-    }
-  }, [fase, estadoFinal, precio]);
+  /*
+    Aquí NO va `Purchase`. Lo manda el webhook desde el servidor, con el id del
+    cobro como clave de deduplicación. Esta pantalla es recargable: cada F5
+    contaba otra compra, y encima se sumaba a la del servidor. Ver MEDICION.md
+    § 6: «Nunca disparar Purchase en el navegador».
+  */
 
   const opciones = cobro
     ? {

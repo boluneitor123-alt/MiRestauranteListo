@@ -16,11 +16,54 @@ export const pixelId = (): string => (process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? '')
 /** Sin id no hay a dónde medir. */
 export const pixelConfigurado = (): boolean => pixelId().length > 0;
 
-/** Eventos personalizados. Renombrarlos rompe el historial acumulado en Meta. */
-export const EVENTOS_PROPIOS = {
+/**
+ * Todo lo que medimos, en un solo lugar.
+ *
+ * Había dos módulos de medición conviviendo —éste y `src/lib/track.ts`— y según
+ * por dónde entrara la persona medía uno u otro. Sólo éste tenía la cola que
+ * espera al píxel, así que la landing perdía eventos y el resto de la app no.
+ * Ahora es uno.
+ */
+export const EVENTOS = {
+  /* Estándar de Meta: el nombre respeta mayúsculas y va con `track`. */
+  pageView: 'PageView',
+  lead: 'Lead',
+  startTrial: 'StartTrial',
+  completeRegistration: 'CompleteRegistration',
+  initiateCheckout: 'InitiateCheckout',
+  purchase: 'Purchase',
+  /* Propios. Renombrarlos rompe el historial acumulado en Meta. */
+  leadIntent: 'LeadIntent',
   registroIniciado: 'RegistroIniciado',
+  calculadoraUsada: 'CalculadoraUsada',
   diagnosticoCompletado: 'DiagnosticoCompletado',
+  videoDemo25: 'VideoDemo25',
+  videoDemo50: 'VideoDemo50',
+  videoDemo75: 'VideoDemo75',
+  videoObjecion: 'VideoObjecion',
+  contactoWhatsApp: 'ContactoWhatsApp',
 } as const;
+
+export type EventoMedicion = (typeof EVENTOS)[keyof typeof EVENTOS];
+
+/**
+ * Cuáles son estándar de Meta.
+ *
+ * La diferencia importa: un estándar va con `track` y Meta lo entiende para
+ * optimizar campañas; con `trackCustom` queda como personalizado aunque se
+ * llame igual, y no sirve para optimizar. Es el error que se hace solo al
+ * renombrar un evento sin mover de lista.
+ */
+const ESTANDAR: ReadonlySet<string> = new Set<EventoMedicion>([
+  EVENTOS.pageView,
+  EVENTOS.lead,
+  EVENTOS.startTrial,
+  EVENTOS.completeRegistration,
+  EVENTOS.initiateCheckout,
+  EVENTOS.purchase,
+]);
+
+export const esEstandar = (evento: string): boolean => ESTANDAR.has(evento);
 
 type Fbq = (
   comando: 'track' | 'trackCustom' | 'init',
@@ -91,21 +134,42 @@ function enviar(
   vaciar();
 }
 
+/** Los que ya se contaron en esta carga, para los que van una sola vez. */
+const yaMedidos = new Set<string>();
+
 /**
- * Evento estándar de Meta. El nombre respeta mayúsculas tal cual.
+ * Mide un evento. Es la única puerta: no hay otro módulo de medición.
+ *
+ * `track` o `trackCustom` lo decide la lista de estándar, no quien llama: así
+ * un evento no puede quedar como personalizado por descuido al renombrarlo.
  *
  * `eventID` sirve para deduplicar contra el mismo evento mandado por el
  * servidor: Meta une los dos y cuenta uno. Tiene que ser idéntico en ambos.
+ *
+ * `unaVez` evita repetirlo dentro de la misma carga de página. No protege entre
+ * recargas: para eso está la marca en el proyecto, o el servidor.
  */
-export const evento = (
-  nombre: string,
-  datos?: Record<string, unknown>,
-  opciones?: { eventID?: string },
-): void => enviar('track', nombre, datos, opciones);
+export function medir(
+  nombre: EventoMedicion,
+  datos: Record<string, unknown> = {},
+  opciones: { eventID?: string; unaVez?: boolean } = {},
+): void {
+  if (typeof window === 'undefined') return;
+  if (opciones.unaVez) {
+    if (yaMedidos.has(nombre)) return;
+    yaMedidos.add(nombre);
+  }
 
-/** Evento propio. */
-export const eventoPropio = (nombre: string, datos?: Record<string, unknown>): void =>
-  enviar('trackCustom', nombre, datos);
+  enviar(esEstandar(nombre) ? 'track' : 'trackCustom', nombre, datos, { eventID: opciones.eventID });
+
+  // El dataLayer sigue para lo que se conecte después (Tag Manager, Analytics).
+  try {
+    const w = window as unknown as { dataLayer?: unknown[] };
+    (w.dataLayer ??= []).push({ event: nombre, ...datos });
+  } catch {
+    // Igual que el píxel: la medición no interrumpe nada.
+  }
+}
 
 /* ───────────────────────  Atribución de los anuncios  ─────────────────────── */
 

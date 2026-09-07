@@ -25,7 +25,7 @@ import { Numeros, type NumbersView } from './tabs/Numeros';
 import { Mas, type SubScreen } from './tabs/Mas';
 import { DishEditor } from './costeador/DishEditor';
 import { SubrecipeEditor } from './costeador/SubrecipeEditor';
-import { EVENTOS_PROPIOS, eventoPropio } from '@/content/medicion';
+import { EVENTOS, medir } from '@/content/medicion';
 
 type Screen = 'onboarding' | 'result' | 'app' | 'dish' | 'subedit' | 'paywall';
 export type Tab = 'inicio' | 'ruta' | 'costeador' | 'numeros' | 'mas';
@@ -319,7 +319,7 @@ export function App() {
               // diagnóstico se puede rehacer desde Más, y sin la bandera cada
               // repetición mandaría otro evento e inflaría la conversión.
               if (!state.settings.diagnosticoMedido) {
-                eventoPropio(EVENTOS_PROPIOS.diagnosticoCompletado);
+                medir(EVENTOS.diagnosticoCompletado);
                 patch({ settings: { ...state.settings, diagnosticoMedido: true } });
               }
               setScreen('result');
