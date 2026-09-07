@@ -6,7 +6,6 @@ import type { EstadoDeCobro } from '@/domain/pago';
 import { FALLO_GENERICO, correoValido, errorDeCorreo, mensajeDeError, parametrosDeConfirmacion } from '@/domain/pago';
 import { money } from '@/domain/format';
 import { getDeviceId } from '@/lib/device';
-import { track } from '@/lib/track';
 import { Arrow, Ico } from '@/components/landing/pieces';
 
 /**
@@ -47,7 +46,8 @@ export function FormaDePago({
 
     setCobrando(true);
     setError('');
-    track('InitiateCheckout', { value: precio, currency: 'MXN' });
+    // `InitiateCheckout` ya lo mandó la pantalla al montar. Repetirlo aquí lo
+    // contaba dos veces por intento, y tres si venía desde la landing.
 
     // El correo se guarda en el servidor antes de cobrar: la licencia se emite
     // al correo que trae el cobro, no al que diga el navegador después.
