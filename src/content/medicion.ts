@@ -171,6 +171,41 @@ export function medir(
   }
 }
 
+/* ─────────────────  Una sola señal de «empezó a registrarse»  ───────────────── */
+
+const CLAVE_INTENCION = 'mrl.intencion';
+/** Dos minutos: lo que tarda cargar `/cuenta` viniendo de la landing, con aire. */
+const VIGENCIA_MS = 120_000;
+
+/**
+ * Marca que la persona pulsó una entrada al producto en la landing.
+ *
+ * `StartTrial` sale del clic y `RegistroIniciado` de que se vea el formulario,
+ * medio segundo después. Son el mismo momento contado dos veces, y un embudo
+ * con un paso que siempre pasa al 100% no dice nada. Con esta marca,
+ * `RegistroIniciado` se calla cuando ya hubo un clic, y sigue midiendo a quien
+ * llega directo a `/cuenta` o cambia de «entrar» a «crear cuenta».
+ */
+export function marcarIntencion(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(CLAVE_INTENCION, String(Date.now()));
+  } catch {
+    // Sin sessionStorage se cuenta de más, no de menos: es el error preferible.
+  }
+}
+
+/** ¿Viene de pulsar una entrada, o llegó a la pantalla por su cuenta? */
+export function vieneDeIntencion(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const marca = Number(window.sessionStorage.getItem(CLAVE_INTENCION));
+    return Number.isFinite(marca) && marca > 0 && Date.now() - marca < VIGENCIA_MS;
+  } catch {
+    return false;
+  }
+}
+
 /* ───────────────────────  Atribución de los anuncios  ─────────────────────── */
 
 const CLAVE_FBCLID = 'mrl.fbclid';

@@ -28,7 +28,7 @@ import {
 import { CORREO as CORREO_CONTACTO, TITULAR as TITULAR_LEGAL } from '@/content/legal';
 import { calculate } from '@/domain/landing';
 import { money } from '@/domain/format';
-import { EVENTOS, medir, type EventoMedicion } from '@/content/medicion';
+import { EVENTOS, marcarIntencion, medir, type EventoMedicion } from '@/content/medicion';
 import { Arrow, Check, Ico, Ilustracion, Kick, Rayita, Uline } from '@/components/landing/pieces';
 
 const digits = (value: string) => value.replace(/[^0-9]/g, '');
@@ -94,6 +94,8 @@ export default function LandingPage() {
   /** Las dos entradas al producto: van a la página de acceso, no a la app. */
   const ir = (evento: EventoMedicion, vista: 'signup' | 'login') => () => {
     medir(evento);
+    // Ya se contó aquí: que `/cuenta` no lo cuente otra vez al abrir.
+    marcarIntencion();
     window.location.href = `/cuenta#${vista}`;
   };
 
