@@ -7,7 +7,7 @@ import { menuAggregates } from '@/domain/aggregates';
 import { subrecipeUnitCost, subrecipeBatchCost } from '@/domain/costing';
 import { matchesSemaphoreFilter, semaphoreLevel, type SemaphoreFilter } from '@/domain/semaphore';
 import { money, money2, pct } from '@/domain/format';
-import { dishLimitNotice, type AccessLevel } from '@/domain/access';
+import { alcanceDe, avisoDeTope, sePuedeGuardarOtro, type AccessLevel } from '@/domain/access';
 import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, EmptyState, H, Muted, Pill, RADIUS, Row, text } from '@/components/ui';
@@ -78,7 +78,7 @@ export function Costeador({
     .filter((row) => (query ? row.dish.name.toLowerCase().includes(query.toLowerCase()) : true))
     .filter((row) => matchesSemaphoreFilter(row.metrics.foodCostRounded, colorFilter));
 
-  const limitNotice = dishLimitNotice(level, state.dishes.length);
+  const limitNotice = avisoDeTope(level, 'platillos', state.dishes.length);
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
@@ -183,7 +183,7 @@ export function Costeador({
         </div>
         <button
           type="button"
-          onClick={() => (can.dishLimit === null || state.dishes.length < can.dishLimit ? onNewDish() : onOpenPaywall())}
+          onClick={() => (sePuedeGuardarOtro(level, 'platillos', state.dishes.length) ? onNewDish() : onOpenPaywall())}
           style={{
             flex: 'none',
             display: 'flex',
@@ -294,7 +294,7 @@ export function Costeador({
           </div>
 
           {/* El potencial de la carta se anuncia aquí y se abre en Mi Menú. */}
-          {can.menu && typeFilter !== 'subrecetas' ? (
+          {alcanceDe(level, 'costeador:menu') !== 'cerrado' && typeFilter !== 'subrecetas' ? (
             <PlanTeaser state={state} onOpen={() => onChangeView('menu')} />
           ) : null}
 
@@ -377,7 +377,7 @@ export function Costeador({
       ) : null}
 
       {view === 'menu' ? (
-        can.menu ? (
+        alcanceDe(level, 'costeador:menu') !== 'cerrado' ? (
           <>
             <PlanDeAccion state={state} onUpdate={onUpdate} onFlash={onFlash} />
             <H size={19} style={{ marginTop: 8 }}>

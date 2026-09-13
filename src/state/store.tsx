@@ -20,28 +20,19 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { capabilities as capabilitiesFor, type AccessLevel, type Capabilities } from '@/domain/access';
 import {
-  capabilities as capabilitiesFor,
-  type AccessLevel,
-  type Capabilities,
-} from '@/domain/access';
+  leerEntitlement,
+  nivelDeAcceso,
+  NIVEL_MAS_RESTRINGIDO,
+  type Entitlement,
+} from '@/domain/entitlement';
 import { emptyProjectState, importBackup, type ProjectState } from '@/domain/projectState';
 import { getDeviceId } from '@/lib/device';
 
 const STATE_KEY = 'mrl.state.v3';
 
-export interface Entitlement {
-  level: AccessLevel;
-  licensed: boolean;
-  code?: string;
-  status?: string;
-  trial: { startedAt: number; expiresAt: number; daysLeft: number; expired: boolean; label: string };
-  capabilities: Capabilities;
-  devices?: { used: number; max: number };
-  price: number;
-  warrantyDays: number;
-  trialDays: number;
-}
+export type { Entitlement };
 
 type Action =
   | { type: 'replace'; state: ProjectState }
@@ -88,8 +79,18 @@ interface StoreValue {
   logout: () => Promise<void>;
   /** Guardado pendiente contra el servidor. */
   saving: boolean;
-  /** Acceso resuelto en el servidor. `null` mientras se consulta. */
+  /** Acceso resuelto en el servidor. `null` mientras se consulta o si no se entendió. */
   entitlement: Entitlement | null;
+  /**
+   * Nivel vigente. Única fuente para decidir qué se abre: ante una respuesta
+   * ausente, rota o de una versión que no reconocemos, vale `bloqueado`.
+   */
+  level: AccessLevel;
+  /** Ya hubo una respuesta del servidor, buena o mala. Antes de eso no se decide nada. */
+  accessReady: boolean;
+  /** Qué del último guardado no cupo en el nivel. Vacío = entró todo. */
+  recortado: string[];
+  olvidarRecorte: () => void;
   refreshEntitlement: () => Promise<Entitlement | null>;
   /** Reclama una licencia recién pagada (activación automática). */
   claim: () => Promise<boolean>;
@@ -106,7 +107,7 @@ interface StoreValue {
 const StoreContext = createContext<StoreValue | null>(null);
 
 /** Mientras no se sabe el acceso, se asume lo mínimo: nunca se filtra de más. */
-const PENDING_CAPABILITIES = capabilitiesFor('bloqueado');
+const PENDING_CAPABILITIES = capabilitiesFor(NIVEL_MAS_RESTRINGIDO);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => emptyProjectState());
@@ -116,6 +117,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [deviceId, setDeviceId] = useState('');
   const [user, setUser] = useState<SessionUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [accessReady, setAccessReady] = useState(false);
+  const [recortado, setRecortado] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -201,11 +204,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
       try {
-        await fetch('/api/project', {
+        const respuesta = await fetch('/api/project', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ state }),
+          // El equipo viaja con el guardado: el servidor resuelve el nivel con
+          // la misma regla que el entitlement, y así la API y la pantalla no
+          // pueden discrepar sobre qué se puede escribir.
+          body: JSON.stringify({ state, deviceId: getDeviceId() }),
         });
+        /*
+          El servidor recorta lo que el nivel no deja guardar. Se avisa en vez
+          de fingir que guardó: quien capturó algo tiene derecho a saber que no
+          quedó.
+        */
+        const datos = (await respuesta.json().catch(() => null)) as { recortado?: string[] } | null;
+        const recortado = datos?.recortado ?? [];
+        if (recortado.length) setRecortado(recortado);
       } catch {
         setOnline(false);
       } finally {
@@ -228,14 +242,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ deviceId: id }),
       });
       if (!response.ok) throw new Error(String(response.status));
-      const data = (await response.json()) as Entitlement;
+      // Se revisa la forma antes de creerle: una respuesta a medias o de otra
+      // versión del servidor no puede abrir nada.
+      const data = leerEntitlement(await response.json());
+      if (!data) throw new Error('respuesta-no-reconocida');
       setEntitlement(data);
       setOnline(true);
       return data;
     } catch {
-      // Sin conexión no se adivina el acceso: se muestra el bloqueo de red.
+      /*
+        Cualquier fallo —sin red, un 500, un cuerpo que no se entiende— deja el
+        acceso sin resolver, y sin resolver significa bloqueado. Se marca fuera
+        de línea a propósito: así sale la pantalla de reintento, que se explica
+        sola y reintenta cada 8 s, en vez del muro de pago, que le mentiría a
+        quien ya pagó.
+      */
+      setEntitlement(null);
       setOnline(false);
       return null;
+    } finally {
+      setAccessReady(true);
     }
   }, []);
 
@@ -380,6 +406,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       logout,
       saving,
       entitlement,
+      level: nivelDeAcceso(entitlement),
+      accessReady,
+      recortado,
+      olvidarRecorte: () => setRecortado([]),
       refreshEntitlement,
       claim,
       activate,
@@ -393,6 +423,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state,
       user,
       authReady,
+      accessReady,
+      recortado,
       register,
       login,
       logout,

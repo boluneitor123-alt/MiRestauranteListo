@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, Check, ChevronRight, Star } from 'lucide-react';
-import { isFreeModule, SAMPLE_LABEL, type AccessLevel } from '@/domain/access';
+import { alcanceDeModulo, CANDADO_TEXTO, courseState, type AccessLevel } from '@/domain/access';
 import type { ModuleProgress, ProjectProgress } from '@/domain/progress';
 import { RADIUS } from '@/components/ui';
 import { moduleIcon } from './moduleIcons';
@@ -135,7 +135,7 @@ export function ListaModulos({
                 <span style={{ display: 'block', fontSize: 14, fontWeight: 800, lineHeight: 1.2 }}>{curso.name}</span>
                 <span style={{ display: 'block', marginTop: 4, fontSize: 11.5, opacity: 0.78 }}>
                   {curso.total} lecciones ·{' '}
-                  {level === 'licencia' ? (curso.done ? `${curso.done} hechas` : 'sin empezar') : 'lección 1 abierta'}
+                  {courseState(level, curso.done)}
                 </span>
               </span>
               <ChevronRight size={16} strokeWidth={2.8} style={{ flex: 'none', opacity: 0.7 }} />
@@ -162,8 +162,9 @@ function FilaModulo({
 }) {
   const [d1, d2, d3] = moduleIcon(mod.id);
   const terminado = !mod.skipped && mod.total > 0 && mod.done === mod.total;
-  // Sin licencia, un módulo que no va completo en la prueba enseña su muestra.
-  const muestra = level !== 'licencia' && !isFreeModule(mod.id) && !terminado;
+  // Un módulo cerrado se sigue viendo entero en la lista —título, avance,
+  // tareas— y lleva el candado. Lo que no abre es la lección.
+  const cerrado = alcanceDeModulo(level, mod.id) === 'cerrado';
   const pendiente = mod.tasks.find((t) => !done[t.key]);
 
   const sub = mod.skipped
@@ -239,7 +240,7 @@ function FilaModulo({
             </span>
           ) : null}
           {current ? <Etiqueta tono="accent">Vas aquí</Etiqueta> : null}
-          {muestra ? <Etiqueta tono="accent-2">{SAMPLE_LABEL}</Etiqueta> : null}
+          {cerrado && !terminado ? <Etiqueta tono="accent">{CANDADO_TEXTO}</Etiqueta> : null}
         </span>
 
         {!mod.skipped && mod.done > 0 ? (

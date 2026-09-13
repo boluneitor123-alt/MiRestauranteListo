@@ -5,14 +5,13 @@ import { ArrowLeft, Bike, Check, ChevronDown, ChevronRight, Lock, Megaphone, Sta
 import { ROUTE_MODULES, SKIP_REASONS } from '@/content/route';
 import { projectProgress, progressWithoutModule, type ModuleProgress, type RouteTask } from '@/domain/progress';
 import {
-  routeTaskAccess,
-  SAMPLE_COURSE_HINT,
-  SAMPLE_COURSE_TITLE,
-  SAMPLE_LABEL,
-  SAMPLE_MODULE_HINT,
+  alcanceDeModulo,
+  CANDADO_TEXTO,
+  sePuedeEditarModulo,
+  type Alcance,
   type AccessLevel,
-  type TaskAccess,
 } from '@/domain/access';
+import { Candado } from '@/components/app/Candado';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, text } from '@/components/ui';
 import { Lesson } from '../ruta/Lesson';
@@ -188,7 +187,7 @@ export function Ruta({
       />
 
       {/* Aviso de muestra: distinto para un módulo de ruta que para un curso. */}
-      <SampleNotice level={level} module={current} onOpenPaywall={onOpenPaywall} />
+      <AvisoDelModulo level={level} module={current} onOpenPaywall={onOpenPaywall} />
 
       {/*
         Dos cursos traen su herramienta. Se ofrece aquí, junto a las lecciones
@@ -198,14 +197,15 @@ export function Ruta({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
         {current.tasks.map((task, index) => {
-          const access = routeTaskAccess(level, current.id, index);
+          const alcance = alcanceDeModulo(level, current.id);
           return (
             <TaskCard
               key={task.key}
               task={task}
               index={index}
               total={current.tasks.length}
-              access={access}
+              level={level}
+              alcance={alcance}
               done={!!state.done[task.key]}
               open={openTaskKey === task.key}
               onOpen={() => onOpenTask(openTaskKey === task.key ? null : task.key)}
@@ -418,10 +418,14 @@ function ModuleTool({
 }
 
 /**
- * Aviso de "muestra gratis" al pie del módulo. El texto del prototipo cambia
- * según sea un módulo de la ruta o uno de los cuatro mini cursos.
+ * El letrero del módulo, al pie de la lista de tareas.
+ *
+ * Antes decía «la lección 1 está abierta»: esa regla se quitó. Ahora dice qué
+ * pasa con este módulo en este nivel, y nada más — la lista de arriba ya
+ * enseña los títulos y el resumen de cada tarea, que es lo que deja entender
+ * el alcance de lo que se compra.
  */
-function SampleNotice({
+function AvisoDelModulo({
   level,
   module,
   onOpenPaywall,
@@ -430,46 +434,23 @@ function SampleNotice({
   module: ModuleProgress;
   onOpenPaywall: () => void;
 }) {
-  if (routeTaskAccess(level, module.id, 0) !== 'muestra') return null;
+  const alcance = alcanceDeModulo(level, module.id);
+  if (alcance === 'abierto') return null;
+
+  const detalle =
+    alcance === 'cerrado'
+      ? module.course
+        ? `Las ${module.total} lecciones de este curso se abren con el pago único.`
+        : `Las ${module.total} lecciones de este módulo se abren con el pago único.`
+      : 'Lo que capturaste sigue aquí y se puede leer completo. Para volver a editarlo, desbloquea.';
 
   return (
-    <Card style={{ background: 'var(--color-accent-2-100)' }}>
-      <Row gap={10} align="flex-start">
-        <span
-          style={{
-            width: 22,
-            height: 22,
-            flex: 'none',
-            borderRadius: '50%',
-            background: 'var(--color-accent-2-600)',
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          <Check size={13} strokeWidth={3} color="var(--color-bg)" />
-        </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {module.course ? (
-            <>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-accent-2-800)' }}>
-                {SAMPLE_COURSE_TITLE}
-              </div>
-              <p
-                className="mrl-prose"
-                style={{ margin: '5px 0 0', fontSize: 12.4, lineHeight: 1.45, color: 'var(--color-accent-2-800)' }}
-              >
-                {SAMPLE_COURSE_HINT}
-              </p>
-            </>
-          ) : (
-            <span style={{ fontSize: 12.5, color: 'var(--color-accent-2-800)' }}>{SAMPLE_MODULE_HINT}</span>
-          )}
-        </div>
-      </Row>
-      <div style={{ marginTop: 12 }}>
-        <Button onClick={onOpenPaywall}>Ver el pago único</Button>
-      </div>
-    </Card>
+    <Candado
+      level={level}
+      motivo={alcance === 'cerrado' ? 'contenido' : 'edicion'}
+      detalle={detalle}
+      onOpenPaywall={onOpenPaywall}
+    />
   );
 }
 
@@ -477,7 +458,8 @@ function TaskCard({
   task,
   index,
   total,
-  access,
+  level,
+  alcance,
   done,
   open,
   onOpen,
@@ -488,7 +470,8 @@ function TaskCard({
   task: RouteTask;
   index: number;
   total: number;
-  access: TaskAccess;
+  level: AccessLevel;
+  alcance: Alcance;
   done: boolean;
   open: boolean;
   onOpen: () => void;
@@ -496,7 +479,9 @@ function TaskCard({
   onOpenPaywall: () => void;
   onDelete?: () => void;
 }) {
-  const locked = access === 'bloqueada';
+  /* Cerrada marca el candado en la fila, pero la fila sigue abriendo: dentro
+     está el resumen y el letrero. Lo que no aparece es la lección. */
+  const locked = alcance === 'cerrado';
 
   return (
     <Card radius={RADIUS.block} style={{ padding: 14 }}>
@@ -505,7 +490,7 @@ function TaskCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            if (!locked) onToggle();
+            onToggle();
           }}
           aria-label={done ? 'Marcar como pendiente' : 'Marcar como completada'}
           className="mrl-inline mrl-hit"
@@ -517,7 +502,7 @@ function TaskCard({
             background: done ? 'var(--color-accent-2-600)' : 'transparent',
             display: 'grid',
             placeItems: 'center',
-            cursor: locked ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
             flexShrink: 0,
             animation: done ? 'mrlPop .2s ease' : undefined,
           }}
@@ -552,20 +537,6 @@ function TaskCard({
             >
               {task.title}
             </span>
-            {access === 'muestra' ? (
-              <span
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: RADIUS.pill,
-                  background: 'var(--color-accent-2-100)',
-                  color: 'var(--color-accent-2-800)',
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                }}
-              >
-                {SAMPLE_LABEL}
-              </span>
-            ) : null}
             {locked ? <Lock size={13} strokeWidth={2.8} color={text(45)} /> : null}
           </span>
           <Muted size={12.5} style={{ marginTop: 2 }}>
@@ -588,7 +559,8 @@ function TaskCard({
           next={task.next}
           index={index}
           total={total}
-          access={access}
+          level={level}
+          alcance={alcance}
           done={done}
           onToggle={onToggle}
           onOpenPaywall={onOpenPaywall}

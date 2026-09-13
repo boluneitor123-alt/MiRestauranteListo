@@ -173,7 +173,12 @@ describe('activación automática al volver del checkout', () => {
       ok: true,
       code,
     });
-    const entitlement = await service.entitlement({ deviceId: 'eq-1' });
+    // La pregunta lleva quién está en sesión: la ruta la saca de la cookie.
+    const entitlement = await service.entitlement({
+      deviceId: 'eq-1',
+      userId: 'u-ana',
+      email: 'ana@correo.com',
+    });
     expect(entitlement.level).toBe('licencia');
     expect(entitlement.licensed).toBe(true);
   });
@@ -241,20 +246,16 @@ describe('acceso resuelto en el servidor', () => {
     const inicio = await service.entitlement({ deviceId: 'eq-1' });
     expect(inicio.level).toBe('prueba');
     expect(inicio.trial.daysLeft).toBe(7);
-    expect(inicio.capabilities.budget).toBe(false);
-    expect(inicio.capabilities.breakeven).toBe(true);
-    expect(inicio.capabilities.showsInvestmentFigures).toBe(false);
+    expect(inicio.capabilities.alcances['numeros:presupuesto']).toBe('solo-lectura');
+    expect(inicio.capabilities.alcances['ruta:define']).toBe('abierto');
+    expect(inicio.capabilities.muestraCifrasDeInversion).toBe(false);
 
     advance(8 * DAY_MS);
     const vencida = await service.entitlement({ deviceId: 'eq-1' });
     expect(vencida.level).toBe('bloqueado');
-    expect(vencida.capabilities.tabs).toEqual({
-      inicio: false,
-      ruta: false,
-      costeador: false,
-      numeros: false,
-      mas: true,
-    });
+    // Vencida no borra nada: lo capturado queda visible y deja de editarse.
+    expect(vencida.capabilities.alcances['ruta:define']).toBe('solo-lectura');
+    expect(vencida.capabilities.alcances['costeador:platillos']).toBe('solo-lectura');
 
     const trial = await store.getTrial('eq-1');
     expect(trial?.expiredAt).toBe(START + 7 * DAY_MS);
@@ -281,7 +282,7 @@ describe('acceso resuelto en el servidor', () => {
     const despues = await service.entitlement({ deviceId: 'eq-1' });
     expect(despues.level).toBe('prueba');
     expect(despues.status).toBe('revocada');
-    expect(despues.capabilities.showsInvestmentFigures).toBe(false);
+    expect(despues.capabilities.muestraCifrasDeInversion).toBe(false);
   });
 
   it('con licencia activa la prueba vencida ya no importa', async () => {
@@ -293,7 +294,7 @@ describe('acceso resuelto en el servidor', () => {
 
     const entitlement = await service.entitlement({ deviceId: 'eq-1' });
     expect(entitlement.level).toBe('licencia');
-    expect(entitlement.capabilities.dishLimit).toBeNull();
+    expect(entitlement.capabilities.topes.platillos).toBeNull();
     expect(entitlement.devices).toEqual({ used: 1, max: 3 });
   });
 
@@ -366,5 +367,106 @@ describe('operaciones del panel', () => {
     expect(await store.listLicenses({ status: 'activada' })).toHaveLength(1);
     expect(await store.listLicenses({ status: 'nueva' })).toHaveLength(1);
     expect(await store.listLicenses({ status: 'todas' })).toHaveLength(2);
+  });
+});
+
+/*
+  El agujero que cerró esto: el `deviceId` vive en el `localStorage` del
+  navegador y sobrevive a cerrar sesión y a registrarse con otro correo.
+  Mientras el acceso se decidía sólo por equipo, un navegador que alguna vez
+  activó una licencia se la prestaba a cualquiera que lo usara después.
+*/
+describe('la licencia es de la persona, no del navegador', () => {
+  /** Deja una licencia de Ana activada en `eq-1`, con cuenta registrada. */
+  async function conLicenciaDeAna() {
+    const s = setup();
+    s.store.cuentas.add('ana@correo.com');
+    const { code } = await s.service.issue({ email: 'ana@correo.com', userId: 'u-ana', paymentRef: 'pi_1' });
+    await s.service.activate({ code, deviceId: 'eq-1' });
+    return { ...s, code };
+  }
+
+  it('Ana entra en el equipo donde activó', async () => {
+    const { service } = await conLicenciaDeAna();
+    const e = await service.entitlement({ deviceId: 'eq-1', userId: 'u-ana', email: 'ana@correo.com' });
+    expect(e.level).toBe('licencia');
+  });
+
+  it('una cuenta nueva en el mismo navegador NO hereda la licencia', async () => {
+    const { service } = await conLicenciaDeAna();
+    const e = await service.entitlement({ deviceId: 'eq-1', userId: 'u-beto', email: 'beto@correo.com' });
+    expect(e.level).toBe('prueba');
+    expect(e.licensed).toBe(false);
+    expect(e.code).toBeUndefined();
+  });
+
+  it('sin sesión, el mismo navegador tampoco abre', async () => {
+    const { service } = await conLicenciaDeAna();
+    const e = await service.entitlement({ deviceId: 'eq-1' });
+    expect(e.level).toBe('prueba');
+    expect(e.licensed).toBe(false);
+  });
+
+  it('el correo basta aunque la licencia no tenga userId', async () => {
+    const s = setup();
+    s.store.cuentas.add('ana@correo.com');
+    const { code } = await s.service.issue({ email: 'ana@correo.com', paymentRef: 'pi_2' });
+    await s.service.activate({ code, deviceId: 'eq-1' });
+    const e = await s.service.entitlement({ deviceId: 'eq-1', email: 'Ana@Correo.com' });
+    expect(e.level).toBe('licencia');
+  });
+
+  it('con la prueba ya vencida, el intruso queda bloqueado, no en prueba', async () => {
+    const { service, advance, store } = await conLicenciaDeAna();
+    await service.entitlement({ deviceId: 'eq-1', userId: 'u-beto', email: 'beto@correo.com' });
+    const settings = await store.getSettings();
+    advance((settings.trialDays + 1) * DAY_MS);
+    const e = await service.entitlement({ deviceId: 'eq-1', userId: 'u-beto', email: 'beto@correo.com' });
+    expect(e.level).toBe('bloqueado');
+  });
+});
+
+describe('red de seguridad: licencias sin dueño registrado', () => {
+  /** Pagó con un correo que nunca llegó a ser cuenta. */
+  async function huerfana() {
+    const s = setup();
+    const { code } = await s.service.issue({ email: 'pago@correo.com', paymentRef: 'pi_3' });
+    await s.service.activate({ code, deviceId: 'eq-1' });
+    return { ...s, code };
+  }
+
+  it('sigue abriendo por equipo: quien ya pagó no se queda fuera', async () => {
+    const { service } = await huerfana();
+    const e = await service.entitlement({ deviceId: 'eq-1', userId: 'u-otro', email: 'otro@correo.com' });
+    expect(e.level).toBe('licencia');
+  });
+
+  it('en cuanto ese correo tiene cuenta, deja de ser de cualquiera', async () => {
+    const { service, store } = await huerfana();
+    store.cuentas.add('pago@correo.com');
+    const e = await service.entitlement({ deviceId: 'eq-1', userId: 'u-otro', email: 'otro@correo.com' });
+    expect(e.level).toBe('prueba');
+  });
+
+  it('y su dueño real entra con ese correo', async () => {
+    const { service, store } = await huerfana();
+    store.cuentas.add('pago@correo.com');
+    const e = await service.entitlement({ deviceId: 'eq-1', email: 'pago@correo.com' });
+    expect(e.level).toBe('licencia');
+  });
+
+  it('deja rastro en la bitácora del servidor cada vez que se usa', async () => {
+    const { service } = await huerfana();
+    const avisos: string[] = [];
+    const original = console.warn;
+    console.warn = (msg: unknown) => void avisos.push(String(msg));
+    try {
+      await service.entitlement({ deviceId: 'eq-1', userId: 'u-otro', email: 'otro@correo.com' });
+    } finally {
+      console.warn = original;
+    }
+    expect(avisos).toHaveLength(1);
+    expect(avisos[0]).toContain('no tiene dueño registrado');
+    expect(avisos[0]).toContain('eq-1');
   });
 });

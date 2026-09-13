@@ -6,14 +6,16 @@ import { LICENSE_STATUS_LABELS, type License, type LicenseStatus } from '@/domai
 import { PERIODS, PERIOD_LABELS, type PeriodId } from '@/domain/period';
 import type { AdminSummary } from '@/server/admin/metrics';
 import { ESTADO_LABELS, type AccountRow, type EstadoCuenta } from '@/server/admin/accounts';
+import type { LicenciaHuerfana, ResumenDeDuenos } from '@/server/admin/licenciasHuerfanas';
 import type { AdminEvent, AdminSettings } from '@/server/licensing/store';
 
-type Page = 'resumen' | 'cuentas' | 'licencias' | 'clientes' | 'ajustes' | 'registro';
+type Page = 'resumen' | 'cuentas' | 'licencias' | 'huerfanas' | 'clientes' | 'ajustes' | 'registro';
 
 const NAV: Array<{ id: Page; label: string }> = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'cuentas', label: 'Cuentas' },
   { id: 'licencias', label: 'Licencias' },
+  { id: 'huerfanas', label: 'Sin dueño' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'ajustes', label: 'Ajustes' },
   { id: 'registro', label: 'Registro' },
@@ -56,6 +58,8 @@ export default function AdminPage() {
   const [accountQuery, setAccountQuery] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<EstadoCuenta | 'todas'>('todas');
   const [soloAbandonadas, setSoloAbandonadas] = useState(false);
+  const [huerfanas, setHuerfanas] = useState<LicenciaHuerfana[]>([]);
+  const [duenos, setDuenos] = useState<ResumenDeDuenos | null>(null);
 
   /**
    * El acceso al panel lo decide el servidor con el `role` de la cuenta.
@@ -126,6 +130,66 @@ export default function AdminPage() {
     const t = setTimeout(loadAccounts, 200);
     return () => clearTimeout(t);
   }, [loadAccounts]);
+
+  const loadHuerfanas = useCallback(async () => {
+    if (!authed) return;
+    try {
+      const data = await call('/api/admin/licencias-huerfanas');
+      setHuerfanas(data.huerfanas ?? []);
+      setDuenos(data.resumen ?? null);
+    } catch {
+      // El 401 ya devolvió al formulario de acceso.
+    }
+  }, [authed, call]);
+
+  useEffect(() => {
+    void loadHuerfanas();
+  }, [loadHuerfanas]);
+
+  /** Le pone dueño a una licencia huérfana: deja de abrir para cualquiera. */
+  const asignarDueno = useCallback(
+    async (code: string, email: string) => {
+      try {
+        const data = await call('/api/admin/licencias-huerfanas', {
+          method: 'POST',
+          body: JSON.stringify({ code, email }),
+        });
+        setMessage(data.ok ? `Listo: ${code} queda a nombre de ${email}.` : (data.message ?? 'No se pudo.'));
+        await loadHuerfanas();
+        await loadAccounts();
+      } catch {
+        setMessage('No se pudo asignar el dueño.');
+      }
+    },
+    [call, loadHuerfanas, loadAccounts],
+  );
+
+  /** Revoca todas las licencias vigentes de un correo. */
+  const revocarPorCorreo = useCallback(
+    async (email: string) => {
+      const ok = window.confirm(
+        `¿Revocar todas las licencias de ${email}? Esa persona pierde el acceso en todos sus equipos.`,
+      );
+      if (!ok) return;
+      try {
+        const data = await call('/api/admin/licencias-huerfanas', {
+          method: 'POST',
+          body: JSON.stringify({ revocarCorreo: email }),
+        });
+        const revocadas: string[] = data.revocadas ?? [];
+        setMessage(
+          revocadas.length
+            ? `Revocadas ${revocadas.length}: ${revocadas.join(', ')}.`
+            : `${email} no tenía licencias vigentes.`,
+        );
+        await loadHuerfanas();
+        await loadAccounts();
+      } catch {
+        setMessage('No se pudo revocar.');
+      }
+    },
+    [call, loadHuerfanas, loadAccounts],
+  );
 
   /** Desbloquea a mano: emite una licencia atada a esa cuenta. */
   const desbloquear = useCallback(
@@ -306,6 +370,8 @@ export default function AdminPage() {
                 ? (summary?.period.description ?? 'Cargando…')
                 : page === 'cuentas'
                 ? 'Todas las personas registradas, hayan pagado o no'
+                : page === 'huerfanas'
+                  ? 'Licencias que abren por equipo porque nadie las reclama'
                 : page === 'licencias'
                   ? 'Códigos emitidos, equipos y estado'
                   : page === 'clientes'
@@ -405,6 +471,15 @@ export default function AdminPage() {
             soloAbandonadas={soloAbandonadas}
             setSoloAbandonadas={setSoloAbandonadas}
             onDesbloquear={desbloquear}
+          />
+        ) : null}
+
+        {page === 'huerfanas' ? (
+          <SinDueno
+            filas={huerfanas}
+            resumen={duenos}
+            onAsignar={asignarDueno}
+            onRevocarCorreo={revocarPorCorreo}
           />
         ) : null}
 
@@ -1088,6 +1163,148 @@ function Cuentas({
             ) : null}
           </tbody>
         </table>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Licencias sin dueño registrado.
+ *
+ * Son las que la red de seguridad sigue abriendo por equipo: alguien pagó con
+ * un correo que nunca llegó a ser cuenta. No es una falla, pero sí una lista
+ * de pendientes: mientras estén aquí, el navegador donde se activaron se las
+ * presta a quien lo use después.
+ */
+function SinDueno({
+  filas,
+  resumen,
+  onAsignar,
+  onRevocarCorreo,
+}: {
+  filas: LicenciaHuerfana[];
+  resumen: ResumenDeDuenos | null;
+  onAsignar: (code: string, email: string) => Promise<void>;
+  onRevocarCorreo: (email: string) => Promise<void>;
+}) {
+  const [correos, setCorreos] = useState<Record<string, string>>({});
+  const [revocar, setRevocar] = useState('');
+
+  return (
+    <section style={{ marginTop: 20 }}>
+      {resumen ? (
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {[
+            ['Licencias vigentes', resumen.total],
+            ['Atadas a una cuenta', resumen.conCuenta],
+            ['Sólo por correo con cuenta', resumen.soloCorreo],
+            ['Sin dueño registrado', resumen.huerfanas],
+          ].map(([label, valor]) => (
+            <div key={String(label)} style={{ ...card, padding: '14px 18px', minWidth: 170 }}>
+              <div style={{ fontSize: 12, opacity: 0.7 }}>{label}</div>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 24 }}>{valor}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <p style={{ fontSize: 12.5, color: 'var(--color-neutral-600)', margin: '14px 2px 0', maxWidth: 720 }}>
+        Estas licencias abren por equipo porque su correo no corresponde a ninguna cuenta. Es a propósito: quien
+        ya pagó no se queda fuera por una regla nueva. Pero mientras sigan así, el navegador donde se activaron
+        le da acceso a cualquiera que lo use. Asígnales un correo con cuenta y dejan de prestarse.
+      </p>
+
+      <div style={{ ...card, marginTop: 14, padding: 0, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: 'var(--color-neutral-200)', textAlign: 'left' }}>
+              {['Código', 'Correo del pago', 'Emitida', 'Activada', 'Equipos', 'Asignar a'].map((h) => (
+                <th key={h} style={{ padding: '12px 14px', fontSize: 11.5, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f) => (
+              <tr key={f.code} style={{ borderTop: '1px solid var(--color-divider)' }}>
+                <td style={cell}>
+                  <div style={{ fontWeight: 700 }}>{f.code}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>
+                    {LICENSE_STATUS_LABELS[f.status]}
+                    {f.source ? ` · ${f.source}` : ''}
+                  </div>
+                </td>
+                <td style={cell}>{f.email ?? <Vacio />}</td>
+                <td style={cell}>{fechaCorta(f.createdAt)}</td>
+                <td style={cell}>{f.activatedAt ? fechaCorta(f.activatedAt) : <Vacio />}</td>
+                <td style={cell}>
+                  {f.devices.length === 0 ? (
+                    <Vacio />
+                  ) : (
+                    f.devices.map((d) => (
+                      <div key={d} style={{ fontFamily: 'monospace', fontSize: 11.5 }}>
+                        {d}
+                      </div>
+                    ))
+                  )}
+                </td>
+                <td style={cell}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      value={correos[f.code] ?? ''}
+                      onChange={(e) => setCorreos({ ...correos, [f.code]: e.target.value })}
+                      placeholder="correo de la cuenta"
+                      style={{ height: 36, padding: '0 12px', borderRadius: 999, border: '1.5px solid var(--color-divider)', minWidth: 200 }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!(correos[f.code] ?? '').includes('@')}
+                      onClick={() => void onAsignar(f.code, (correos[f.code] ?? '').trim())}
+                      style={{ ...chip, height: 36, opacity: (correos[f.code] ?? '').includes('@') ? 1 : 0.45 }}
+                    >
+                      Asignar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filas.length === 0 ? (
+              <tr>
+                <td style={{ ...cell, textAlign: 'center', color: 'var(--color-neutral-600)' }} colSpan={6}>
+                  Ninguna licencia anda suelta. Todas tienen dueño.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ ...card, marginTop: 18, maxWidth: 560 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>Revocar por correo</div>
+        <p style={{ fontSize: 12.5, color: 'var(--color-neutral-600)', margin: '6px 0 12px' }}>
+          Revoca todas las licencias vigentes de ese correo, en todos sus equipos. Las ya revocadas o
+          reembolsadas se quedan como están.
+        </p>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            value={revocar}
+            onChange={(e) => setRevocar(e.target.value)}
+            placeholder="correo@ejemplo.com"
+            style={{ height: 42, padding: '0 14px', borderRadius: 999, border: '1.5px solid var(--color-divider)', minWidth: 260 }}
+          />
+          <button
+            type="button"
+            disabled={!revocar.includes('@')}
+            onClick={() => {
+              void onRevocarCorreo(revocar.trim());
+              setRevocar('');
+            }}
+            style={{ ...secondaryButton, opacity: revocar.includes('@') ? 1 : 0.45 }}
+          >
+            Revocar
+          </button>
+        </div>
       </div>
     </section>
   );

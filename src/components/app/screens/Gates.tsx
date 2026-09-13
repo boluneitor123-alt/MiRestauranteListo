@@ -145,46 +145,17 @@ export function Paywall({
   );
 }
 
-/** Bloqueo al expirar la prueba: sólo queda "Más" (README § 1.12). */
-export function Blocked({
-  onOpenPaywall,
-  onGoMore,
-  onBackup,
-}: {
-  onOpenPaywall: () => void;
-  onGoMore: () => void;
-  onBackup: () => void;
-}) {
+/**
+ * Mientras el servidor resuelve el acceso.
+ *
+ * No es un bloqueo ni un muro de pago: es "todavía no sabemos". Se muestra en
+ * lugar del contenido porque abrirlo antes de saber sería regalarlo, y en
+ * lugar del muro porque acusar de no haber pagado a quien sí pagó es peor.
+ */
+export function ValidandoAcceso() {
   return (
     <div className="mrl-measure" style={{ padding: '60px 24px 40px', textAlign: 'center' }}>
-      <div
-        style={{
-          width: 72,
-          height: 72,
-          borderRadius: RADIUS.pill,
-          background: 'var(--color-accent-100)',
-          display: 'grid',
-          placeItems: 'center',
-          margin: '0 auto',
-        }}
-      >
-        <Clock size={34} color="var(--color-accent)" strokeWidth={2.6} />
-      </div>
-      <H size={26} style={{ marginTop: 20 }}>
-        Desbloquea con un solo pago
-      </H>
-      <Muted size={14} style={{ marginTop: 10 }}>
-        Recuperas Inicio, Mi Ruta, el Costeador de Platillos y Números tal como los dejaste: nada se borró.
-      </Muted>
-      <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
-        <Button onClick={onOpenPaywall}>Ver el pago único</Button>
-        <Button variant="secondary" height={48} onClick={onGoMore}>
-          Ir a Más
-        </Button>
-        <Button variant="ghost" height={48} onClick={onBackup}>
-          Descargar respaldo
-        </Button>
-      </div>
+      <Muted size={14}>Validando tu acceso…</Muted>
     </div>
   );
 }

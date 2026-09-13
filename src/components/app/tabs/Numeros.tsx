@@ -5,7 +5,8 @@ import { ArrowRight, ChevronDown, ChevronRight, FileText, Lock } from 'lucide-re
 import { breakeven, conceptTotal, fixedExpensesTotal, investment, type Subconcept } from '@/domain/finance';
 import { money } from '@/domain/format';
 import { menuAggregates } from '@/domain/aggregates';
-import type { Capabilities } from '@/domain/access';
+import { alcanceDe, type AccessLevel, type Capabilities } from '@/domain/access';
+import { SoloLectura } from '@/components/app/SoloLectura';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
@@ -74,6 +75,7 @@ export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio' | 'agu
 export function Numeros({
   state,
   view,
+  level,
   can,
   formOpen,
   onChangeView,
@@ -88,6 +90,7 @@ export function Numeros({
 }: {
   state: ProjectState;
   view: NumbersView;
+  level: AccessLevel;
   can: Capabilities;
   formOpen: boolean;
   onChangeView: (view: NumbersView) => void;
@@ -110,7 +113,7 @@ export function Numeros({
       <Budget
         state={state}
         formOpen={formOpen}
-        readOnly={!can.budget}
+        readOnly={can.alcances['numeros:presupuesto'] !== 'abierto'}
         onBack={() => onChangeView('home')}
         onPatch={onPatch}
         onFlash={onFlash}
@@ -120,16 +123,37 @@ export function Numeros({
   }
 
   if (view === 'fijos') {
-    return <FixedExpenses state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />;
+    return (
+      <SoloLectura
+        activo={alcanceDe(level, 'numeros:fijos') !== 'abierto'}
+        level={level}
+        onOpenPaywall={onOpenPaywall}
+      >
+        <FixedExpenses state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
+      </SoloLectura>
+    );
   }
 
   if (view === 'equilibrio') {
-    return <Breakeven state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />;
+    return (
+      <SoloLectura
+        activo={alcanceDe(level, 'numeros:equilibrio') !== 'abierto'}
+        level={level}
+        onOpenPaywall={onOpenPaywall}
+      >
+        <Breakeven state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
+      </SoloLectura>
+    );
   }
 
   if (view === 'aguante') {
     const result = survivalOf(state);
     return (
+      <SoloLectura
+        activo={alcanceDe(level, 'numeros:aguante') !== 'abierto'}
+        level={level}
+        onOpenPaywall={onOpenPaywall}
+      >
       <Aguante
         result={result}
         ownerSalary={result.ownerSalary}
@@ -151,6 +175,7 @@ export function Numeros({
         onChangePrepMinutes={(prepMinutes) => onPatch({ prepMinutes })}
         onChangeStress={(stress) => onPatch({ stress })}
       />
+      </SoloLectura>
     );
   }
 
@@ -183,12 +208,18 @@ export function Numeros({
 
   if (view === 'realidad') {
     return (
-      <Realidad
-        result={realidad}
-        capacity={state.capacity}
-        onBack={() => onChangeView('home')}
-        onChangeCapacity={(capacity) => onPatch({ capacity })}
-      />
+      <SoloLectura
+        activo={alcanceDe(level, 'numeros:realidad') !== 'abierto'}
+        level={level}
+        onOpenPaywall={onOpenPaywall}
+      >
+        <Realidad
+          result={realidad}
+          capacity={state.capacity}
+          onBack={() => onChangeView('home')}
+          onChangeCapacity={(capacity) => onPatch({ capacity })}
+        />
+      </SoloLectura>
     );
   }
 
@@ -304,7 +335,7 @@ export function Numeros({
         kicker="Módulo 1"
         title="Presupuesto de apertura"
         hint={
-          can.showsInvestmentFigures
+          can.muestraCifrasDeInversion
             ? `${money(invest.total)} · ${state.budget.length} conceptos`
             : `${state.budget.length} conceptos con subconceptos · míralo completo antes de pagar`
         }
@@ -334,7 +365,9 @@ export function Numeros({
 
       <button
         type="button"
-        onClick={onPrint}
+        /* El resumen financiero se genera con los datos reales: es de lo que
+           se abre con el pago, no del recorrido de prueba. */
+        onClick={() => (alcanceDe(level, 'numeros:resumen') === 'abierto' ? onPrint() : onOpenPaywall())}
         style={{
           display: 'flex',
           alignItems: 'center',

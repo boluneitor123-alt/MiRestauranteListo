@@ -78,6 +78,15 @@ export interface LicenseStore {
    */
   findClaimableLicense(owner: { userId?: string; email?: string }): Promise<License | undefined>;
   listLicenses(filter?: LicenseFilter): Promise<License[]>;
+  /**
+   * La cuenta registrada con ese correo, si existe.
+   *
+   * Decide si una licencia tiene dueño de verdad: una cuyo correo no pertenece
+   * a ninguna cuenta no puede compararse contra nadie, y es la que conserva el
+   * acceso por equipo para no dejar fuera a quien ya pagó. El `id` se usa al
+   * asignarle dueño a mano desde el panel.
+   */
+  findAccountByEmail(email: string): Promise<{ id: string; name?: string } | undefined>;
   createLicense(data: NewLicense): Promise<License>;
   saveLicense(license: License): Promise<License>;
   deleteAllLicenses(): Promise<void>;
