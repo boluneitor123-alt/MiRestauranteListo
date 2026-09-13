@@ -14,7 +14,9 @@ import { useStore } from '@/state/store';
 import { RADIUS, Sheet, text } from '@/components/ui';
 import { Onboarding } from './screens/Onboarding';
 import { Diagnostic } from './screens/Diagnostic';
-import { Blocked, OfflineGate, Paywall, ValidandoAcceso } from './screens/Gates';
+import { sePuedeGuardarOtro } from '@/domain/access';
+import { SoloLectura } from './SoloLectura';
+import { OfflineGate, Paywall, ValidandoAcceso } from './screens/Gates';
 import { Tour } from './screens/Tour';
 import { Celebration, type CelebrationState } from './ruta/Celebration';
 import { InstallSheet, shouldShowInstallSheet } from './screens/InstallSheet';
@@ -55,6 +57,8 @@ export function App() {
     entitlement,
     level,
     accessReady,
+    recortado,
+    olvidarRecorte,
     can,
     online,
     refreshEntitlement,
@@ -205,9 +209,33 @@ export function App() {
     }
   }, [authReady, user, state.answers]);
 
+  /*
+    El servidor recorta lo que el nivel no deja guardar. Se avisa aquí, en la
+    misma barra donde se confirma todo lo demás: fingir que guardó sería la
+    peor forma de enterarse.
+  */
+  useEffect(() => {
+    if (!recortado.length) return;
+    const nombres: Record<string, string> = {
+      platillos: 'los platillos de más',
+      'sub-recetas': 'las sub-recetas de más',
+      tareas: 'las tareas de los módulos cerrados',
+      presupuesto: 'el presupuesto',
+      'gastos-fijos': 'los gastos fijos',
+      'punto-de-equilibrio': 'el punto de equilibrio',
+      'prueba-de-estres': 'la prueba de estrés',
+      'revision-de-realidad': 'la revisión de realidad',
+      herramientas: 'las calculadoras',
+      diagnostico: 'el diagnóstico',
+    };
+    const lista = recortado.map((r) => nombres[r] ?? r).join(', ');
+    flash(`No se guardó ${lista}: se abre con el pago único.`);
+    olvidarRecorte();
+  }, [recortado, flash, olvidarRecorte]);
+
   const diagnosis = useMemo(
-    () => diagnose({ state, modules: ROUTE_MODULES, showFigures: can.showsInvestmentFigures }),
-    [state, can.showsInvestmentFigures],
+    () => diagnose({ state, modules: ROUTE_MODULES, showFigures: can.muestraCifrasDeInversion }),
+    [state, can.muestraCifrasDeInversion],
   );
 
   /*
@@ -216,8 +244,13 @@ export function App() {
     otro caso. `accessReady` distingue "todavía no contesta" de "contestó que
     no": mientras no contesta no se abre nada, pero tampoco se le enseña el
     muro de pago a quien quizá ya pagó.
+
+    Al vencer la prueba la app **no** se cierra. Antes se reemplazaba todo por
+    una pantalla de pago y las cuatro pestañas quedaban muertas: quien había
+    capturado su presupuesto y sus platillos veía que su trabajo desapareció.
+    Ahora cada pantalla se dibuja en sólo lectura y lo capturado sigue a la
+    vista. Si se pierde el trabajo, se pierde la venta.
   */
-  const blocked = level === 'bloqueado';
   // El punto naranja de la campana: sólo con una recomendación de severidad alta.
   const hasAlerts = diagnosis.recommendations.some((r) => r.severity === 'alta');
 
@@ -256,7 +289,7 @@ export function App() {
   };
 
   const openDish = (id?: string) => {
-    if (!id && can.dishLimit !== null && state.dishes.length >= can.dishLimit) {
+    if (!id && !sePuedeGuardarOtro(level, 'platillos', state.dishes.length)) {
       setScreen('paywall');
       return;
     }
@@ -268,6 +301,10 @@ export function App() {
 
   const openSubrecipe = (id?: string) => {
     let target = id;
+    if (!target && !sePuedeGuardarOtro(level, 'subrecetas', state.subrecipes.length)) {
+      setScreen('paywall');
+      return;
+    }
     if (!target) {
       target = `sr${Date.now()}`;
       const sub: Subrecipe = { id: target, name: 'Sub-receta nueva', yieldQty: 1000, unit: 'ml', ingredients: [] };
@@ -375,6 +412,11 @@ export function App() {
 
     if (screen === 'dish' && dish) {
       return (
+        <SoloLectura
+          activo={can.alcances['costeador:platillos'] === 'solo-lectura'}
+          level={level}
+          onOpenPaywall={() => setScreen('paywall')}
+        >
         <DishEditor
           dish={dish}
           state={state}
@@ -398,11 +440,17 @@ export function App() {
           onPrint={() => window.open(`/print/ficha-tecnica?platillo=${dish.id}`, '_blank', 'noopener')}
           onFlash={flash}
         />
+        </SoloLectura>
       );
     }
 
     if (screen === 'subedit' && subrecipe) {
       return (
+        <SoloLectura
+          activo={can.alcances['costeador:subrecetas'] === 'solo-lectura'}
+          level={level}
+          onOpenPaywall={() => setScreen('paywall')}
+        >
         <SubrecipeEditor
           subrecipe={subrecipe}
           subrecipes={state.subrecipes}
@@ -423,23 +471,11 @@ export function App() {
           }}
           onFlash={flash}
         />
+        </SoloLectura>
       );
     }
 
     if (!accessReady && tab !== 'mas') return <ValidandoAcceso />;
-
-    if (blocked && tab !== 'mas') {
-      return (
-        <Blocked
-          onOpenPaywall={() => setScreen('paywall')}
-          onGoMore={() => setTab('mas')}
-          onBackup={() => {
-            setTab('mas');
-            setSubScreen('respaldo');
-          }}
-        />
-      );
-    }
 
     switch (tab) {
       case 'inicio':
@@ -447,6 +483,7 @@ export function App() {
           <Inicio
             state={state}
             diagnosis={diagnosis}
+            level={level}
             licensed={!!entitlement?.licensed}
             trial={
               entitlement && !entitlement.licensed
@@ -597,6 +634,7 @@ export function App() {
           <Numeros
             state={state}
             view={numbersView}
+            level={level}
             can={can}
             formOpen={formOpen}
             onChangeView={setNumbersView}
@@ -681,7 +719,7 @@ export function App() {
           <nav className="mrl-nav" aria-label="Navegación principal">
             {TABS.map(({ id, label, Icon }) => {
               const active = tab === id;
-              const disabled = (blocked || !accessReady) && id !== 'mas';
+              const disabled = !accessReady && id !== 'mas';
               return (
                 <button
                   key={id}

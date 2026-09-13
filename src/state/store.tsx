@@ -88,6 +88,9 @@ interface StoreValue {
   level: AccessLevel;
   /** Ya hubo una respuesta del servidor, buena o mala. Antes de eso no se decide nada. */
   accessReady: boolean;
+  /** Qué del último guardado no cupo en el nivel. Vacío = entró todo. */
+  recortado: string[];
+  olvidarRecorte: () => void;
   refreshEntitlement: () => Promise<Entitlement | null>;
   /** Reclama una licencia recién pagada (activación automática). */
   claim: () => Promise<boolean>;
@@ -115,6 +118,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [accessReady, setAccessReady] = useState(false);
+  const [recortado, setRecortado] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -200,11 +204,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
       try {
-        await fetch('/api/project', {
+        const respuesta = await fetch('/api/project', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ state }),
+          // El equipo viaja con el guardado: el servidor resuelve el nivel con
+          // la misma regla que el entitlement, y así la API y la pantalla no
+          // pueden discrepar sobre qué se puede escribir.
+          body: JSON.stringify({ state, deviceId: getDeviceId() }),
         });
+        /*
+          El servidor recorta lo que el nivel no deja guardar. Se avisa en vez
+          de fingir que guardó: quien capturó algo tiene derecho a saber que no
+          quedó.
+        */
+        const datos = (await respuesta.json().catch(() => null)) as { recortado?: string[] } | null;
+        const recortado = datos?.recortado ?? [];
+        if (recortado.length) setRecortado(recortado);
       } catch {
         setOnline(false);
       } finally {
@@ -393,6 +408,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       entitlement,
       level: nivelDeAcceso(entitlement),
       accessReady,
+      recortado,
+      olvidarRecorte: () => setRecortado([]),
       refreshEntitlement,
       claim,
       activate,
@@ -407,6 +424,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       user,
       authReady,
       accessReady,
+      recortado,
       register,
       login,
       logout,

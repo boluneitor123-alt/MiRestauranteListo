@@ -420,6 +420,27 @@ export class LicenseService {
     };
   }
 
+  /**
+   * El nivel con el que se decide qué puede guardar una cuenta.
+   *
+   * Normalmente sale del `entitlement` de su equipo, que es la misma regla que
+   * contesta la app. Si la petición no trae equipo —un cliente viejo, o una
+   * llamada a mano— no se puede saber si la prueba de ese aparato venció, así
+   * que se resuelve por la cuenta: con licencia suya, `licencia`; sin ella,
+   * `prueba`. Nunca se devuelve un nivel más generoso que el que le toca.
+   */
+  async nivelParaGuardar(input: { deviceId?: string; userId?: string; email?: string }): Promise<AccessLevel> {
+    if (input.deviceId) return (await this.entitlement({ ...input, deviceId: input.deviceId })).level;
+
+    const correo = input.email?.trim().toLowerCase();
+    const suya = (await this.store.listLicenses({})).find(
+      (l) =>
+        l.status === 'activada' &&
+        ((!!input.userId && l.userId === input.userId) || (!!correo && l.email?.trim().toLowerCase() === correo)),
+    );
+    return suya ? 'licencia' : 'prueba';
+  }
+
   private async transition(
     code: string,
     change: (license: License) => License,

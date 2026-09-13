@@ -246,20 +246,16 @@ describe('acceso resuelto en el servidor', () => {
     const inicio = await service.entitlement({ deviceId: 'eq-1' });
     expect(inicio.level).toBe('prueba');
     expect(inicio.trial.daysLeft).toBe(7);
-    expect(inicio.capabilities.budget).toBe(false);
-    expect(inicio.capabilities.breakeven).toBe(true);
-    expect(inicio.capabilities.showsInvestmentFigures).toBe(false);
+    expect(inicio.capabilities.alcances['numeros:presupuesto']).toBe('solo-lectura');
+    expect(inicio.capabilities.alcances['ruta:define']).toBe('abierto');
+    expect(inicio.capabilities.muestraCifrasDeInversion).toBe(false);
 
     advance(8 * DAY_MS);
     const vencida = await service.entitlement({ deviceId: 'eq-1' });
     expect(vencida.level).toBe('bloqueado');
-    expect(vencida.capabilities.tabs).toEqual({
-      inicio: false,
-      ruta: false,
-      costeador: false,
-      numeros: false,
-      mas: true,
-    });
+    // Vencida no borra nada: lo capturado queda visible y deja de editarse.
+    expect(vencida.capabilities.alcances['ruta:define']).toBe('solo-lectura');
+    expect(vencida.capabilities.alcances['costeador:platillos']).toBe('solo-lectura');
 
     const trial = await store.getTrial('eq-1');
     expect(trial?.expiredAt).toBe(START + 7 * DAY_MS);
@@ -286,7 +282,7 @@ describe('acceso resuelto en el servidor', () => {
     const despues = await service.entitlement({ deviceId: 'eq-1' });
     expect(despues.level).toBe('prueba');
     expect(despues.status).toBe('revocada');
-    expect(despues.capabilities.showsInvestmentFigures).toBe(false);
+    expect(despues.capabilities.muestraCifrasDeInversion).toBe(false);
   });
 
   it('con licencia activa la prueba vencida ya no importa', async () => {
@@ -298,7 +294,7 @@ describe('acceso resuelto en el servidor', () => {
 
     const entitlement = await service.entitlement({ deviceId: 'eq-1' });
     expect(entitlement.level).toBe('licencia');
-    expect(entitlement.capabilities.dishLimit).toBeNull();
+    expect(entitlement.capabilities.topes.platillos).toBeNull();
     expect(entitlement.devices).toEqual({ used: 1, max: 3 });
   });
 

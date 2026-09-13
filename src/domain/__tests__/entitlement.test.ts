@@ -22,7 +22,7 @@ describe('leer la respuesta de acceso', () => {
     const leido = leerEntitlement(buena());
     expect(leido?.level).toBe('licencia');
     expect(leido?.licensed).toBe(true);
-    expect(leido?.capabilities.printableDocuments).toBe(true);
+    expect(leido?.capabilities.alcances['numeros:resumen']).toBe('abierto');
   });
 
   it.each([
@@ -53,11 +53,10 @@ describe('leer la respuesta de acceso', () => {
   });
 
   it('un alcance incompleto se cambia por el del nivel, no se rellena con huecos', () => {
-    const roto = { ...capabilities('prueba') } as Record<string, unknown>;
-    delete roto.printableDocuments;
+    const roto = { alcances: { 'ruta:define': 'abierto' } };
     const leido = leerEntitlement(buena({ level: 'prueba', capabilities: roto }));
     expect(leido?.capabilities).toEqual(capabilities('prueba'));
-    expect(leido?.capabilities.printableDocuments).toBe(false);
+    expect(leido?.capabilities.alcances['ruta:construye']).toBe('cerrado');
   });
 
   it('un alcance más generoso que su nivel no abre nada de más', () => {
@@ -65,20 +64,20 @@ describe('leer la respuesta de acceso', () => {
     // licencia pagada. Manda el nivel, no el alcance que venga pegado.
     const leido = leerEntitlement(buena({ level: 'prueba', capabilities: capabilities('licencia') }));
     expect(leido?.capabilities).toEqual(capabilities('prueba'));
-    expect(leido?.capabilities.openRouteModules).not.toBe('todos');
-    expect(leido?.capabilities.printableDocuments).toBe(false);
-    expect(leido?.capabilities.dishLimit).toBe(3);
+    expect(leido?.capabilities.alcances['ruta:cursos']).toBe('cerrado');
+    expect(leido?.capabilities.topes.platillos).toBe(2);
+    expect(leido?.capabilities.muestraCifrasDeInversion).toBe(false);
   });
 
-  it('un bloqueado con alcance de licencia sigue bloqueado', () => {
+  it('un bloqueado con alcance de licencia no recupera la edición', () => {
     const leido = leerEntitlement(buena({ level: 'bloqueado', capabilities: capabilities('licencia') }));
     expect(leido?.capabilities).toEqual(capabilities('bloqueado'));
-    expect(leido?.capabilities.tabs.ruta).toBe(false);
+    expect(leido?.capabilities.alcances['ruta:define']).toBe('solo-lectura');
   });
 
   it('un alcance a medias no deja llaves en undefined', () => {
     const leido = leerEntitlement(buena({ level: 'bloqueado', capabilities: { menu: true } }));
     expect(leido?.capabilities).toEqual(capabilities('bloqueado'));
-    expect(leido?.capabilities.printableDocuments).toBe(false);
+    expect(leido?.capabilities.alcances.documentos).toBe('cerrado');
   });
 });

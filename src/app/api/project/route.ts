@@ -1,7 +1,9 @@
 import { currentUser } from '@/server/auth';
 import { getProjectRepository, hasDatabase } from '@/server/project/repository';
+import { getLicenseService } from '@/server/licensing';
 import { importBackup } from '@/domain/projectState';
-import { json, readJson } from '@/server/http';
+import { aplicarAlcance } from '@/domain/alcance';
+import { json, readJson, str } from '@/server/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,8 +32,15 @@ export async function GET(request: Request) {
 /**
  * `PUT /api/project` — guarda el proyecto completo.
  *
- * El cuerpo pasa por el mismo importador que el respaldo `.json`: lo que llegue
- * incompleto o manipulado se normaliza antes de tocar la base.
+ * Dos filtros antes de tocar la base. El primero, `importBackup`, es el mismo
+ * del respaldo `.json`: normaliza lo que llegue incompleto o manipulado. El
+ * segundo, `aplicarAlcance`, es el que faltaba: esconder un botón no impedía
+ * nada a quien llamara esta ruta a mano, así que el tercer platillo y las
+ * cifras de Números se guardaban igual.
+ *
+ * Recorta en vez de rechazar, y devuelve en `recortado` qué se ignoró. Un
+ * `PUT` trae el estado entero: un 400 tiraría también las ediciones legítimas
+ * que vinieran en el mismo cuerpo.
  */
 export async function PUT(request: Request) {
   const user = await currentUser(request);
@@ -39,8 +48,19 @@ export async function PUT(request: Request) {
   if (!hasDatabase()) return noDatabase();
 
   const body = await readJson(request);
-  const state = importBackup(body.state ?? body);
-  await getProjectRepository().save(user.id, state);
+  const repo = getProjectRepository();
 
-  return json({ ok: true });
+  // El nivel lo resuelve el mismo servicio que contesta el entitlement: una
+  // sola regla, para que la API y la pantalla no puedan discrepar.
+  const service = await getLicenseService();
+  const level = await service.nivelParaGuardar({
+    deviceId: str(body.deviceId),
+    userId: user.id,
+    email: user.email,
+  });
+
+  const { state, recortado } = aplicarAlcance(level, importBackup(body.state ?? body), (await repo.load(user.id)) ?? null);
+  await repo.save(user.id, state);
+
+  return json({ ok: true, level, recortado });
 }

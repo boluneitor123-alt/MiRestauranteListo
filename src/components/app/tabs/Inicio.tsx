@@ -3,6 +3,7 @@
 import { ArrowRight, ChevronRight, FileText, Sprout, TriangleAlert } from 'lucide-react';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
 import { breakeven, fixedExpensesTotal } from '@/domain/finance';
+import { resumenDeAlcance, type AccessLevel } from '@/domain/access';
 import { dishMetrics } from '@/domain/costing';
 import { menuAggregates } from '@/domain/aggregates';
 import { money, pct as pctLabel } from '@/domain/format';
@@ -37,6 +38,7 @@ export function Inicio({
   diagnosis,
   licensed,
   trial,
+  level,
   startedAt,
   hasAlerts,
   onGo,
@@ -55,6 +57,7 @@ export function Inicio({
   licensed: boolean;
   /** Días que le quedan de prueba. `null` con licencia: el aviso desaparece. */
   trial: { daysLeft: number; expired: boolean } | null;
+  level: AccessLevel;
   /** Cuándo empezó a usar la app. Alimenta la proyección de fecha de apertura. */
   startedAt: number | null;
   /** Hay una alerta que merece el punto naranja de la campana. */
@@ -123,7 +126,7 @@ export function Inicio({
         onOpenProject={onOpenProject}
       />
 
-      {trial ? <AvisoDePrueba trial={trial} onOpenPaywall={onOpenPaywall} /> : null}
+      {trial ? <AvisoDePrueba trial={trial} level={level} onOpenPaywall={onOpenPaywall} /> : null}
 
       <SiguientePaso
         titulo={diagnosis.nextStep.title}
@@ -301,9 +304,11 @@ export function Inicio({
 /** El aviso de la prueba, que lleva al pago único. */
 function AvisoDePrueba({
   trial,
+  level,
   onOpenPaywall,
 }: {
   trial: { daysLeft: number; expired: boolean };
+  level: AccessLevel;
   onOpenPaywall: () => void;
 }) {
   return (
@@ -326,17 +331,17 @@ function AvisoDePrueba({
     >
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5, color: 'var(--color-accent-900)' }}>
-          Versión de prueba
+          {trial.expired ? 'Tu prueba terminó' : 'Versión de prueba'}
         </span>
         <span
           className="mrl-prose"
           style={{ display: 'block', fontSize: 12, lineHeight: 1.45, color: 'var(--color-accent-800)', marginTop: 1 }}
         >
           {trial.expired
-            ? 'La app quedó bloqueada. Desbloquéala con un solo pago y recupera todo tu avance.'
-            : `Prueba gratis: ${
-                trial.daysLeft === 1 ? 'te queda 1 día' : `te quedan ${trial.daysLeft} días`
-              }. Trabajas Concepto y Local completos, abres la primera lección de los otros 12 módulos, costeas 3 platillos y ves tu punto de equilibrio.`}
+            ? resumenDeAlcance(level)
+            : `${
+                trial.daysLeft === 1 ? 'Te queda 1 día' : `Te quedan ${trial.daysLeft} días`
+              }. ${resumenDeAlcance(level)}`}
         </span>
       </span>
       <ChevronRight size={17} strokeWidth={2.75} color="var(--color-accent-800)" style={{ flex: 'none' }} />

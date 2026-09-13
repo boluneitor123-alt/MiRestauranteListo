@@ -378,7 +378,8 @@ function SubScreenView(props: {
   switch (sub) {
     // Las dos herramientas viven detrás del pago único.
     case 'delivery':
-      if (!props.can.printableDocuments) return <ToolLocked name="La calculadora de delivery" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
+      if (props.can.alcances.herramientas !== 'abierto')
+        return <ToolLocked name="La calculadora de delivery" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
       return (
         <DeliveryCalculator
           saved={state.delivery}
@@ -388,7 +389,8 @@ function SubScreenView(props: {
       );
 
     case 'anuncios':
-      if (!props.can.printableDocuments) return <ToolLocked name="El analizador de anuncios" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
+      if (props.can.alcances.herramientas !== 'abierto')
+        return <ToolLocked name="El analizador de anuncios" onBack={onBack} onOpenPaywall={props.onOpenPaywall} />;
       return (
         <AdDoctor
           ticket={state.ticket}
@@ -677,7 +679,7 @@ function SubScreenView(props: {
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{label}</div>
                   <Muted size={11.5}>{file}</Muted>
                 </div>
-                {props.can.resources ? (
+                {props.can.alcances.recursos === 'abierto' ? (
                   <a
                     href={`/api/recursos/${file}`}
                     download

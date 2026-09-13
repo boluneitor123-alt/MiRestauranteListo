@@ -1,9 +1,10 @@
 'use client';
 
-import { Camera, Check, Lock } from 'lucide-react';
+import { Camera, Check } from 'lucide-react';
 import { getLesson } from '@/content/lessons';
 import { lessonArt } from '@/content/illustrations';
-import { SAMPLE_LABEL, type TaskAccess } from '@/domain/access';
+import { type Alcance, type AccessLevel } from '@/domain/access';
+import { Candado } from '@/components/app/Candado';
 import { Button, RADIUS, text } from '@/components/ui';
 
 /** Encabezado de sección dentro de la lección. */
@@ -75,7 +76,8 @@ export function Lesson({
   next,
   index,
   total,
-  access,
+  level,
+  alcance,
   done,
   onToggle,
   onOpenPaywall,
@@ -89,7 +91,8 @@ export function Lesson({
   /** Posición de la lección dentro del módulo, empezando en 0. */
   index: number;
   total: number;
-  access: TaskAccess;
+  level: AccessLevel;
+  alcance: Alcance;
   done: boolean;
   onToggle: () => void;
   onOpenPaywall: () => void;
@@ -98,31 +101,19 @@ export function Lesson({
   const lesson = getLesson(title);
   const art = lessonArt(title);
 
-  if (access === 'bloqueada') {
+  /*
+    Cerrada: no se abre el contenido. Se ve el título y el resumen en la lista,
+    que es lo que deja entender el alcance de lo que se compra sin regalarlo.
+  */
+  if (alcance === 'cerrado') {
     return (
-      <div
-        style={{
-          marginTop: 14,
-          padding: 16,
-          borderRadius: RADIUS.small,
-          background: 'var(--color-accent-100)',
-          animation: 'mrlUp .2s ease both',
-        }}
-      >
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <Lock size={17} color="var(--color-accent-700)" strokeWidth={2.6} style={{ flex: 'none', marginTop: 2 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-accent-900)' }}>
-              Esta lección se abre con el pago único
-            </div>
-            <p style={{ margin: '4px 0 0', fontSize: 12.8, lineHeight: 1.5, color: 'var(--color-accent-900)' }}>
-              Toma {lesson.m} min y trae sus pasos, el error típico y el checklist, igual que la que ya abriste.
-            </p>
-          </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <Button onClick={onOpenPaywall}>Ver el pago único</Button>
-        </div>
+      <div style={{ marginTop: 14 }}>
+        <Candado
+          level={level}
+          motivo="contenido"
+          detalle={`Toma ${lesson.m} min y trae sus pasos, el error típico y el checklist.`}
+          onOpenPaywall={onOpenPaywall}
+        />
       </div>
     );
   }
@@ -141,20 +132,6 @@ export function Lesson({
         <span style={{ fontSize: 12, fontWeight: 800, color: text(55) }}>
           Lección {index + 1} de {total}
         </span>
-        {access === 'muestra' ? (
-          <span
-            style={{
-              padding: '3px 10px',
-              borderRadius: RADIUS.pill,
-              background: 'var(--color-accent-2-100)',
-              color: 'var(--color-accent-2-800)',
-              fontSize: 11,
-              fontWeight: 800,
-            }}
-          >
-            {SAMPLE_LABEL}
-          </span>
-        ) : null}
         <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: text(55) }}>{lesson.m} min</span>
       </div>
 
@@ -295,9 +272,15 @@ export function Lesson({
         </p>
       </section>
 
-      <Button variant={done ? 'secondary' : 'success'} onClick={onToggle}>
-        {done ? 'Marcar como pendiente' : 'Ya lo hice, marcar completada'}
-      </Button>
+      {alcance === 'abierto' ? (
+        <Button variant={done ? 'secondary' : 'success'} onClick={onToggle}>
+          {done ? 'Marcar como pendiente' : 'Ya lo hice, marcar completada'}
+        </Button>
+      ) : (
+        /* Sólo lectura: la lección se lee completa y lo marcado se conserva.
+           Lo único que se apaga es el botón. */
+        <Candado level={level} motivo="edicion" onOpenPaywall={onOpenPaywall} />
+      )}
 
       {onDelete ? (
         <button
