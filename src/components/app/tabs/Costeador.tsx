@@ -181,29 +181,36 @@ export function Costeador({
             );
           })}
         </div>
-        <button
-          type="button"
-          onClick={() => (sePuedeGuardarOtro(level, 'platillos', state.dishes.length) ? onNewDish() : onOpenPaywall())}
-          style={{
-            flex: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            height: 46,
-            paddingInline: 18,
-            border: 'none',
-            borderRadius: RADIUS.control,
-            background: 'var(--color-accent)',
-            color: 'var(--on-accent)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-heading)',
-            fontSize: 15,
-            letterSpacing: '-.01em',
-          }}
-        >
-          <Plus size={17} strokeWidth={3} style={{ flex: 'none' }} />
-          Nuevo platillo
-        </button>
+        {/*
+          Con la prueba vencida el botón no aparece. Antes se quedaba y llevaba
+          al pago: ofrecer crear algo que no se va a poder guardar es una
+          promesa que la app no cumple.
+        */}
+        {alcanceDe(level, 'costeador:platillos') === 'abierto' ? (
+          <button
+            type="button"
+            onClick={() => (sePuedeGuardarOtro(level, 'platillos', state.dishes.length) ? onNewDish() : onOpenPaywall())}
+            style={{
+              flex: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              height: 46,
+              paddingInline: 18,
+              border: 'none',
+              borderRadius: RADIUS.control,
+              background: 'var(--color-accent)',
+              color: 'var(--on-accent)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 15,
+              letterSpacing: '-.01em',
+            }}
+          >
+            <Plus size={17} strokeWidth={3} style={{ flex: 'none' }} />
+            Nuevo platillo
+          </button>
+        ) : null}
       </div>
 
       {view === 'platillos' ? (
@@ -299,7 +306,7 @@ export function Costeador({
           ) : null}
 
           {typeFilter === 'subrecetas' ? (
-            <SubrecipeList state={state} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} />
+            <SubrecipeList state={state} level={level} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} />
           ) : rows.length ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
               {rows.map(({ dish, metrics }) => (
@@ -370,7 +377,13 @@ export function Costeador({
             <EmptyState
               title="Todavía no costeas nada"
               body="Empieza por tus platillos estrella: son los que van a mover tu venta."
-              action={<Button height={44} onClick={onNewDish}>Costear mi primer platillo</Button>}
+              action={
+                alcanceDe(level, 'costeador:platillos') === 'abierto' ? (
+                  <Button height={44} onClick={onNewDish}>
+                    Costear mi primer platillo
+                  </Button>
+                ) : undefined
+              }
             />
           )}
         </>
@@ -394,7 +407,7 @@ export function Costeador({
         )
       ) : null}
 
-      {view === 'subrecetas' ? <SubrecipeList state={state} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} /> : null}
+      {view === 'subrecetas' ? <SubrecipeList state={state} level={level} onOpen={onOpenSubrecipe} onNew={onNewSubrecipe} /> : null}
     </div>
   );
 }
@@ -427,10 +440,12 @@ function MenuKpis({ state }: { state: ProjectState }) {
 
 function SubrecipeList({
   state,
+  level,
   onOpen,
   onNew,
 }: {
   state: ProjectState;
+  level: AccessLevel;
   onOpen: (id: string) => void;
   onNew: () => void;
 }) {
@@ -482,9 +497,11 @@ function SubrecipeList({
           </Row>
         </button>
       ))}
-      <Button variant="success" onClick={onNew}>
-        Nueva sub-receta
-      </Button>
+      {alcanceDe(level, 'costeador:subrecetas') === 'abierto' ? (
+        <Button variant="success" onClick={onNew}>
+          Nueva sub-receta
+        </Button>
+      ) : null}
     </div>
   );
 }
