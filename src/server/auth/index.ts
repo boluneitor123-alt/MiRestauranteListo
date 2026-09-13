@@ -1,31 +1,27 @@
 /**
  * Punto de entrada de autenticación.
  *
- * Con `DATABASE_URL` real usa Postgres; sin ella cae a un almacén en memoria
- * para poder desarrollar sin base de datos (se pierde al reiniciar).
+ * Con `DATABASE_URL` real usa Postgres. Sin ella, en desarrollo cae a un
+ * almacén en memoria; en producción falla, igual que las licencias: una base
+ * de cuentas que se vacía en cada arranque en frío es peor que no arrancar.
  */
 
 import { AuthService, SESSION_COOKIE } from './service';
 import { MemoryAuthStore } from './memoryStore';
 import type { AuthStore } from './store';
+import { permiteAlmacenEnMemoria } from '../db';
 
 const globalForAuth = globalThis as unknown as { mrlAuthStore?: AuthStore; mrlAuthService?: AuthService };
-
-function hasDatabase(): boolean {
-  const url = process.env.DATABASE_URL;
-  return !!url && !url.includes('user:password@localhost');
-}
 
 export async function getAuthService(): Promise<AuthService> {
   if (globalForAuth.mrlAuthService) return globalForAuth.mrlAuthService;
 
   let store: AuthStore;
-  if (hasDatabase()) {
+  if (permiteAlmacenEnMemoria('cuentas')) {
+    store = new MemoryAuthStore();
+  } else {
     const { PrismaAuthStore } = await import('./prismaStore');
     store = new PrismaAuthStore();
-  } else {
-    console.warn('[cuentas] Sin DATABASE_URL real: usando almacén en memoria. No usar en producción.');
-    store = new MemoryAuthStore();
   }
 
   globalForAuth.mrlAuthStore = store;

@@ -122,6 +122,16 @@ export class PrismaLicenseStore implements LicenseStore {
     return row ? toDomain(row) : undefined;
   }
 
+  async findAccountByEmail(email: string): Promise<{ id: string; name?: string } | undefined> {
+    const correo = email.trim().toLowerCase();
+    if (!correo) return undefined;
+    const cuenta = await this.db.user.findUnique({
+      where: { email: correo },
+      select: { id: true, name: true },
+    });
+    return cuenta ? { id: cuenta.id, name: cuenta.name ?? undefined } : undefined;
+  }
+
   async listLicenses(filter: LicenseFilter = {}): Promise<License[]> {
     const query = filter.query?.trim();
     const where: Prisma.LicenseWhereInput = {

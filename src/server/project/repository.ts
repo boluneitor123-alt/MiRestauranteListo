@@ -423,7 +423,4 @@ export function getProjectRepository(): ProjectRepository {
   return globalForProject.mrlProjectRepository;
 }
 
-export function hasDatabase(): boolean {
-  const url = process.env.DATABASE_URL;
-  return !!url && !url.includes('user:password@localhost');
-}
+export { hasDatabase } from '@/server/db';

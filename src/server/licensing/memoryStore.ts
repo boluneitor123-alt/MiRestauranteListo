@@ -62,6 +62,14 @@ export class MemoryLicenseStore implements LicenseStore {
       .sort((a, b) => b.createdAt - a.createdAt)[0];
   }
 
+  /** Correos con cuenta. En memoria se declaran a mano; en Postgres se consultan. */
+  readonly cuentas = new Set<string>();
+
+  async findAccountByEmail(email: string): Promise<{ id: string; name?: string } | undefined> {
+    const correo = email.trim().toLowerCase();
+    return this.cuentas.has(correo) ? { id: `u-${correo}` } : undefined;
+  }
+
   async listLicenses(filter: LicenseFilter = {}): Promise<License[]> {
     const query = (filter.query || '').trim().toLowerCase();
     let list = [...this.licenses.values()].sort((a, b) => b.createdAt - a.createdAt);

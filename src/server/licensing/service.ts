@@ -208,6 +208,113 @@ export class LicenseService {
     );
   }
 
+  /**
+   * La licencia sólo abre si es de quien está preguntando.
+   *
+   * El `deviceId` vive en el `localStorage` del navegador y sobrevive a cerrar
+   * sesión y a registrarse con otro correo. Mientras el acceso se decidía sólo
+   * por equipo, un navegador que alguna vez activó una licencia la prestaba a
+   * cualquier cuenta nueva que se creara ahí —y a quien ni siquiera entrara—.
+   *
+   * Red de seguridad: una licencia sin dueño registrado se sigue respetando
+   * por equipo. Es la del comprador real que pagó con un correo y se registró
+   * con otro, o que nunca llegó a crear cuenta: quitarle el acceso por una
+   * regla nueva sería cobrarle dos veces. Cada vez que ese camino se usa queda
+   * el aviso en la bitácora del servidor, y el panel las lista para asignarles
+   * dueño a mano.
+   */
+  private async siEsDeQuienPregunta(
+    license: License,
+    quien: { userId?: string; email?: string; deviceId: string },
+  ): Promise<License | undefined> {
+    const correo = quien.email?.trim().toLowerCase();
+    const suya =
+      (!!quien.userId && license.userId === quien.userId) ||
+      (!!correo && !!license.email && license.email.trim().toLowerCase() === correo);
+    if (suya) return license;
+
+    if (!(await this.sinDuenoRegistrado(license))) return undefined;
+
+    console.warn(
+      `[licencias] Licencia ${license.code} abierta por equipo: no tiene dueño registrado. ` +
+        `equipo=${quien.deviceId} correoDeLaLicencia=${license.email ?? '(ninguno)'} ` +
+        `quienPregunta=${correo ?? '(sin sesión)'}`,
+    );
+    return license;
+  }
+
+  /**
+   * ¿Esta licencia no tiene a quién pertenecer?
+   *
+   * Con `userId` ya hay dueño. Con un correo que sí tiene cuenta, también: esa
+   * persona puede entrar con él. Huérfana es la que no tiene ninguno de los
+   * dos, y es la única que conserva el acceso por equipo.
+   */
+  private async sinDuenoRegistrado(license: License): Promise<boolean> {
+    if (license.userId) return false;
+    const correo = license.email?.trim().toLowerCase();
+    if (!correo) return true;
+    return !(await this.store.findAccountByEmail(correo));
+  }
+
+  /**
+   * Asigna a mano el dueño de una licencia huérfana, desde el panel.
+   *
+   * Es la salida de la red de seguridad: mientras la licencia no tenga dueño,
+   * el navegador donde se activó se la presta a cualquiera. Al ponerle un
+   * correo con cuenta, el acceso pasa a ser de esa persona y de nadie más.
+   */
+  async asignarDueno(
+    code: string,
+    email: string,
+  ): Promise<{ ok: true; license: License } | { ok: false; error: 'no-existe' | 'correo-invalido' | 'sin-cuenta' }> {
+    const correo = email.trim().toLowerCase();
+    if (!correo || !correo.includes('@')) return { ok: false, error: 'correo-invalido' };
+
+    const license = await this.store.findLicense(normalizeLicenseCode(code) ?? '');
+    if (!license) return { ok: false, error: 'no-existe' };
+
+    /*
+      Se exige que el correo ya tenga cuenta. Poner uno que no la tiene dejaría
+      la licencia igual de huérfana pero fuera de la lista de pendientes: un
+      problema escondido en vez de resuelto.
+    */
+    const cuenta = await this.store.findAccountByEmail(correo);
+    if (!cuenta) return { ok: false, error: 'sin-cuenta' };
+
+    const saved = await this.store.saveLicense({ ...license, email: correo, userId: cuenta.id });
+    await this.store.appendEvent({
+      kind: 'licencia-emitida',
+      message: `Licencia ${saved.code} asignada a ${correo} desde el panel`,
+      code: saved.code,
+      meta: { email: correo, userId: cuenta.id },
+    });
+    return { ok: true, license: saved };
+  }
+
+  /**
+   * Revoca todas las licencias vigentes de un correo.
+   *
+   * Por código hay que saber cuál es; por correo se resuelve con el dato que
+   * el dueño sí tiene a la mano. Las ya revocadas o reembolsadas se dejan como
+   * están: volver a tocarlas sólo ensucia la bitácora.
+   */
+  async revokeByEmail(email: string): Promise<{ codes: string[] }> {
+    const correo = email.trim().toLowerCase();
+    if (!correo) return { codes: [] };
+
+    const suyas = (await this.store.listLicenses({})).filter(
+      (l) => l.email?.trim().toLowerCase() === correo && (l.status === 'activada' || l.status === 'nueva'),
+    );
+
+    const codes: string[] = [];
+    for (const license of suyas) {
+      const revocada = await this.revoke(license.code);
+      if (revocada) codes.push(revocada.code);
+    }
+    return { codes };
+  }
+
   /** `POST /licenses/:code/revoke` */
   async revoke(code: string): Promise<License | undefined> {
     return this.transition(code, (l) => revokeLicense(l, this.now()), 'licencia-revocada', 'revocada');
@@ -284,8 +391,10 @@ export class LicenseService {
       (await this.store.findLicenseByDevice(input.deviceId)) ??
       (input.code ? await this.store.findLicense(normalizeLicenseCode(input.code) ?? '') : undefined);
 
-    // Una licencia de otro equipo no da acceso a este.
-    const own = license && license.devices.includes(input.deviceId) ? license : undefined;
+    // Una licencia de otro equipo no da acceso a este…
+    const enEsteEquipo = license && license.devices.includes(input.deviceId) ? license : undefined;
+    // …y una de otra persona tampoco, aunque el equipo sea el mismo.
+    const own = enEsteEquipo ? await this.siEsDeQuienPregunta(enEsteEquipo, input) : undefined;
     const access = resolveAccess({
       license: own,
       trialStart: sealed.startedAt,
