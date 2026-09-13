@@ -120,6 +120,7 @@ export function Lesson({
   level,
   alcance,
   moduleId,
+  esPropia = false,
   done,
   onToggle,
   onOpenPaywall,
@@ -137,6 +138,15 @@ export function Lesson({
   alcance: Alcance;
   /** El módulo al que pertenece: el servidor valida el nivel contra él. */
   moduleId: string;
+  /**
+   * Una tarea que la persona agregó ella misma.
+   *
+   * No es de las 90, así que no tiene lección que pedir. Ni se pregunta: el
+   * endpoint niega cualquier título que no sea de ese módulo —igual que niega
+   * uno cerrado, para no delatar cuál es cuál— y preguntar sólo traería un 404
+   * y el aviso de que algo falló.
+   */
+  esPropia?: boolean;
   done: boolean;
   onToggle: () => void;
   onOpenPaywall: () => void;
@@ -148,7 +158,7 @@ export function Lesson({
     enseñan **antes** de comprar, en el letrero de la lección cerrada.
   */
   const minutos = minutosDeLeccion(title);
-  const contenido = useLeccion(moduleId, title, alcance !== 'cerrado');
+  const contenido = useLeccion(moduleId, title, alcance !== 'cerrado' && !esPropia);
   const lesson = contenido.estado === 'lista' ? contenido.contenido.leccion : null;
   const art = contenido.estado === 'lista' ? contenido.contenido.arte : null;
 
@@ -186,8 +196,8 @@ export function Lesson({
         <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: text(55) }}>{minutos} min</span>
       </div>
 
-      {contenido.estado === 'cargando' ? <Esqueleto /> : null}
-      {contenido.estado === 'sin-contenido' ? (
+      {!esPropia && contenido.estado === 'cargando' ? <Esqueleto /> : null}
+      {!esPropia && contenido.estado === 'sin-contenido' ? (
         <p style={{ margin: 0, fontSize: 13, color: text(55) }}>
           No pudimos traer esta lección. Revisa tu conexión y vuelve a abrirla.
         </p>
