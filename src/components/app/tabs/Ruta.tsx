@@ -15,6 +15,7 @@ import { Candado } from '@/components/app/Candado';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, text } from '@/components/ui';
 import { Lesson } from '../ruta/Lesson';
+import { precargarLeccion } from '../ruta/useLeccion';
 import { Etapas } from '../ruta/Etapas';
 import { ListaModulos } from '../ruta/ListaModulos';
 import { moduleIcon } from '../ruta/moduleIcons';
@@ -206,6 +207,7 @@ export function Ruta({
               total={current.tasks.length}
               level={level}
               alcance={alcance}
+              moduleId={current.id}
               done={!!state.done[task.key]}
               open={openTaskKey === task.key}
               onOpen={() => onOpenTask(openTaskKey === task.key ? null : task.key)}
@@ -460,6 +462,7 @@ function TaskCard({
   total,
   level,
   alcance,
+  moduleId,
   done,
   open,
   onOpen,
@@ -472,6 +475,7 @@ function TaskCard({
   total: number;
   level: AccessLevel;
   alcance: Alcance;
+  moduleId: string;
   done: boolean;
   open: boolean;
   onOpen: () => void;
@@ -513,6 +517,14 @@ function TaskCard({
         <button
           type="button"
           onClick={onOpen}
+          /*
+            Se pide la lección en cuanto el dedo toca, antes de que el acordeón
+            termine de abrir. Para cuando la pantalla la necesita, la respuesta
+            casi siempre ya llegó y el esqueleto no alcanza a verse.
+          */
+          onPointerDown={() => {
+            if (alcance !== 'cerrado') precargarLeccion(moduleId, task.title);
+          }}
           aria-expanded={open}
           style={{
             flex: 1,
@@ -561,6 +573,7 @@ function TaskCard({
           total={total}
           level={level}
           alcance={alcance}
+          moduleId={moduleId}
           done={done}
           onToggle={onToggle}
           onOpenPaywall={onOpenPaywall}

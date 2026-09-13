@@ -9,7 +9,7 @@ import { menuAggregates } from '@/domain/aggregates';
 import { money, pct as pctLabel } from '@/domain/format';
 import { semaphoreLevel } from '@/domain/semaphore';
 import { paceProjection, stageLabel } from '@/domain/progress';
-import { getLesson } from '@/content/lessons';
+import { minutosDeLeccion } from '@/content/leccionesMeta';
 import { DEMO_DISHES } from '@/content/demo';
 import { ETAPAS } from '@/content/route';
 import type { ProjectState } from '@/domain/projectState';
@@ -94,7 +94,7 @@ export function Inicio({
   const carta = menuAggregates(state.dishes, { subrecipes: state.subrecipes });
   const recent = state.dishes.slice(-6).reverse();
   const courses = diagnosis.progress.modules.filter((m) => m.course);
-  const nextLesson = getLesson(diagnosis.nextStep.title);
+  const minutosDelSiguiente = minutosDeLeccion(diagnosis.nextStep.title);
   // El ejemplo de la plantilla sigue cargado y todavía no decide qué hacer con él.
   const exampleOn = !state.settings.exampleHidden && state.dishes.some((d) => DEMO_DISH_IDS.has(d.id));
   // La proyección la ve todo el mundo, haya pagado o no.
@@ -131,7 +131,7 @@ export function Inicio({
       <SiguientePaso
         titulo={diagnosis.nextStep.title}
         cuerpo={diagnosis.nextStep.body}
-        minutos={`${nextLesson.m} min`}
+        minutos={`${minutosDelSiguiente} min`}
         etapa={stageLabel(ETAPAS, diagnosis.progress.nextTask)}
         pct={diagnosis.progress.pct}
         ritmo={pace}

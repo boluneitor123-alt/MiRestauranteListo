@@ -219,6 +219,17 @@ textarea {
   }
 }
 
+/* El latido del esqueleto mientras llega el contenido de una lección. */
+@keyframes mrlLatido {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
 @keyframes mrlPop {
   0% {
     transform: scale(0.7);

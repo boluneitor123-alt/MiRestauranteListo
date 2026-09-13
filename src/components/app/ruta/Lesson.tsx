@@ -1,8 +1,8 @@
 'use client';
 
 import { Camera, Check } from 'lucide-react';
-import { getLesson } from '@/content/lessons';
-import { lessonArt } from '@/content/illustrations';
+import { minutosDeLeccion } from '@/content/leccionesMeta';
+import { useLeccion } from './useLeccion';
 import { type Alcance, type AccessLevel } from '@/domain/access';
 import { Candado } from '@/components/app/Candado';
 import { Button, RADIUS, text } from '@/components/ui';
@@ -12,6 +12,47 @@ function Kicker({ children }: { children: string }) {
   return (
     <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 800, color: text(55) }}>
       {children}
+    </div>
+  );
+}
+
+/**
+ * Lo que se ve mientras llega el contenido.
+ *
+ * Con la precarga al tocar la fila casi nunca alcanza a aparecer, pero con
+ * datos lentos sí, y una pantalla en blanco se siente rota. Repite la forma de
+ * la lección —ilustración, pasos, checklist— para que el salto sea mínimo
+ * cuando el texto entra.
+ */
+function Esqueleto() {
+  const bloque = (alto: number, ancho = '100%') => (
+    <span
+      aria-hidden
+      style={{
+        display: 'block',
+        height: alto,
+        width: ancho,
+        borderRadius: RADIUS.small,
+        background: 'var(--color-neutral-200)',
+        animation: 'mrlLatido 1.2s ease-in-out infinite',
+      }}
+    />
+  );
+
+  return (
+    <div
+      role="status"
+      aria-label="Cargando la lección"
+      style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}
+    >
+      {bloque(140)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8 }}>
+        {bloque(13, '38%')}
+        {bloque(13)}
+        {bloque(13, '86%')}
+        {bloque(13, '64%')}
+      </div>
+      {bloque(70)}
     </div>
   );
 }
@@ -78,6 +119,7 @@ export function Lesson({
   total,
   level,
   alcance,
+  moduleId,
   done,
   onToggle,
   onOpenPaywall,
@@ -93,13 +135,22 @@ export function Lesson({
   total: number;
   level: AccessLevel;
   alcance: Alcance;
+  /** El módulo al que pertenece: el servidor valida el nivel contra él. */
+  moduleId: string;
   done: boolean;
   onToggle: () => void;
   onOpenPaywall: () => void;
   onDelete?: () => void;
 }) {
-  const lesson = getLesson(title);
-  const art = lessonArt(title);
+  /*
+    El contenido no viaja en el paquete: se pide a `/api/lecciones`, que revisa
+    el nivel antes de contestar. Sólo los minutos vienen del cliente, porque se
+    enseñan **antes** de comprar, en el letrero de la lección cerrada.
+  */
+  const minutos = minutosDeLeccion(title);
+  const contenido = useLeccion(moduleId, title, alcance !== 'cerrado');
+  const lesson = contenido.estado === 'lista' ? contenido.contenido.leccion : null;
+  const art = contenido.estado === 'lista' ? contenido.contenido.arte : null;
 
   /*
     Cerrada: no se abre el contenido. Se ve el título y el resumen en la lista,
@@ -111,7 +162,7 @@ export function Lesson({
         <Candado
           level={level}
           motivo="contenido"
-          detalle={`Toma ${lesson.m} min y trae sus pasos, el error típico y el checklist.`}
+          detalle={`Toma ${minutos} min y trae sus pasos, el error típico y el checklist.`}
           onOpenPaywall={onOpenPaywall}
         />
       </div>
@@ -132,17 +183,24 @@ export function Lesson({
         <span style={{ fontSize: 12, fontWeight: 800, color: text(55) }}>
           Lección {index + 1} de {total}
         </span>
-        <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: text(55) }}>{lesson.m} min</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: text(55) }}>{minutos} min</span>
       </div>
 
-      {art ? (
+      {contenido.estado === 'cargando' ? <Esqueleto /> : null}
+      {contenido.estado === 'sin-contenido' ? (
+        <p style={{ margin: 0, fontSize: 13, color: text(55) }}>
+          No pudimos traer esta lección. Revisa tu conexión y vuelve a abrirla.
+        </p>
+      ) : null}
+
+      {lesson && art ? (
         <div
           className="mrl-illo"
           role="img"
-          aria-label={lesson.img ?? title}
+          aria-label={lesson?.img ?? title}
           dangerouslySetInnerHTML={{ __html: art }}
         />
-      ) : lesson.img ? (
+      ) : lesson?.img ? (
         <PhotoSlot hint={lesson.img} />
       ) : null}
 
@@ -153,7 +211,7 @@ export function Lesson({
         </p>
       </section>
 
-      {lesson.s.length ? (
+      {lesson?.s.length ? (
         <section>
           <Kicker>Cómo hacerlo</Kicker>
           <ol style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
@@ -184,7 +242,7 @@ export function Lesson({
         </section>
       ) : null}
 
-      {lesson.e ? (
+      {lesson?.e ? (
         <section
           style={{
             borderRadius: RADIUS.small,
@@ -200,7 +258,7 @@ export function Lesson({
         </section>
       ) : null}
 
-      {lesson.d.length ? (
+      {lesson?.d.length ? (
         <section>
           <Kicker>Ya quedó cuando…</Kicker>
           <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 8 }}>
@@ -229,7 +287,7 @@ export function Lesson({
       ) : null}
 
       {/* Solo 44 de las 90 lecciones traen tabla de ejemplo. Si no la trae, no se pinta. */}
-      {lesson.x ? (
+      {lesson?.x ? (
         <section
           style={{
             borderRadius: RADIUS.small,
