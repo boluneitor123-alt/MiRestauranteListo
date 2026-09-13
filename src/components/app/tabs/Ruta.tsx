@@ -523,7 +523,7 @@ function TaskCard({
             casi siempre ya llegó y el esqueleto no alcanza a verse.
           */
           onPointerDown={() => {
-            if (alcance !== 'cerrado') precargarLeccion(moduleId, task.title);
+            if (alcance !== 'cerrado' && !task.customId) precargarLeccion(moduleId, task.title);
           }}
           aria-expanded={open}
           style={{
@@ -574,6 +574,7 @@ function TaskCard({
           level={level}
           alcance={alcance}
           moduleId={moduleId}
+          esPropia={!!task.customId}
           done={done}
           onToggle={onToggle}
           onOpenPaywall={onOpenPaywall}
