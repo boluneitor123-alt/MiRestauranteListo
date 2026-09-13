@@ -14,7 +14,7 @@ import { useStore } from '@/state/store';
 import { RADIUS, Sheet, text } from '@/components/ui';
 import { Onboarding } from './screens/Onboarding';
 import { Diagnostic } from './screens/Diagnostic';
-import { Blocked, OfflineGate, Paywall } from './screens/Gates';
+import { Blocked, OfflineGate, Paywall, ValidandoAcceso } from './screens/Gates';
 import { Tour } from './screens/Tour';
 import { Celebration, type CelebrationState } from './ruta/Celebration';
 import { InstallSheet, shouldShowInstallSheet } from './screens/InstallSheet';
@@ -53,6 +53,8 @@ export function App() {
     update,
     replace,
     entitlement,
+    level,
+    accessReady,
     can,
     online,
     refreshEntitlement,
@@ -208,7 +210,14 @@ export function App() {
     [state, can.showsInvestmentFigures],
   );
 
-  const blocked = entitlement?.level === 'bloqueado';
+  /*
+    Un solo lugar decide qué está abierto. `level` lo resuelve el store: es el
+    del servidor cuando la respuesta se entendió, y `bloqueado` en cualquier
+    otro caso. `accessReady` distingue "todavía no contesta" de "contestó que
+    no": mientras no contesta no se abre nada, pero tampoco se le enseña el
+    muro de pago a quien quizá ya pagó.
+  */
+  const blocked = level === 'bloqueado';
   // El punto naranja de la campana: sólo con una recomendación de severidad alta.
   const hasAlerts = diagnosis.recommendations.some((r) => r.severity === 'alta');
 
@@ -417,6 +426,8 @@ export function App() {
       );
     }
 
+    if (!accessReady && tab !== 'mas') return <ValidandoAcceso />;
+
     if (blocked && tab !== 'mas') {
       return (
         <Blocked
@@ -480,7 +491,7 @@ export function App() {
         return (
           <Ruta
             state={state}
-            level={entitlement?.level ?? 'bloqueado'}
+            level={level}
             moduleId={moduleId}
             openTaskKey={openTaskKey}
             formOpen={formOpen}
@@ -547,7 +558,7 @@ export function App() {
           <Costeador
             state={state}
             view={costView}
-            level={entitlement?.level ?? 'bloqueado'}
+            level={level}
             can={can}
             onChangeView={setCostView}
             onOpenDish={openDish}
@@ -670,7 +681,7 @@ export function App() {
           <nav className="mrl-nav" aria-label="Navegación principal">
             {TABS.map(({ id, label, Icon }) => {
               const active = tab === id;
-              const disabled = blocked && id !== 'mas';
+              const disabled = (blocked || !accessReady) && id !== 'mas';
               return (
                 <button
                   key={id}

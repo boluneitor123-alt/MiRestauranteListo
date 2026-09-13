@@ -145,6 +145,21 @@ export function Paywall({
   );
 }
 
+/**
+ * Mientras el servidor resuelve el acceso.
+ *
+ * No es un bloqueo ni un muro de pago: es "todavía no sabemos". Se muestra en
+ * lugar del contenido porque abrirlo antes de saber sería regalarlo, y en
+ * lugar del muro porque acusar de no haber pagado a quien sí pagó es peor.
+ */
+export function ValidandoAcceso() {
+  return (
+    <div className="mrl-measure" style={{ padding: '60px 24px 40px', textAlign: 'center' }}>
+      <Muted size={14}>Validando tu acceso…</Muted>
+    </div>
+  );
+}
+
 /** Bloqueo al expirar la prueba: sólo queda "Más" (README § 1.12). */
 export function Blocked({
   onOpenPaywall,
