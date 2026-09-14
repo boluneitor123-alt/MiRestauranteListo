@@ -4,7 +4,7 @@
 
 import { dishMetrics, type CostingContext, EMPTY_CONTEXT } from './costing';
 import { money } from './format';
-import { semaphoreLevel } from './semaphore';
+import { ANCHOR_MAX, semaphoreLevel } from './semaphore';
 import { MENU_SECTIONS, type Dish, type MenuSection, type Popularity, resolveDish } from './types';
 
 export type MenuClass =
@@ -352,7 +352,22 @@ export const MIN_ACTION_IMPACT = 100;
 /** Cuántas sugerencias se muestran a la vez. */
 export const MAX_ACTIONS = 5;
 
-export type MenuActionKind = 'Subir precio' | 'Empujar en la carta' | 'Sacar de la carta';
+export type MenuActionKind =
+  | 'Subir precio'
+  | 'Empujar en la carta'
+  | 'Sacar de la carta'
+  | 'Ancla de la carta';
+
+/**
+ * El ancla no es una sugerencia: es una lección.
+ *
+ * Las otras tres reglas proponen un cambio y cuantifican lo que ese cambio
+ * deja al mes. Ésta no propone nada sobre el platillo —está bien como está—;
+ * explica para qué sirve el margen que ya tiene. Por eso no lleva cifra, no
+ * suma al potencial de la carta y no tiene botón que aplicar: inventarle un
+ * "+$X al mes" sería prometer dinero que nadie va a cobrar.
+ */
+export const esLeccion = (kind: MenuActionKind): boolean => kind === 'Ancla de la carta';
 
 export interface MenuAction {
   /** Identidad estable de la sugerencia: es la que se archiva. */
@@ -432,7 +447,19 @@ export function menuMoney(
   const weightedFoodCost = soldNet ? Math.round((soldCost / soldNet) * 100) : 0;
   const averageProfit = daily ? perDay / daily : 0;
 
+  /*
+    La bebida más cara de la carta. El ancla se explica con ella —"este margen
+    es el que te deja poner tu refresco a $35"— y ese precio sale de lo que la
+    persona ya capturó, nunca de un ejemplo tecleado aquí.
+  */
+  const bebida = priced
+    .filter((d) => d.dish.section === 'Bebidas')
+    .map((d) => d.dish)
+    .sort((a, b) => b.price - a.price)[0];
+
   const all: MenuAction[] = [];
+  /** Las lecciones van aparte: no compiten por lugar con lo que mueve dinero. */
+  const anclas: Array<{ fc: number; action: MenuAction }> = [];
   for (const { dish, m } of priced) {
     const fc = m.foodCost ?? 0;
     const u = units(dish.popularity);
@@ -480,6 +507,35 @@ export function menuMoney(
       }
     }
 
+    /*
+      El ancla es de comida, nunca una bebida: la lección es que el margen del
+      platillo que trae gente es el que sostiene el precio de las bebidas, y
+      con una bebida de ancla el consejo se muerde la cola. Y se decide sobre
+      el food cost **redondeado**, que es el que la persona está viendo en la
+      ficha del platillo: si ahí dice 25%, aquí tiene que valer 25%.
+    */
+    const fcVisible = m.foodCostRounded ?? 100;
+    if (fcVisible <= ANCHOR_MAX && dish.popularity === 'alta' && dish.section !== 'Bebidas') {
+      anclas.push({
+        fc: fcVisible,
+        action: {
+          key: menuActionKey('Ancla de la carta', dish.id),
+          kind: 'Ancla de la carta',
+          dishId: dish.id,
+          dishName: dish.name,
+          impact: 0,
+          title: `${dish.name} es tu ancla`,
+          body:
+            `Tu platillo más pedido deja ${100 - fcVisible}% de margen. Ese margen es el que ` +
+            (bebida
+              ? `te deja poner ${bebida.name} a ${money(bebida.price)} sin que nadie se queje: `
+              : 'sostiene el resto de tu carta: ') +
+            'revisa si tus bebidas están cobrando lo que pueden.',
+          cta: '',
+        },
+      });
+    }
+
     if (fc > DROP_FC && dish.popularity === 'baja') {
       all.push({
         key: menuActionKey('Sacar de la carta', dish.id),
@@ -504,13 +560,26 @@ export function menuMoney(
   // opuestos: gana la que mueve más dinero y la otra no se pinta. Así el
   // potencial de arriba tampoco cuenta dos veces al mismo platillo.
   const perDish = new Set<string>();
-  const winners = all.filter((action) => {
+  const dinero = all.filter((action) => {
     if (action.impact < MIN_ACTION_IMPACT || perDish.has(action.dishId)) return false;
     perDish.add(action.dishId);
     return true;
   });
 
-  const actions = winners.filter((a) => !ignored[a.key]).slice(0, MAX_ACTIONS);
+  /*
+    Una sola lección a la vez, la del ancla más fuerte: si media carta está
+    debajo del 25% el consejo es el mismo, y repetirlo cuatro veces lo apaga.
+    No pasa por el filtro de los $100 —no mueve dinero, enseña a leerlo— ni
+    consume uno de los cinco lugares de las sugerencias.
+  */
+  const leccion = anclas.sort((a, b) => a.fc - b.fc).map((a) => a.action)[0];
+  const winners = leccion ? [...dinero, leccion] : dinero;
+
+  const visibles = winners.filter((a) => !ignored[a.key]);
+  const actions = [
+    ...visibles.filter((a) => !esLeccion(a.kind)).slice(0, MAX_ACTIONS),
+    ...visibles.filter((a) => esLeccion(a.kind)),
+  ];
   const archived = winners.filter((a) => ignored[a.key]);
   const upside = actions.reduce((a, x) => a + x.impact, 0);
 
@@ -528,6 +597,9 @@ export function menuMoney(
 
 /** Cómo queda la carta después de aplicar una sugerencia. */
 export function applyMenuAction(dishes: readonly Dish[], action: MenuAction): Dish[] {
+  // Una lección no cambia nada de la carta; si llega aquí, la carta se queda
+  // igual en vez de marcar el platillo como destacado por descarte.
+  if (esLeccion(action.kind)) return [...dishes];
   if (action.kind === 'Sacar de la carta') return dishes.filter((d) => d.id !== action.dishId);
   return dishes.map((d) => {
     if (d.id !== action.dishId) return d;
@@ -538,6 +610,7 @@ export function applyMenuAction(dishes: readonly Dish[], action: MenuAction): Di
 
 /** El aviso que se muestra al aplicar una sugerencia. */
 export function menuActionFlash(action: MenuAction): string {
+  if (esLeccion(action.kind)) return `${action.dishName} se queda como está`;
   if (action.kind === 'Subir precio') return `${action.dishName} ahora cuesta ${money(action.targetPrice ?? 0)}`;
   if (action.kind === 'Empujar en la carta') return `${action.dishName} marcado para destacar en la carta`;
   return `${action.dishName} salió de tu carta`;

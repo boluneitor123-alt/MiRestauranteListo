@@ -6,6 +6,7 @@ import {
   menuActionFlash,
   menuMoney,
   DAILY_MIX_OPTIONS,
+  esLeccion,
   type MenuAction,
 } from '@/domain/menu';
 import { money } from '@/domain/format';
@@ -46,7 +47,7 @@ export function PlanDeAccion({
 
   const archivar = (action: MenuAction) => {
     onUpdate((s) => ({ ...s, ignoredActions: { ...s.ignoredActions, [action.key]: true } }));
-    onFlash('Sugerencia archivada');
+    onFlash(esLeccion(action.kind) ? 'Listo, no te lo volvemos a decir' : 'Sugerencia archivada');
   };
 
   const reactivar = (action: MenuAction) => {
@@ -186,28 +187,34 @@ export function PlanDeAccion({
         <div style={{ marginTop: 10 }}>
           <H size={19}>Tu plan de acción</H>
           <p className="mrl-prose" style={{ margin: '4px 0 10px', fontSize: 12.5, lineHeight: 1.45, color: text(60) }}>
-            Ordenado por cuánto dinero mueve cada cambio. Empieza por el primero.
+            {plan.actions.every((a) => esLeccion(a.kind))
+              ? 'Tu carta no pide cambios de precio. Lo que sigue es cómo sacarle provecho.'
+              : 'Ordenado por cuánto dinero mueve cada cambio. Empieza por el primero.'}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
-            {plan.actions.map((action, i) => (
+            {plan.actions.map((action, i) => {
+              const leccion = esLeccion(action.kind);
+              return (
               <Card key={action.key} radius={RADIUS.card} style={{ padding: '16px 17px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      flex: 'none',
-                      borderRadius: '50%',
-                      background: 'var(--color-accent)',
-                      color: 'var(--on-accent)',
-                      display: 'grid',
-                      placeItems: 'center',
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {i + 1}
-                  </span>
+                  {leccion ? null : (
+                    <span
+                      style={{
+                        width: 24,
+                        height: 24,
+                        flex: 'none',
+                        borderRadius: '50%',
+                        background: 'var(--color-accent)',
+                        color: 'var(--on-accent)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                  )}
                   <span
                     style={{
                       padding: '3px 10px',
@@ -220,36 +227,41 @@ export function PlanDeAccion({
                   >
                     {action.kind}
                   </span>
-                  <span
-                    style={{
-                      marginLeft: 'auto',
-                      fontWeight: 700,
-                      fontSize: 13,
-                      color: 'var(--color-accent-2-800)',
-                    }}
-                  >
-                    +{money(action.impact)} al mes
-                  </span>
+                  {leccion ? null : (
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: 'var(--color-accent-2-800)',
+                      }}
+                    >
+                      +{money(action.impact)} al mes
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>{action.title}</div>
                 <p className="mrl-prose" style={{ margin: '6px 0 12px', fontSize: 12.8, lineHeight: 1.5, color: text(70) }}>
                   {action.body}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <Button height={44} style={{ flex: 1, minWidth: 160, fontSize: 14 }} onClick={() => aplicar(action)}>
-                    {action.cta}
-                  </Button>
+                  {leccion ? null : (
+                    <Button height={44} style={{ flex: 1, minWidth: 160, fontSize: 14 }} onClick={() => aplicar(action)}>
+                      {action.cta}
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     height={44}
-                    style={{ paddingInline: 15, fontSize: 13 }}
+                    style={leccion ? { flex: 1, minWidth: 160, fontSize: 13 } : { paddingInline: 15, fontSize: 13 }}
                     onClick={() => archivar(action)}
                   >
-                    No, gracias
+                    {leccion ? 'Entendido' : 'No, gracias'}
                   </Button>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -289,7 +301,7 @@ export function PlanDeAccion({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.8, fontWeight: 700 }}>{action.title}</div>
                   <Muted size={11.5} style={{ marginTop: 1 }}>
-                    {action.kind} · +{money(action.impact)} al mes
+                    {esLeccion(action.kind) ? action.kind : `${action.kind} · +${money(action.impact)} al mes`}
                   </Muted>
                 </div>
                 <Button

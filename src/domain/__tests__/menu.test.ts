@@ -14,6 +14,7 @@ import {
   LAYOUT_PRINT_GUIDES,
   menuPrintTag,
   MIN_ACTION_IMPACT,
+  esLeccion,
   type MenuClass,
 } from '../menu';
 import { dishMetrics, EMPTY_CONTEXT } from '../costing';
@@ -318,5 +319,140 @@ describe('documento de la carta de menú', () => {
     expect(menuPrintTag('vaca', false)).toBe('Revisa su costo');
     expect(menuPrintTag('rompecabezas', false)).toBe('Empújalo');
     expect(menuPrintTag('margen justo', false)).toBe('');
+  });
+});
+
+describe('el ancla de la carta', () => {
+  /*
+    El caso que estaba muerto: el platillo más pedido con food cost bajo. Las
+    tres reglas de dinero lo esquivaban —"empujar" exige popularidad distinta
+    de alta, "subir precio" exige food cost alto— así que el platillo que
+    sostiene el negocio era el único del que la app no decía nada.
+  */
+  const ancla = dish('taco', 24, 'alta', 'Fuertes', 28);
+  const refresco = dish('refresco', 31, 'alta', 'Bebidas', 35);
+  const carta = [ancla, refresco, dish('relleno', 35, 'media')];
+
+  it('le habla al platillo más pedido de margen alto', () => {
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
+    const leccion = m.actions.find((a) => a.kind === 'Ancla de la carta');
+    expect(leccion?.dishId).toBe('taco');
+    expect(leccion?.body).toContain('76% de margen');
+  });
+
+  it('el precio del refresco sale de la carta de la persona, no del texto', () => {
+    const conRefresco = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
+    expect(conRefresco.actions.find((a) => esLeccion(a.kind))?.body).toContain('refresco a $35');
+
+    const otroPrecio = menuMoney(
+      [ancla, dish('refresco', 31, 'alta', 'Bebidas', 48), dish('relleno', 35, 'media')],
+      EMPTY_CONTEXT,
+      { daily: 100 },
+    );
+    expect(otroPrecio.actions.find((a) => esLeccion(a.kind))?.body).toContain('refresco a $48');
+  });
+
+  it('el ejemplo es la bebida más cara, que es la que enseña el techo', () => {
+    const m = menuMoney(
+      [ancla, dish('agua', 20, 'alta', 'Bebidas', 22), dish('cerveza', 22, 'media', 'Bebidas', 65)],
+      EMPTY_CONTEXT,
+      { daily: 100 },
+    );
+    expect(m.actions.find((a) => esLeccion(a.kind))?.body).toContain('cerveza a $65');
+  });
+
+  it('sin bebidas en la carta no inventa un precio de bebida', () => {
+    const m = menuMoney([ancla, dish('relleno', 35, 'media')], EMPTY_CONTEXT, { daily: 100 });
+    const leccion = m.actions.find((a) => esLeccion(a.kind))!;
+    expect(leccion.body).toContain('sostiene el resto de tu carta');
+    expect(leccion.body).not.toMatch(/\$\d/);
+  });
+
+  it('una bebida nunca es el ancla: el consejo se mordería la cola', () => {
+    // Pasaba con la cerveza de barril de una alitería y con el agua fresca de
+    // una fonda: "tu cerveza deja 78%, revisa tus bebidas".
+    const m = menuMoney(
+      [dish('cerveza', 22, 'alta', 'Bebidas', 65), dish('relleno', 35, 'media')],
+      EMPTY_CONTEXT,
+      { daily: 100 },
+    );
+    expect(m.actions.some((a) => esLeccion(a.kind))).toBe(false);
+  });
+
+  it('decide sobre el food cost redondeado, el mismo que ve la persona', () => {
+    /*
+      La ficha del platillo dice 25% y el veredicto lo llama bajo. Si Mi menú
+      midiera el crudo —25.4%— se quedaría callado justo ahí, y la app se
+      contradiría sola entre dos pantallas.
+    */
+    const casi = dish('casi', 25.4, 'alta', 'Fuertes', 100);
+    expect(dishMetrics(casi, EMPTY_CONTEXT).foodCostRounded).toBe(25);
+    const m = menuMoney([casi, refresco], EMPTY_CONTEXT, { daily: 100 });
+    const leccion = m.actions.find((a) => esLeccion(a.kind));
+    expect(leccion?.dishId).toBe('casi');
+    expect(leccion?.body).toContain('75% de margen');
+  });
+
+  it('no se dispara con margen normal ni con un platillo que casi no se pide', () => {
+    const normal = menuMoney([dish('normal', 29, 'alta'), refresco], EMPTY_CONTEXT, { daily: 100 });
+    expect(normal.actions.some((a) => esLeccion(a.kind))).toBe(false);
+
+    const impopular = menuMoney([dish('impopular', 18, 'baja'), refresco], EMPTY_CONTEXT, { daily: 100 });
+    expect(impopular.actions.some((a) => esLeccion(a.kind))).toBe(false);
+  });
+
+  it('no promete dinero que nadie va a cobrar', () => {
+    /*
+      `upside` alimenta "tu carta dejaría X al mes". Si la lección sumara ahí,
+      la app estaría prometiendo una ganancia por un cambio que no existe.
+    */
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
+    const leccion = m.actions.find((a) => esLeccion(a.kind))!;
+    expect(leccion.impact).toBe(0);
+    expect(leccion.cta).toBe('');
+    expect(m.upside).toBe(m.actions.filter((a) => !esLeccion(a.kind)).reduce((a, x) => a + x.impact, 0));
+    expect(m.monthlyAfter).toBe(m.monthly + m.upside);
+  });
+
+  it('no cambia la carta si alguien la aplica', () => {
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100 });
+    const leccion = m.actions.find((a) => esLeccion(a.kind))!;
+    expect(applyMenuAction(carta, leccion)).toEqual(carta);
+    expect(menuActionFlash(leccion)).toBe('taco se queda como está');
+  });
+
+  it('sobrevive al filtro de los $100 y no le quita lugar a las sugerencias', () => {
+    /*
+      Vale $0 al mes: el filtro de impacto mínimo la borraría, y ordenada por
+      dinero quedaría siempre al final, fuera de los cinco lugares.
+    */
+    const llena = [
+      ancla,
+      refresco,
+      ...Array.from({ length: MAX_ACTIONS + 2 }, (_, i) => dish(`caro${i}`, 45, 'baja', 'Fuertes', 200)),
+    ];
+    const m = menuMoney(llena, EMPTY_CONTEXT, { daily: 400 });
+    expect(m.actions.filter((a) => !esLeccion(a.kind))).toHaveLength(MAX_ACTIONS);
+    expect(m.actions.filter((a) => esLeccion(a.kind))).toHaveLength(1);
+    expect(esLeccion(m.actions[m.actions.length - 1].kind)).toBe(true);
+    expect(MIN_ACTION_IMPACT).toBeGreaterThan(0);
+  });
+
+  it('da una sola lección, la del ancla más fuerte', () => {
+    const m = menuMoney(
+      [dish('flojo', 24, 'alta', 'Fuertes', 28), dish('fuerte', 12, 'alta', 'Fuertes', 30), refresco],
+      EMPTY_CONTEXT,
+      { daily: 100 },
+    );
+    const lecciones = m.actions.filter((a) => esLeccion(a.kind));
+    expect(lecciones).toHaveLength(1);
+    expect(lecciones[0].dishId).toBe('fuerte');
+  });
+
+  it('se puede archivar como cualquier otra', () => {
+    const key = menuActionKey('Ancla de la carta', 'taco');
+    const m = menuMoney(carta, EMPTY_CONTEXT, { daily: 100, ignored: { [key]: true } });
+    expect(m.actions.some((a) => esLeccion(a.kind))).toBe(false);
+    expect(m.archived.some((a) => a.key === key)).toBe(true);
   });
 });
