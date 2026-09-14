@@ -41,6 +41,9 @@
  *
  * En cada platillo, los ingredientes llevan:
  *
+ *   extras      Opcional, en el platillo: % de gas, condimentos y merma
+ *               general sobre el costo de los insumos.
+ *
  *   nombre      qty   cuánto lleva el platillo
  *   u           la unidad de esa cantidad: 'g', 'ml', 'pz'
  *   bu          la unidad en que lo compras: 'kg', 'l', 'pz'
@@ -74,6 +77,13 @@ export interface PlatilloEstimado {
   nombre: string;
   precio: number;
   ingredientes: IngredienteEstimado[];
+  /**
+   * Gas, condimentos y merma general, en porcentaje sobre el costo de los
+   * insumos. Va en los platillos que se cocinan de verdad: un guisado gasta
+   * gas y se le va producto que no llega al plato, y eso cuesta aunque no
+   * aparezca en la receta. Opcional; sin él, sólo cuentan los insumos.
+   */
+  extras?: number;
 }
 
 export interface EstimacionDeGiro {
@@ -126,8 +136,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Taco de pastor",
         precio: 28,
         ingredientes: [
-          { nombre: "Carne al pastor", qty: 70, u: "g", bu: "kg", buyPrice: 165, buyQty: 1, merma: 8 },
-          { nombre: "Tortilla de maíz", qty: 2, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
+          { nombre: "Carne al pastor", qty: 30, u: "g", bu: "kg", buyPrice: 120, buyQty: 1, merma: 8 },
+          { nombre: "Tortilla de maíz", qty: 1, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
           { nombre: "Piña", qty: 10, u: "g", bu: "kg", buyPrice: 28, buyQty: 1, merma: 35 },
           { nombre: "Cebolla y cilantro", qty: 15, u: "g", bu: "kg", buyPrice: 22, buyQty: 1, merma: 20 },
         ],
@@ -136,8 +146,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Taco de bistec",
         precio: 32,
         ingredientes: [
-          { nombre: "Bistec de res", qty: 75, u: "g", bu: "kg", buyPrice: 210, buyQty: 1, merma: 12 },
-          { nombre: "Tortilla de maíz", qty: 2, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
+          { nombre: "Bistec de res", qty: 38, u: "g", bu: "kg", buyPrice: 190, buyQty: 1, merma: 12 },
+          { nombre: "Tortilla de maíz", qty: 1, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
           { nombre: "Cebolla y cilantro", qty: 15, u: "g", bu: "kg", buyPrice: 22, buyQty: 1, merma: 20 },
         ],
       },
@@ -275,7 +285,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Croissant de jamón y queso",
         precio: 79,
         ingredientes: [
-          { nombre: "Croissant", qty: 1, u: "pz", bu: "pz", buyPrice: 14, buyQty: 1, merma: 0 },
+          { nombre: "Croissant", qty: 1, u: "pz", bu: "pz", buyPrice: 8, buyQty: 1, merma: 0 },
           { nombre: "Jamón", qty: 40, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 0 },
           { nombre: "Queso manchego", qty: 30, u: "g", bu: "kg", buyPrice: 180, buyQty: 1, merma: 0 },
         ],
@@ -323,7 +333,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         ingredientes: [
           { nombre: "Masa", qty: 280, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
           { nombre: "Salsa de tomate", qty: 120, u: "ml", bu: "l", buyPrice: 48, buyQty: 1, merma: 0 },
-          { nombre: "Queso mozzarella", qty: 180, u: "g", bu: "kg", buyPrice: 165, buyQty: 1, merma: 0 },
+          { nombre: "Queso mozzarella", qty: 130, u: "g", bu: "kg", buyPrice: 165, buyQty: 1, merma: 0 },
           { nombre: "Albahaca", qty: 5, u: "g", bu: "kg", buyPrice: 220, buyQty: 1, merma: 15 },
         ],
       },
@@ -333,7 +343,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         ingredientes: [
           { nombre: "Masa", qty: 280, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
           { nombre: "Salsa de tomate", qty: 120, u: "ml", bu: "l", buyPrice: 48, buyQty: 1, merma: 0 },
-          { nombre: "Queso mozzarella", qty: 180, u: "g", bu: "kg", buyPrice: 165, buyQty: 1, merma: 0 },
+          { nombre: "Queso mozzarella", qty: 130, u: "g", bu: "kg", buyPrice: 165, buyQty: 1, merma: 0 },
           { nombre: "Pepperoni", qty: 70, u: "g", bu: "kg", buyPrice: 240, buyQty: 1, merma: 0 },
         ],
       },
@@ -341,7 +351,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Refresco 600 ml",
         precio: 35,
         ingredientes: [
-          { nombre: "Refresco", qty: 1, u: "pz", bu: "pz", buyPrice: 14, buyQty: 1, merma: 0 },
+          { nombre: "Refresco", qty: 1, u: "pz", bu: "pz", buyPrice: 9, buyQty: 1, merma: 0 },
         ],
       },
     ],
@@ -385,7 +395,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Orden de alitas (12 piezas)",
         precio: 189,
         ingredientes: [
-          { nombre: "Alitas de pollo", qty: 700, u: "g", bu: "kg", buyPrice: 95, buyQty: 1, merma: 6 },
+          { nombre: "Alitas de pollo", qty: 520, u: "g", bu: "kg", buyPrice: 95, buyQty: 1, merma: 6 },
           { nombre: "Salsa búfalo", qty: 60, u: "ml", bu: "l", buyPrice: 145, buyQty: 1, merma: 0 },
           { nombre: "Aderezo ranch", qty: 40, u: "ml", bu: "l", buyPrice: 120, buyQty: 1, merma: 0 },
           { nombre: "Apio y zanahoria", qty: 40, u: "g", bu: "kg", buyPrice: 30, buyQty: 1, merma: 20 },
@@ -395,7 +405,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Boneless 300 g",
         precio: 165,
         ingredientes: [
-          { nombre: "Pechuga de pollo", qty: 300, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 8 },
+          { nombre: "Pechuga de pollo", qty: 210, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 8 },
           { nombre: "Capeado", qty: 60, u: "g", bu: "kg", buyPrice: 30, buyQty: 1, merma: 0 },
           { nombre: "Salsa BBQ", qty: 60, u: "ml", bu: "l", buyPrice: 110, buyQty: 1, merma: 0 },
         ],
@@ -404,7 +414,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Cerveza de barril",
         precio: 65,
         ingredientes: [
-          { nombre: "Cerveza", qty: 400, u: "ml", bu: "l", buyPrice: 38, buyQty: 1, merma: 0 },
+          { nombre: "Cerveza", qty: 400, u: "ml", bu: "l", buyPrice: 27, buyQty: 1, merma: 0 },
           { nombre: "Vaso", qty: 1, u: "pz", bu: "pz", buyPrice: 1.2, buyQty: 1, merma: 0 },
         ],
       },
@@ -448,12 +458,20 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Comida corrida",
         precio: 95,
+        // El guisado y la sopa iban como insumo comprado —$110/kg y $18/l—, que es
+        // el platillo ya hecho. Una fonda compra pollo, jitomate y verdura, y
+        // guisa: eso es lo que la app tiene que enseñar a costear.
+        extras: 6,
         ingredientes: [
-          { nombre: "Guisado del día", qty: 220, u: "g", bu: "kg", buyPrice: 110, buyQty: 1, merma: 10 },
+          { nombre: "Pierna y muslo de pollo", qty: 130, u: "g", bu: "kg", buyPrice: 95, buyQty: 1, merma: 15 },
+          { nombre: "Jitomate", qty: 60, u: "g", bu: "kg", buyPrice: 28, buyQty: 1, merma: 10 },
+          { nombre: "Cebolla", qty: 25, u: "g", bu: "kg", buyPrice: 22, buyQty: 1, merma: 15 },
+          { nombre: "Chile y especias", qty: 8, u: "g", bu: "kg", buyPrice: 60, buyQty: 1, merma: 0 },
+          { nombre: "Aceite", qty: 12, u: "ml", bu: "l", buyPrice: 42, buyQty: 1, merma: 0 },
+          { nombre: "Verduras para la sopa", qty: 70, u: "g", bu: "kg", buyPrice: 34, buyQty: 1, merma: 12 },
           { nombre: "Arroz", qty: 120, u: "g", bu: "kg", buyPrice: 26, buyQty: 1, merma: 0 },
           { nombre: "Frijoles", qty: 100, u: "g", bu: "kg", buyPrice: 38, buyQty: 1, merma: 0 },
           { nombre: "Tortillas", qty: 4, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
-          { nombre: "Sopa", qty: 250, u: "ml", bu: "l", buyPrice: 18, buyQty: 1, merma: 0 },
         ],
       },
       {
@@ -467,8 +485,13 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Sopa del día",
         precio: 35,
+        // «Verduras y caldo» a $20/l era la sopa ya hecha. Desglosada.
+        extras: 8,
         ingredientes: [
-          { nombre: "Verduras y caldo", qty: 300, u: "ml", bu: "l", buyPrice: 20, buyQty: 1, merma: 12 },
+          { nombre: "Verduras", qty: 110, u: "g", bu: "kg", buyPrice: 34, buyQty: 1, merma: 12 },
+          { nombre: "Retazo de pollo para el caldo", qty: 40, u: "g", bu: "kg", buyPrice: 55, buyQty: 1, merma: 20 },
+          { nombre: "Cebolla y ajo", qty: 15, u: "g", bu: "kg", buyPrice: 22, buyQty: 1, merma: 15 },
+          { nombre: "Especias", qty: 3, u: "g", bu: "kg", buyPrice: 60, buyQty: 1, merma: 0 },
         ],
       },
     ],
@@ -530,8 +553,14 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Postre en vaso",
         precio: 69,
+        // «Base de postre» a $16 la pieza era el postre entero. Desglosado.
+        extras: 5,
         ingredientes: [
-          { nombre: "Base de postre", qty: 1, u: "pz", bu: "pz", buyPrice: 16, buyQty: 1, merma: 0 },
+          { nombre: "Queso crema", qty: 60, u: "g", bu: "kg", buyPrice: 180, buyQty: 1, merma: 0 },
+          { nombre: "Crema para batir", qty: 40, u: "ml", bu: "l", buyPrice: 70, buyQty: 1, merma: 0 },
+          { nombre: "Galleta molida", qty: 25, u: "g", bu: "kg", buyPrice: 90, buyQty: 1, merma: 0 },
+          { nombre: "Azúcar", qty: 20, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
+          { nombre: "Vaso y tapa", qty: 1, u: "pz", bu: "pz", buyPrice: 2.5, buyQty: 1, merma: 0 },
         ],
       },
     ],

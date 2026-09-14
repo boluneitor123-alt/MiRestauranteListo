@@ -3,6 +3,8 @@ import { ESTIMACIONES, GIRO_GENERICO } from '@/content/estimaciones';
 import { BUDGET_CONCEPTS, FIXED_CONCEPTS } from '@/content/catalog';
 import { QS } from '@/content/onboarding';
 import { estimarProyecto, topeDePresupuesto } from '../estimacion';
+import { dishMetrics } from '../costing';
+import { semaphoreLevel } from '../semaphore';
 
 const catalogos = { presupuesto: BUDGET_CONCEPTS, fijos: FIXED_CONCEPTS };
 const estimar = (answers: Record<string, string>) => estimarProyecto(answers, catalogos);
@@ -43,6 +45,31 @@ describe('la tabla y el diagnóstico hablan el mismo idioma', () => {
       expect(tabla.margin, giro).toBeGreaterThan(0);
       expect(tabla.margin, giro).toBeLessThan(100);
     }
+  });
+
+  it('ningún platillo sembrado sale con insumo comprado ya hecho', () => {
+    /*
+      «Guisado del día» a $110/kg, «Base de postre» a $16/pz y «Verduras y
+      caldo» a $20/l no eran insumos: eran el platillo terminado. Con eso, el
+      Costeador le enseñaba a la persona a costear comprando en vez de
+      producir, y los números no cuadraban con lo que ella paga en el mercado.
+    */
+    const comprados = ['Guisado del día', 'Base de postre', 'Verduras y caldo', 'Sopa'];
+    for (const [giro, tabla] of Object.entries(ESTIMACIONES)) {
+      for (const p of tabla.platillos) {
+        for (const i of p.ingredientes) {
+          expect(comprados, `${giro} · ${p.nombre}`).not.toContain(i.nombre);
+        }
+      }
+    }
+  });
+
+  it('una taquería recién diagnosticada no recibe el aviso de food cost peligroso', () => {
+    // Era el síntoma que se quería matar: la app criticando su propia
+    // estimación en la primera pantalla que alguien ve.
+    const e = estimarProyecto({ giro: 'Taquería' }, catalogos);
+    const niveles = e.dishes.map((d) => semaphoreLevel(dishMetrics(d, { subrecipes: [] }).foodCostRounded));
+    expect(niveles).not.toContain('peligroso');
   });
 
   it('los platillos traen ingredientes con precio de compra', () => {
