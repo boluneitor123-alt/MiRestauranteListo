@@ -2,8 +2,9 @@
 
 import { ArrowRight, ChevronRight, FileText, Sprout, TriangleAlert } from 'lucide-react';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
-import { breakeven, fixedExpensesTotal } from '@/domain/finance';
-import { resumenDeAlcance, type AccessLevel } from '@/domain/access';
+import { breakeven, fixedExpensesTotal, investment } from '@/domain/finance';
+import { resumenDeAlcance, type AccessLevel, type Capabilities } from '@/domain/access';
+import { titularDeEquilibrio } from '@/domain/titular';
 import { dishMetrics } from '@/domain/costing';
 import { menuAggregates } from '@/domain/aggregates';
 import { money, pct as pctLabel } from '@/domain/format';
@@ -39,6 +40,7 @@ export function Inicio({
   licensed,
   trial,
   level,
+  can,
   startedAt,
   hasAlerts,
   onGo,
@@ -58,6 +60,8 @@ export function Inicio({
   /** Días que le quedan de prueba. `null` con licencia: el aviso desaparece. */
   trial: { daysLeft: number; expired: boolean } | null;
   level: AccessLevel;
+  /** El alcance vigente: decide si la cifra de inversión se enseña. */
+  can: Capabilities;
   /** Cuándo empezó a usar la app. Alimenta la proyección de fecha de apertura. */
   startedAt: number | null;
   /** Hay una alerta que merece el punto naranja de la campana. */
@@ -92,6 +96,19 @@ export function Inicio({
     ? conPrecio.reduce((a, m) => a + m.costPerPortion, 0) / conPrecio.length
     : 0;
   const carta = menuAggregates(state.dishes, { subrecipes: state.subrecipes });
+  const inversion = investment({
+    concepts: state.budget,
+    subconcepts: state.budgetSub,
+    budgetCap: state.project.budgetCap,
+  });
+  const titular = titularDeEquilibrio({
+    fixedExpenses: fixed,
+    grossMargin: state.margin,
+    ticket: state.ticket,
+    ownerGoal: state.ownerGoal,
+    hours: state.hours,
+    closedOneDay: state.closedOneDay,
+  });
   const recent = state.dishes.slice(-6).reverse();
   const courses = diagnosis.progress.modules.filter((m) => m.course);
   const minutosDelSiguiente = minutosDeLeccion(diagnosis.nextStep.title);
@@ -128,6 +145,18 @@ export function Inicio({
 
       {trial ? <AvisoDePrueba trial={trial} level={level} onOpenPaywall={onOpenPaywall} /> : null}
 
+      <ResultadosClave
+        titular={titular}
+        rows={keyResults({
+          ticket: state.ticket,
+          averageCost: costoPromedio,
+          pricedDishes: conPrecio.length,
+          margin: carta.suggestedMargin ?? 0,
+          inversion: inversion.total,
+          muestraInversion: can.muestraCifrasDeInversion,
+        })}
+      />
+
       <SiguientePaso
         titulo={diagnosis.nextStep.title}
         cuerpo={diagnosis.nextStep.body}
@@ -145,17 +174,6 @@ export function Inicio({
         done={state.done}
         onGo={onGo}
         onOpenTask={(module, task) => onGo({ tab: 'ruta', module, task })}
-      />
-
-      <ResultadosClave
-        rows={keyResults({
-          ticketsPerDay: be.ticketsPerDay,
-          monthlySales: be.monthlySales,
-          ticket: state.ticket,
-          averageCost: costoPromedio,
-          pricedDishes: conPrecio.length,
-          margin: carta.suggestedMargin ?? 0,
-        })}
       />
 
       <NoOlvides recomendaciones={diagnosis.recommendations.slice(0, 3)} onGo={onGo} />

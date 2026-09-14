@@ -1,8 +1,12 @@
 'use client';
 
 import type { CSSProperties } from 'react';
+import { Lock } from 'lucide-react';
 import { money, money2, pct } from '@/domain/format';
+import { INVESTMENT_HIDDEN_LABEL } from '@/domain/access';
+import type { Titular } from '@/domain/titular';
 import { RADIUS } from '@/components/ui';
+import { NumeroAnimado } from './NumeroAnimado';
 
 /**
  * "Resultados clave": las cuatro cifras que resumen el proyecto.
@@ -19,18 +23,16 @@ export interface KeyResult {
   foot: string;
   /** El pie va como insignia verde en lugar de como texto tenue. */
   chip?: boolean;
-  /** Token del pastel, sin el prefijo --cat-. La primera tarjeta no lleva. */
+  /** Token del pastel, sin el prefijo --cat-. */
   cat?: string;
+  /** Va apagada y con candado: el dato existe pero no se enseña todavía. */
+  bajoCandado?: boolean;
   d1: string;
   d2: string;
 }
 
 /** Las cuatro tarjetas, ya resueltas a partir de los números del proyecto. */
 export function keyResults(input: {
-  /** Clientes al día del punto de equilibrio. */
-  ticketsPerDay: number;
-  /** Venta mensual que hay que hacer para no perder. */
-  monthlySales: number;
   /** Ticket promedio capturado. */
   ticket: number;
   /** Costo promedio por porción de los platillos con precio. */
@@ -39,16 +41,17 @@ export function keyResults(input: {
   pricedDishes: number;
   /** Margen bruto promedio de la carta, en porcentaje. */
   margin: number;
+  /** Lo que cuesta abrir, sumado del presupuesto. */
+  inversion: number;
+  /**
+   * ¿Se puede enseñar la cifra de inversión?
+   *
+   * En prueba no. La tarjeta se queda en su lugar con el candado, al lado de
+   * las que sí se ven: es más claro —y mejor argumento— que esconderla.
+   */
+  muestraInversion: boolean;
 }): KeyResult[] {
   return [
-    {
-      label: 'Punto de equilibrio',
-      value: `${input.ticketsPerDay}`,
-      unit: 'clientes al día',
-      foot: `${money(input.monthlySales)} venta mensual`,
-      d1: 'M4 20h16M6.5 16.5V11M11.5 16.5V5.5M16.5 16.5v-4',
-      d2: 'M12 3v2',
-    },
     {
       label: 'Ticket promedio',
       value: money(input.ticket || 0),
@@ -74,10 +77,74 @@ export function keyResults(input: {
       d1: 'M4 20h16',
       d2: 'M6.5 16.5V11M11.5 16.5V5.5M16.5 16.5v-4',
     },
+    {
+      label: 'Inversión para abrir',
+      value: input.muestraInversion ? money(input.inversion) : INVESTMENT_HIDDEN_LABEL,
+      foot: input.muestraInversion
+        ? input.inversion
+          ? 'Suma de tu presupuesto'
+          : 'Captura tu presupuesto'
+        : 'Se abre con el pago único',
+      bajoCandado: !input.muestraInversion,
+      cat: 'local',
+      d1: 'M3 10.5 12 4l9 6.5',
+      d2: 'M5.5 10v10h13V10M10 20v-6h4v6',
+    },
   ];
 }
 
-export function ResultadosClave({ rows }: { rows: KeyResult[] }) {
+/**
+ * La frase, en tamaño de conclusión.
+ *
+ * Se arma de tres piezas —«Necesitas», el número, «clientes al día para no
+ * perder dinero»— para que el número pueda ir grande y animarse sin partir la
+ * oración a mano. Se lee como algo que alguien te dice, no como una métrica.
+ */
+function Frase({ titular }: { titular: Titular }) {
+  if (!titular.listo) {
+    return (
+      <p
+        className="mrl-prose"
+        style={{
+          margin: '10px 0 0',
+          fontFamily: 'var(--font-heading)',
+          fontSize: 21,
+          lineHeight: 1.25,
+          letterSpacing: '-.02em',
+          color: 'var(--color-text-2)',
+        }}
+      >
+        {titular.mensaje}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p
+        className="mrl-prose"
+        style={{
+          margin: '10px 0 0',
+          fontFamily: 'var(--font-heading)',
+          fontSize: 26,
+          lineHeight: 1.2,
+          letterSpacing: '-.025em',
+        }}
+      >
+        {titular.antes}{' '}
+        <span style={{ color: 'var(--color-accent-800)', fontSize: 40, letterSpacing: '-.03em' }}>
+          <NumeroAnimado valor={titular.numero} />
+        </span>{' '}
+        {titular.unidad} {titular.despues}
+      </p>
+      <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--color-text-2)' }}>
+        {money(titular.ventaMensual)} de venta al mes
+      </p>
+    </>
+  );
+}
+
+export function ResultadosClave({ titular, rows }: { titular: Titular; rows: KeyResult[] }) {
   return (
     <div
       style={{
@@ -104,11 +171,12 @@ export function ResultadosClave({ rows }: { rows: KeyResult[] }) {
             <path d="M4 20h16M6.5 16.5V11M11.5 16.5V5.5M16.5 16.5v-4" />
           </svg>
         </span>
-        <h4 style={{ margin: 0, flex: 1, fontSize: 18, letterSpacing: '-.01em', fontFamily: 'var(--font-heading)' }}>
-          Resultados clave
+        <h4 style={{ margin: 0, flex: 1, fontSize: 13, letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 800, color: 'var(--color-text-2)' }}>
+          Tus números
         </h4>
-        <span style={{ fontSize: 12.5, color: 'var(--color-text-2)' }}>Actualizados hoy</span>
       </div>
+
+      <Frase titular={titular} />
 
       <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
         {rows.map((r) => {
@@ -117,6 +185,9 @@ export function ResultadosClave({ rows }: { rows: KeyResult[] }) {
             borderRadius: RADIUS.inner,
             background: r.cat ? `var(--cat-${r.cat})` : 'var(--color-text)',
             color: r.cat ? `var(--cat-${r.cat}-ink)` : 'var(--color-neutral-100)',
+            // Bajo candado se apaga, pero se queda en su lugar y del mismo
+            // tamaño: el hueco al lado de las que sí se ven es el argumento.
+            ...(r.bajoCandado ? { opacity: 0.72 } : {}),
           };
           return (
             <div key={r.label} style={card}>
@@ -126,9 +197,17 @@ export function ResultadosClave({ rows }: { rows: KeyResult[] }) {
                   <path d={r.d2} />
                 </svg>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, fontWeight: 700, lineHeight: 1.3 }}>{r.label}</span>
+                {r.bajoCandado ? <Lock size={13} strokeWidth={2.8} style={{ flex: 'none', opacity: 0.8 }} /> : null}
               </span>
               <span style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 9, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-heading)', fontSize: 25, lineHeight: 1, letterSpacing: '-.02em' }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: r.bajoCandado ? 17 : 25,
+                    lineHeight: 1.15,
+                    letterSpacing: '-.02em',
+                  }}
+                >
                   {r.value}
                 </span>
                 {r.unit ? <span style={{ fontSize: 12, opacity: 0.78 }}>{r.unit}</span> : null}

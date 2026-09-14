@@ -484,6 +484,7 @@ export function App() {
             state={state}
             diagnosis={diagnosis}
             level={level}
+            can={can}
             licensed={!!entitlement?.licensed}
             trial={
               entitlement && !entitlement.licensed
