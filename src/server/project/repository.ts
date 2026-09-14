@@ -202,6 +202,8 @@ export class PrismaProjectRepository implements ProjectRepository {
       },
       fcTarget: project.fcTarget,
       layout: project.layout,
+      estimados: Array.isArray(project.estimados) ? (project.estimados as string[]) : [],
+      ...(project.selloEstimado ? { selloEstimado: project.selloEstimado } : {}),
       settings: (() => {
         const guardados = { ...base.settings, ...((project.settings as Record<string, unknown>) ?? {}) };
         // El acento se repone si lo guardado no es un color.
@@ -257,6 +259,8 @@ export class PrismaProjectRepository implements ProjectRepository {
           ignoredActions: { ...state.ignoredActions },
           fcTarget: Math.round(state.fcTarget),
           layout: state.layout,
+          estimados: state.estimados,
+          selloEstimado: state.selloEstimado ?? null,
         },
         create: {
           userId,
@@ -287,6 +291,8 @@ export class PrismaProjectRepository implements ProjectRepository {
           ignoredActions: { ...state.ignoredActions },
           fcTarget: Math.round(state.fcTarget),
           layout: state.layout,
+          estimados: state.estimados,
+          selloEstimado: state.selloEstimado ?? null,
         },
       });
 

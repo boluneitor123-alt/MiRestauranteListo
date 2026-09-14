@@ -7,6 +7,7 @@ import { money } from '@/domain/format';
 import { menuAggregates } from '@/domain/aggregates';
 import { alcanceDe, type AccessLevel, type Capabilities } from '@/domain/access';
 import { SoloLectura } from '@/components/app/SoloLectura';
+import { AvisoDeEstimado } from '@/components/app/EtiquetaEstimado';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
@@ -105,11 +106,19 @@ export function Numeros({
   /** Hay una alerta que merece el punto naranja de la campana. */
   hasAlerts: boolean;
 }) {
+  /** Cuántos valores de ese grupo siguen siendo estimación. */
+  const estimadosDe = (grupo: string) => state.estimados.filter((r) => r.startsWith(`${grupo}:`)).length;
+  const sello = state.selloEstimado ?? '';
+
   if (view === 'presupuesto') {
     // Durante la prueba el presupuesto NO lleva candado: se ve completo, con
     // los 13 conceptos de un caso real, y sólo no se puede editar. Es el
     // bloqueo que mejor convierte y por eso se muestra en vez de esconderse.
     return (
+      <>
+      <div style={{ padding: '0 20px' }}>
+        <AvisoDeEstimado sello={sello} cuantos={estimadosDe('presupuesto')} />
+      </div>
       <Budget
         state={state}
         formOpen={formOpen}
@@ -119,6 +128,7 @@ export function Numeros({
         onFlash={onFlash}
         onOpenPaywall={onOpenPaywall}
       />
+      </>
     );
   }
 
@@ -129,7 +139,12 @@ export function Numeros({
         level={level}
         onOpenPaywall={onOpenPaywall}
       >
-        <FixedExpenses state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
+        <>
+          <div style={{ padding: '0 20px' }}>
+            <AvisoDeEstimado sello={sello} cuantos={estimadosDe('fijos')} />
+          </div>
+          <FixedExpenses state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
+        </>
       </SoloLectura>
     );
   }
@@ -656,7 +671,7 @@ function Budget({
                           aria-label="Nombre del subconcepto"
                           style={{
                             flex: 1, minWidth: 0,
-                            height: 42,
+                            height: 44,
                             padding: '0 12px',
                             borderRadius: RADIUS.small,
                             border: 'none',
@@ -678,7 +693,7 @@ function Budget({
                           aria-label="Monto del subconcepto"
                           style={{
                             width: 92,
-                            height: 42,
+                            height: 44,
                             textAlign: 'right',
                             padding: '0 10px',
                             borderRadius: RADIUS.small,
@@ -848,7 +863,7 @@ function FixedExpenses({
                 placeholder="0"
                 style={{
                   width: 92,
-                  height: 42,
+                  height: 44,
                   textAlign: 'right',
                   padding: '0 10px',
                   borderRadius: RADIUS.pill,

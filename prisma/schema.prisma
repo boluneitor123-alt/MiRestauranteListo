@@ -121,6 +121,12 @@ model Project {
   ignoredActions Json @default("{}")
   fcTarget    Int     @default(30)
   layout      String  @default("p2")
+  /// Qué valores siguen siendo una estimación del diagnóstico y no un dato que
+  /// la persona haya dado. Se va vaciando conforme ella los corrige, y lo que
+  /// sale de aquí no vuelve a entrar: un dato suyo no se pisa nunca.
+  estimados     Json    @default("[]")
+  /// De dónde salió esa estimación, en palabras. Vacío si nunca hubo una.
+  selloEstimado String?
 
   trialStartedAt DateTime @default(now())
   createdAt      DateTime @default(now())
