@@ -538,9 +538,11 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
   },
 
   "Marisquería": {
-    // PENDIENTE DE REVISIÓN: derivado de BENCH, no medido. Corrige estos montos.
     ticket: 320,
-    margin: 65,
+    // Margen bajo a propósito: el insumo es volátil, la merma de limpieza es
+    // alta y el producto se echa a perder. Los 65% que salían del promedio de
+    // los otros giros son imposibles en mariscos.
+    margin: 56,
 
     presupuesto: {
       renta: 80000,
@@ -576,9 +578,9 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
   },
 
   "Sushi": {
-    // PENDIENTE DE REVISIÓN: derivado de BENCH, no medido. Corrige estos montos.
     ticket: 280,
-    margin: 67,
+    // Mismo motivo que marisquería, un poco menos castigado.
+    margin: 60,
 
     presupuesto: {
       renta: 72500,
@@ -614,7 +616,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
   },
 
   "Otro": {
-    // PENDIENTE DE REVISIÓN: promedio de los demás giros. No presume un giro.
+    // Promedio de los demás giros. No presume un giro que no conoce.
     ticket: 150,
     margin: 67,
 

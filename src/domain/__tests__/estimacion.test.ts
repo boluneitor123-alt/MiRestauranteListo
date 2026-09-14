@@ -25,6 +25,18 @@ describe('la tabla y el diagnóstico hablan el mismo idioma', () => {
     }
   });
 
+  it('los giros de mariscos llevan margen castigado, no el promedio', () => {
+    /*
+      El promedio de los demás giros daba 65% y 67%. En mariscos es imposible:
+      el insumo es volátil, la merma de limpieza es alta y el producto se echa
+      a perder. Si alguien vuelve a derivarlos de los rangos generales, esto
+      truena.
+    */
+    expect(ESTIMACIONES['Marisquería'].margin).toBeLessThanOrEqual(58);
+    expect(ESTIMACIONES['Sushi'].margin).toBeLessThanOrEqual(62);
+    expect(ESTIMACIONES['Marisquería'].margin).toBeLessThan(ESTIMACIONES['Taquería'].margin);
+  });
+
   it('ningún bloque trae un ticket o un margen absurdo', () => {
     for (const [giro, tabla] of Object.entries(ESTIMACIONES)) {
       expect(tabla.ticket, giro).toBeGreaterThan(0);
