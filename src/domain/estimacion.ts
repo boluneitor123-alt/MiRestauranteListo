@@ -121,6 +121,8 @@ function aPlatillo(p: PlatilloEstimado, indice: number): Dish {
     price: p.precio,
     portions: 1,
     ...(p.extras ? { extrasPct: p.extras } : {}),
+    ...(p.seccion ? { section: p.seccion } : {}),
+    ...(p.popularidad ? { popularity: p.popularidad } : {}),
     ingredients: p.ingredientes.map((i, n) => ({
       id: `est-${indice + 1}-${n + 1}`,
       name: i.nombre,

@@ -87,6 +87,35 @@ describe('la tabla y el diagnóstico hablan el mismo idioma', () => {
     expect(niveles).not.toContain('peligroso');
   });
 
+  it('todo platillo sembrado dice qué tanto se vende', () => {
+    /*
+      Sin popularidad, Mi menú no puede aconsejar nada sobre un platillo
+      estimado: la regla del ancla y el empujón en la carta la leen. Salió
+      vacía la primera vez y las dos reglas quedaron mudas.
+    */
+    for (const [giro, tabla] of Object.entries(ESTIMACIONES)) {
+      for (const p of tabla.platillos) {
+        expect(p.popularidad, `${giro} · ${p.nombre}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('la popularidad llega hasta el platillo del Costeador', () => {
+    for (const giro of Object.keys(ESTIMACIONES)) {
+      const e = estimarProyecto({ giro }, catalogos);
+      for (const d of e.dishes) expect(d.popularity, `${giro} · ${d.name}`).toBeTruthy();
+    }
+  });
+
+  it('cada platillo sembrado sabe en qué parte de la carta va', () => {
+    // Se perdió en la misma migración que la popularidad: sin sección, el agua
+    // de horchata de una taquería se imprimía entre los platos fuertes.
+    for (const [giro, tabla] of Object.entries(ESTIMACIONES)) {
+      for (const p of tabla.platillos) expect(p.seccion, `${giro} · ${p.nombre}`).toBeTruthy();
+    }
+    expect(estimarProyecto({ giro: 'Taquería' }, catalogos).dishes.map((d) => d.section)).toContain('Bebidas');
+  });
+
   it('los platillos traen ingredientes con precio de compra', () => {
     for (const [giro, tabla] of Object.entries(ESTIMACIONES)) {
       for (const p of tabla.platillos) {

@@ -32,17 +32,24 @@
  *   presupuesto   Los 13 conceptos de la inversión para abrir, en pesos. Van
  *                 los 13, aunque alguno vaya en 0.
  *   gastosFijos   Los 10 conceptos del gasto de cada mes, en pesos.
- *   platillos     Lista de platillos con sus ingredientes. Puede ir vacía; si
- *                 va vacía, ese giro simplemente abre sin platillos.
+ *   platillos     Lista de platillos con sus ingredientes y qué tanto se
+ *                 venden. Puede ir vacía; si va vacía, ese giro simplemente
+ *                 abre sin platillos.
  *
  * Las llaves de `presupuesto` y `gastosFijos` no se inventan: son las del
  * catálogo (`src/content/demo.ts`). Si te falta una o sobra una, la prueba
  * `estimaciones.test.ts` truena y te dice cuál.
  *
- * En cada platillo, los ingredientes llevan:
+ * En cada platillo van, aparte de los ingredientes:
  *
- *   extras      Opcional, en el platillo: % de gas, condimentos y merma
- *               general sobre el costo de los insumos.
+ *   extras        Opcional: % de gas, condimentos y merma general sobre el
+ *                 costo de los insumos.
+ *   seccion       Opcional: 'Entradas', 'Fuertes', 'Bebidas' o 'Postres'.
+ *                 Dónde va en la carta.
+ *   popularidad   Opcional: 'alta', 'media' o 'baja'. Qué tanto se vende. De
+ *                 aquí salen los consejos de Mi menú.
+ *
+ * Y en cada ingrediente:
  *
  *   nombre      qty   cuánto lleva el platillo
  *   u           la unidad de esa cantidad: 'g', 'ml', 'pz'
@@ -61,6 +68,7 @@
  * propósito — no invento recetas de un giro que no conozco.
  */
 
+import type { MenuSection, Popularity } from '@/domain/types';
 import type { UnitCode } from '@/domain/units';
 
 export interface IngredienteEstimado {
@@ -77,6 +85,18 @@ export interface PlatilloEstimado {
   nombre: string;
   precio: number;
   ingredientes: IngredienteEstimado[];
+  /**
+   * En qué parte de la carta va: 'Entradas', 'Fuertes', 'Bebidas' o 'Postres'.
+   * De aquí sale el reparto de la carta impresa, y sin ella un agua de
+   * horchata queda listada entre los platos fuertes.
+   */
+  seccion?: MenuSection;
+  /**
+   * Qué tanto se vende: 'alta', 'media' o 'baja'. Es lo mismo que la persona
+   * contesta a mano en el Costeador, y de ahí salen los consejos de Mi menú —
+   * sin esto, un platillo estimado nunca recibe consejo de carta.
+   */
+  popularidad?: Popularity;
   /**
    * Gas, condimentos y merma general, en porcentaje sobre el costo de los
    * insumos. Va en los platillos que se cocinan de verdad: un guisado gasta
@@ -135,6 +155,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Taco de pastor",
         precio: 28,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Carne al pastor", qty: 30, u: "g", bu: "kg", buyPrice: 120, buyQty: 1, merma: 8 },
           { nombre: "Tortilla de maíz", qty: 1, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
@@ -145,6 +167,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Taco de bistec",
         precio: 32,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Bistec de res", qty: 38, u: "g", bu: "kg", buyPrice: 190, buyQty: 1, merma: 12 },
           { nombre: "Tortilla de maíz", qty: 1, u: "pz", bu: "pz", buyPrice: 0.8, buyQty: 1, merma: 0 },
@@ -154,6 +178,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Agua de horchata",
         precio: 32,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Arroz", qty: 30, u: "g", bu: "kg", buyPrice: 26, buyQty: 1, merma: 0 },
           { nombre: "Leche", qty: 150, u: "ml", bu: "l", buyPrice: 26, buyQty: 1, merma: 0 },
@@ -201,6 +227,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Hamburguesa clásica",
         precio: 129,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Carne molida", qty: 150, u: "g", bu: "kg", buyPrice: 168, buyQty: 1, merma: 5 },
           { nombre: "Pan brioche", qty: 1, u: "pz", bu: "pz", buyPrice: 8, buyQty: 1, merma: 0 },
@@ -211,6 +239,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Hamburguesa con tocino",
         precio: 159,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Carne molida", qty: 150, u: "g", bu: "kg", buyPrice: 168, buyQty: 1, merma: 5 },
           { nombre: "Tocino", qty: 40, u: "g", bu: "kg", buyPrice: 195, buyQty: 1, merma: 12 },
@@ -221,6 +251,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Papas a la francesa",
         precio: 65,
+        seccion: "Entradas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Papa", qty: 200, u: "g", bu: "kg", buyPrice: 28, buyQty: 1, merma: 20 },
           { nombre: "Aceite", qty: 40, u: "ml", bu: "l", buyPrice: 42, buyQty: 1, merma: 0 },
@@ -267,6 +299,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Latte 12 oz",
         precio: 58,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Café de especialidad", qty: 18, u: "g", bu: "kg", buyPrice: 380, buyQty: 1, merma: 0 },
           { nombre: "Leche entera", qty: 240, u: "ml", bu: "l", buyPrice: 26, buyQty: 1, merma: 0 },
@@ -276,6 +310,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Americano",
         precio: 45,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Café de especialidad", qty: 18, u: "g", bu: "kg", buyPrice: 380, buyQty: 1, merma: 0 },
           { nombre: "Vaso y tapa", qty: 1, u: "pz", bu: "pz", buyPrice: 2.5, buyQty: 1, merma: 0 },
@@ -284,6 +320,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Croissant de jamón y queso",
         precio: 79,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Croissant", qty: 1, u: "pz", bu: "pz", buyPrice: 8, buyQty: 1, merma: 0 },
           { nombre: "Jamón", qty: 40, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 0 },
@@ -330,6 +368,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Pizza margarita mediana",
         precio: 179,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Masa", qty: 280, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
           { nombre: "Salsa de tomate", qty: 120, u: "ml", bu: "l", buyPrice: 48, buyQty: 1, merma: 0 },
@@ -340,6 +380,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Pizza pepperoni mediana",
         precio: 199,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Masa", qty: 280, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
           { nombre: "Salsa de tomate", qty: 120, u: "ml", bu: "l", buyPrice: 48, buyQty: 1, merma: 0 },
@@ -350,6 +392,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Refresco 600 ml",
         precio: 35,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Refresco", qty: 1, u: "pz", bu: "pz", buyPrice: 9, buyQty: 1, merma: 0 },
         ],
@@ -394,6 +438,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Orden de alitas (12 piezas)",
         precio: 189,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Alitas de pollo", qty: 520, u: "g", bu: "kg", buyPrice: 80, buyQty: 1, merma: 6 },
           { nombre: "Salsa búfalo", qty: 60, u: "ml", bu: "l", buyPrice: 145, buyQty: 1, merma: 0 },
@@ -404,6 +450,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Boneless 300 g",
         precio: 165,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Pechuga de pollo", qty: 210, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 8 },
           { nombre: "Capeado", qty: 60, u: "g", bu: "kg", buyPrice: 30, buyQty: 1, merma: 0 },
@@ -413,6 +461,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Cerveza de barril",
         precio: 65,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Cerveza", qty: 400, u: "ml", bu: "l", buyPrice: 27, buyQty: 1, merma: 0 },
           { nombre: "Vaso", qty: 1, u: "pz", bu: "pz", buyPrice: 1.2, buyQty: 1, merma: 0 },
@@ -458,6 +508,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Comida corrida",
         precio: 120,
+        seccion: "Fuertes",
+        popularidad: "alta",
         // El guisado y la sopa iban como insumo comprado —$110/kg y $18/l—, que es
         // el platillo ya hecho. Una fonda compra pollo, jitomate y verdura, y
         // guisa: eso es lo que la app tiene que enseñar a costear.
@@ -477,6 +529,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Agua fresca del día",
         precio: 22,
+        seccion: "Bebidas",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Fruta de temporada", qty: 90, u: "g", bu: "kg", buyPrice: 24, buyQty: 1, merma: 30 },
           { nombre: "Azúcar", qty: 25, u: "g", bu: "kg", buyPrice: 32, buyQty: 1, merma: 0 },
@@ -485,6 +539,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Sopa del día",
         precio: 35,
+        seccion: "Entradas",
+        popularidad: "media",
         // «Verduras y caldo» a $20/l era la sopa ya hecha. Desglosada.
         extras: 8,
         ingredientes: [
@@ -534,6 +590,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Bowl de pollo",
         precio: 159,
+        seccion: "Fuertes",
+        popularidad: "alta",
         ingredientes: [
           { nombre: "Pechuga de pollo", qty: 180, u: "g", bu: "kg", buyPrice: 145, buyQty: 1, merma: 8 },
           { nombre: "Arroz", qty: 150, u: "g", bu: "kg", buyPrice: 26, buyQty: 1, merma: 0 },
@@ -544,6 +602,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Bowl vegetariano",
         precio: 139,
+        seccion: "Fuertes",
+        popularidad: "media",
         ingredientes: [
           { nombre: "Garbanzo", qty: 150, u: "g", bu: "kg", buyPrice: 48, buyQty: 1, merma: 0 },
           { nombre: "Arroz", qty: 150, u: "g", bu: "kg", buyPrice: 26, buyQty: 1, merma: 0 },
@@ -553,6 +613,8 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
       {
         nombre: "Postre en vaso",
         precio: 69,
+        seccion: "Postres",
+        popularidad: "baja",
         // «Base de postre» a $16 la pieza era el postre entero. Desglosado.
         extras: 5,
         ingredientes: [
