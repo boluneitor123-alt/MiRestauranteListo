@@ -395,7 +395,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
         nombre: "Orden de alitas (12 piezas)",
         precio: 189,
         ingredientes: [
-          { nombre: "Alitas de pollo", qty: 520, u: "g", bu: "kg", buyPrice: 95, buyQty: 1, merma: 6 },
+          { nombre: "Alitas de pollo", qty: 520, u: "g", bu: "kg", buyPrice: 80, buyQty: 1, merma: 6 },
           { nombre: "Salsa búfalo", qty: 60, u: "ml", bu: "l", buyPrice: 145, buyQty: 1, merma: 0 },
           { nombre: "Aderezo ranch", qty: 40, u: "ml", bu: "l", buyPrice: 120, buyQty: 1, merma: 0 },
           { nombre: "Apio y zanahoria", qty: 40, u: "g", bu: "kg", buyPrice: 30, buyQty: 1, merma: 20 },
@@ -457,7 +457,7 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
     platillos: [
       {
         nombre: "Comida corrida",
-        precio: 95,
+        precio: 120,
         // El guisado y la sopa iban como insumo comprado —$110/kg y $18/l—, que es
         // el platillo ya hecho. Una fonda compra pollo, jitomate y verdura, y
         // guisa: eso es lo que la app tiene que enseñar a costear.

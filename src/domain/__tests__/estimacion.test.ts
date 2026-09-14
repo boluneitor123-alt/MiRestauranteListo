@@ -64,6 +64,21 @@ describe('la tabla y el diagnóstico hablan el mismo idioma', () => {
     }
   });
 
+  it('ningún platillo sembrado sale en rojo, en ningún giro', () => {
+    /*
+      No es sólo la taquería: la orden de alitas y la comida corrida también
+      salían arriba de 38% con los insumos inflados. Un platillo en rojo de
+      fábrica es la app desconfiando de su propia estimación.
+    */
+    for (const giro of Object.keys(ESTIMACIONES)) {
+      const e = estimarProyecto({ giro }, catalogos);
+      for (const d of e.dishes) {
+        const m = dishMetrics(d, { subrecipes: [] });
+        expect(semaphoreLevel(m.foodCostRounded), `${giro} · ${d.name}`).not.toBe('peligroso');
+      }
+    }
+  });
+
   it('una taquería recién diagnosticada no recibe el aviso de food cost peligroso', () => {
     // Era el síntoma que se quería matar: la app criticando su propia
     // estimación en la primera pantalla que alguien ve.
