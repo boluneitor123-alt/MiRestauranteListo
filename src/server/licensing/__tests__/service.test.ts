@@ -81,20 +81,58 @@ describe('activación', () => {
     });
   });
 
-  it('no funciona en un cuarto equipo hasta liberar equipos desde el panel', async () => {
-    const { service } = setup();
+  it('el cuarto equipo entra: sale el más olvidado, no se rechaza a quien pagó', async () => {
+    /*
+      El tope se gasta con el `deviceId`, que muere al borrar los datos del
+      navegador. Rechazar convertía un límite contra la reventa en una trampa
+      para el cliente: tres limpiezas y se quedaba fuera de lo que compró.
+    */
+    const { service, store, advance } = setup();
     const { code } = await service.issue({ email: 'ana@correo.com' });
 
     for (const device of ['eq-1', 'eq-2', 'eq-3']) {
+      await service.entitlement({ deviceId: device });
       expect((await service.activate({ code, deviceId: device })).ok).toBe(true);
+      advance(DAY_MS);
     }
-    expect(await service.activate({ code, deviceId: 'eq-4' })).toMatchObject({
-      ok: false,
-      error: 'limite-de-equipos',
-    });
+    // eq-1 es el que lleva más tiempo sin abrirse; eq-3, el más reciente.
+    await service.entitlement({ deviceId: 'eq-2' });
 
-    await service.freeDevices(code);
-    expect((await service.activate({ code, deviceId: 'eq-4' })).ok).toBe(true);
+    const cuarto = await service.activate({ code, deviceId: 'eq-4' });
+    expect(cuarto.ok).toBe(true);
+
+    const license = (await store.findLicense(code))!;
+    expect(license.devices).toHaveLength(3);
+    expect(license.devices).toContain('eq-4');
+    expect(license.devices).not.toContain('eq-1');
+    expect(license.devices).toEqual(expect.arrayContaining(['eq-2', 'eq-3']));
+  });
+
+  it('el reciclaje queda en la bitácora, para ver quién comparte su licencia', async () => {
+    const { service, store, advance } = setup();
+    const { code } = await service.issue({ email: 'ana@correo.com' });
+    for (const device of ['eq-1', 'eq-2', 'eq-3']) {
+      await service.entitlement({ deviceId: device });
+      await service.activate({ code, deviceId: device });
+      advance(DAY_MS);
+    }
+    await service.activate({ code, deviceId: 'eq-4' });
+
+    const reciclajes = (await store.listEvents()).filter((e) => e.kind === 'equipo-reciclado');
+    expect(reciclajes).toHaveLength(1);
+    expect(reciclajes[0].code).toBe(code);
+    expect(reciclajes[0].meta).toMatchObject({ entra: 'eq-4', salio: 'eq-1' });
+    expect(reciclajes[0].message).toContain('días sin abrirse');
+  });
+
+  it('un equipo que ya está dentro no recicla a nadie', async () => {
+    const { service, store } = setup();
+    const { code } = await service.issue({ email: 'ana@correo.com' });
+    for (const device of ['eq-1', 'eq-2', 'eq-3']) await service.activate({ code, deviceId: device });
+
+    expect((await service.activate({ code, deviceId: 'eq-2' })).ok).toBe(true);
+    expect((await store.findLicense(code))!.devices.sort()).toEqual(['eq-1', 'eq-2', 'eq-3']);
+    expect((await store.listEvents()).filter((e) => e.kind === 'equipo-reciclado')).toHaveLength(0);
   });
 
   it('respeta el máximo de equipos configurado en el panel', async () => {
@@ -103,7 +141,27 @@ describe('activación', () => {
     const { code } = await service.issue({ email: 'ana@correo.com' });
 
     expect((await service.activate({ code, deviceId: 'eq-1' })).ok).toBe(true);
-    expect(await service.activate({ code, deviceId: 'eq-2' })).toMatchObject({ error: 'limite-de-equipos' });
+    // Con tope de 1, el segundo entra y el primero sale. Nunca se rechaza.
+    expect((await service.activate({ code, deviceId: 'eq-2' })).ok).toBe(true);
+    expect((await store.findLicense(code))!.devices).toEqual(['eq-2']);
+  });
+
+  it('bajar el tope desde el panel recorta los equipos que sobran', async () => {
+    const { service, store, advance } = setup();
+    const { code } = await service.issue({ email: 'ana@correo.com' });
+    for (const device of ['eq-1', 'eq-2', 'eq-3']) {
+      await service.entitlement({ deviceId: device });
+      await service.activate({ code, deviceId: device });
+      advance(DAY_MS);
+    }
+
+    await store.updateSettings({ maxDevices: 2 });
+    await service.activate({ code, deviceId: 'eq-4' });
+
+    const license = (await store.findLicense(code))!;
+    expect(license.devices).toHaveLength(2);
+    expect(license.devices).toEqual(['eq-3', 'eq-4']);
+    expect((await store.listEvents()).filter((e) => e.kind === 'equipo-reciclado')).toHaveLength(2);
   });
 
   it('bloquea la activación de licencias revocadas y reembolsadas', async () => {
@@ -516,5 +574,123 @@ describe('a quien pagó nunca se le dice que su prueba terminó', () => {
 
     expect(ent.level).toBe('bloqueado');
     expect(ent.trial.label).toBe('Tu prueba terminó');
+  });
+});
+
+describe('borrar los datos del navegador no le quema un lugar a quien pagó', () => {
+  /*
+    El defecto que esto cierra. El `deviceId` vive en el `localStorage` y muere
+    con él, así que cada limpieza del navegador se presentaba como un equipo
+    nuevo. Tres limpiezas gastaban los tres lugares de su propia licencia y la
+    cuarta lo dejaba en 'bloqueado', leyendo «Tu prueba terminó» — a alguien
+    que había pagado acceso de por vida.
+  */
+  const limpiarNavegador = async (
+    service: LicenseService,
+    correo: string,
+    vez: number,
+  ): Promise<{ deviceId: string; level: string }> => {
+    // Cada limpieza genera un deviceId nuevo: es lo que hace `getDeviceId()`.
+    const deviceId = `navegador-limpio-${vez}`;
+    const ent = await service.entitlement({ deviceId, email: correo });
+    return { deviceId, level: ent.level };
+  };
+
+  it('a la cuarta limpieza sigue entrando, y su licencia no acumula equipos', async () => {
+    const { service, store, advance } = setup();
+    await service.issue({ email: 'ana@correo.com' });
+
+    const niveles: string[] = [];
+    for (let vez = 1; vez <= 5; vez++) {
+      const { level } = await limpiarNavegador(service, 'ana@correo.com', vez);
+      niveles.push(level);
+      advance(DAY_MS);
+    }
+
+    expect(niveles).toEqual(['licencia', 'licencia', 'licencia', 'licencia', 'licencia']);
+
+    const license = (await store.listLicenses({}))[0];
+    expect(license.devices).toHaveLength(3);
+    // Los tres que quedan son los tres últimos: los viejos ya no existen.
+    expect(license.devices).toEqual(
+      expect.arrayContaining(['navegador-limpio-3', 'navegador-limpio-4', 'navegador-limpio-5']),
+    );
+  });
+
+  it('la secuencia completa del reporte, día por día', async () => {
+    /*
+      Así se veía desde afuera y por eso costó encontrarlo: el navegador recién
+      limpiado estrena prueba de 7 días, así que la persona entra normal y el
+      problema aparece una semana después. Antes: el cuarto navegador no
+      alcanzaba lugar en su licencia, corría su prueba nueva, y al octavo día
+      caía en 'bloqueado' con «Tu prueba terminó» — habiendo pagado.
+    */
+    const { service, advance } = setup();
+    await service.issue({ email: 'ana@correo.com' });
+    for (let vez = 1; vez <= 3; vez++) {
+      await limpiarNavegador(service, 'ana@correo.com', vez);
+      advance(DAY_MS);
+    }
+
+    const cuarta = await service.entitlement({ deviceId: 'cuarta-limpieza', email: 'ana@correo.com' });
+    expect(cuarta.level).toBe('licencia');
+    expect(cuarta.trial.expired).toBe(false);
+
+    // Ocho días después, con la prueba de ese navegador ya vencida.
+    advance(8 * DAY_MS);
+    const despues = await service.entitlement({ deviceId: 'cuarta-limpieza', email: 'ana@correo.com' });
+
+    expect(despues.trial.expired).toBe(true);
+    expect(despues.level).toBe('licencia');
+    expect(despues.licensed).toBe(true);
+    expect(despues.trial.label).toBe('Acceso de por vida');
+  });
+});
+
+describe('los equipos de una licencia, desde el panel', () => {
+  const conTresEquipos = async () => {
+    const s = setup();
+    const { code } = await s.service.issue({ email: 'ana@correo.com' });
+    for (const device of ['eq-1', 'eq-2', 'eq-3']) {
+      await s.service.entitlement({ deviceId: device });
+      await s.service.activate({ code, deviceId: device });
+      s.advance(DAY_MS);
+    }
+    return { ...s, code };
+  };
+
+  it('los lista del más reciente al más olvidado', async () => {
+    const { service, code } = await conTresEquipos();
+    const equipos = (await service.equiposDe(code))!;
+
+    expect(equipos.map((e) => e.deviceId)).toEqual(['eq-3', 'eq-2', 'eq-1']);
+    expect(equipos[0].ultimoUso).toBeGreaterThan(equipos[2].ultimoUso!);
+  });
+
+  it('libera uno sin tocar los otros dos', async () => {
+    const { service, store, code } = await conTresEquipos();
+    const license = await service.freeDevice(code, 'eq-2');
+
+    expect(license!.devices.sort()).toEqual(['eq-1', 'eq-3']);
+    // Sigue activada: liberar uno no es liberar todos.
+    expect(license!.status).toBe('activada');
+    expect((await store.listEvents())[0]).toMatchObject({ kind: 'equipos-liberados', meta: { deviceId: 'eq-2' } });
+  });
+
+  it('no inventa nada con un equipo o un código que no existe', async () => {
+    const { service, code } = await conTresEquipos();
+    expect(await service.freeDevice(code, 'equipo-fantasma')).toBeUndefined();
+    expect(await service.freeDevice('MRL-AAAA-BBBB', 'eq-1')).toBeUndefined();
+    expect(await service.equiposDe('MRL-AAAA-BBBB')).toBeUndefined();
+  });
+
+  it('el equipo liberado vuelve a entrar solo si la persona abre la app', async () => {
+    // Es lo que desatasca a quien llamó porque cambió de teléfono: se le
+    // libera el viejo y el nuevo se registra en su siguiente arranque.
+    const { service, store, code } = await conTresEquipos();
+    await service.freeDevice(code, 'eq-1');
+
+    await service.entitlement({ deviceId: 'eq-1', email: 'ana@correo.com' });
+    expect((await store.findLicense(code))!.devices).toContain('eq-1');
   });
 });

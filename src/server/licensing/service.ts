@@ -8,9 +8,11 @@
 
 import {
   ACTIVATION_MESSAGES,
-  activateLicense,
+  activarEquipo,
   canActivate,
+  DAY_MS,
   freeDevices,
+  liberarEquipo,
   generateLicenseCode,
   grantsAccess,
   isValidLicenseCode,
@@ -132,17 +134,34 @@ export class LicenseService {
     const settings = await this.store.getSettings();
     const license = await this.store.findLicense(code);
     const check = canActivate(license, input.deviceId, settings.maxDevices);
-    if (!check.ok) return { ok: false, error: check.error, message: ACTIVATION_MESSAGES[check.error] };
+    /*
+      `limite-de-equipos` ya no cierra la puerta: se recicla el equipo más
+      viejo y la persona entra. El tope existe contra la reventa, no contra
+      quien pagó, y se gastaba con el `deviceId` —que muere al borrar los datos
+      del navegador—, así que tres limpiezas dejaban fuera al cliente de lo que
+      compró. Revocada y reembolsada sí siguen cerrando.
+    */
+    if (!check.ok && check.error !== 'limite-de-equipos') {
+      return { ok: false, error: check.error, message: ACTIVATION_MESSAGES[check.error] };
+    }
 
-    const activated = await this.store.saveLicense(
-      activateLicense(license as License, input.deviceId, this.now(), settings.maxDevices),
+    const suyos = license as License;
+    const ultimoUso = await this.store.ultimoUsoDeEquipos(suyos.devices);
+    const { license: conElNuevo, reciclados } = activarEquipo(
+      suyos,
+      input.deviceId,
+      this.now(),
+      settings.maxDevices,
+      ultimoUso,
     );
+    const activated = await this.store.saveLicense(conElNuevo);
     await this.markConverted(input.deviceId);
     await this.store.appendEvent({
       kind: 'licencia-activada',
       message: `Licencia ${code} activada en un equipo (${activated.devices.length} de ${settings.maxDevices})`,
       code,
     });
+    await this.registrarReciclaje(code, input.deviceId, reciclados, ultimoUso);
     await this.mail(activated.email ?? '', 'acceso-activado', { code });
 
     return { ok: true, code, devices: activated.devices.length, max: settings.maxDevices };
@@ -182,11 +201,15 @@ export class LicenseService {
     if (!settings.autoActivation) return { ok: false };
     if (!input.userId && !input.email) return { ok: false };
 
-    // Primero la que este equipo pagó; si no, cualquiera de esta persona que
-    // todavía tenga lugar. Así el acceso sigue a la cuenta y no al aparato.
+    /*
+      Primero la que este equipo pagó; si no, cualquiera que sea suya. Ya no se
+      le pide lugar: si el tope está lleno, `activate` recicla el equipo más
+      olvidado. Exigir lugar aquí era lo que dejaba a un cliente con licencia
+      activa resolviendo a «bloqueado» en su cuarto navegador.
+    */
     const claimable =
       (await this.store.findClaimableLicense({ userId: input.userId, email: input.email })) ??
-      (await this.suyaConLugar(input, settings.maxDevices));
+      (await this.suyaAunqueEsteLlena(input));
     if (!claimable) return { ok: false };
 
     const result = await this.activate({ code: claimable.code, deviceId: input.deviceId });
@@ -194,24 +217,49 @@ export class LicenseService {
   }
 
   /**
-   * Una licencia de esta persona que todavía admita otro equipo.
+   * Una licencia vigente de esta persona, tenga lugar o no.
    *
-   * Es lo que hace que pagar en el celular desbloquee también la laptop, sin
-   * que nadie teclee el código: el acceso es de por vida en hasta N equipos.
+   * Es lo que hace que pagar en el celular desbloquee también la laptop sin
+   * teclear el código. Antes pedía `devices.length < maxDevices` y ahí estaba
+   * la trampa: el tope se gasta con el `deviceId`, que muere al borrar los
+   * datos del navegador. Quien limpiaba su navegador tres veces se quedaba sin
+   * lugares en su propia licencia y la app lo trataba como si nunca hubiera
+   * pagado. Ahora entra igual y el tope se resuelve reciclando.
    */
-  private async suyaConLugar(
-    owner: { userId?: string; email?: string },
-    maxDevices: number,
-  ): Promise<License | undefined> {
+  private async suyaAunqueEsteLlena(owner: { userId?: string; email?: string }): Promise<License | undefined> {
     if (!owner.userId && !owner.email) return undefined;
     const correo = owner.email?.trim().toLowerCase();
     const todas = await this.store.listLicenses({});
     return todas.find(
       (l) =>
         ((owner.userId && l.userId === owner.userId) || (!!correo && l.email === correo)) &&
-        (l.status === 'activada' || l.status === 'nueva') &&
-        l.devices.length < maxDevices,
+        (l.status === 'activada' || l.status === 'nueva'),
     );
+  }
+
+  /**
+   * Deja el reciclaje en la bitácora del panel.
+   *
+   * Es la única señal de que una licencia se está compartiendo: un equipo
+   * reciclado de vez en cuando es alguien que cambió de teléfono o limpió su
+   * navegador; cinco en una semana son cinco personas turnándose una licencia.
+   */
+  private async registrarReciclaje(
+    code: string,
+    entra: string,
+    reciclados: string[],
+    ultimoUso: Readonly<Record<string, number>>,
+  ): Promise<void> {
+    for (const salio of reciclados) {
+      const visto = ultimoUso[salio];
+      const hace = visto ? `${Math.floor((this.now() - visto) / DAY_MS)} días sin abrirse` : 'sin registro de uso';
+      await this.store.appendEvent({
+        kind: 'equipo-reciclado',
+        message: `Licencia ${code}: entró un equipo y salió el más olvidado (${hace})`,
+        code,
+        meta: { entra, salio, ultimoUso: visto ?? null },
+      });
+    }
   }
 
   /**
@@ -348,6 +396,46 @@ export class LicenseService {
   /** `POST /licenses/:code/free-devices` */
   async freeDevices(code: string): Promise<License | undefined> {
     return this.transition(code, freeDevices, 'equipos-liberados', 'con sus equipos liberados');
+  }
+
+  /**
+   * Los equipos de una licencia, con cuándo se usó cada uno.
+   *
+   * El panel los lista para dos cosas: ver si una licencia se está compartiendo
+   * —tres equipos usados el mismo día desde lados distintos— y liberar uno a
+   * mano cuando alguien llama porque cambió de teléfono.
+   */
+  async equiposDe(code: string): Promise<Array<{ deviceId: string; ultimoUso: number | null }> | undefined> {
+    const normalizado = normalizeLicenseCode(code);
+    const license = normalizado ? await this.store.findLicense(normalizado) : undefined;
+    if (!license) return undefined;
+
+    const visto = await this.store.ultimoUsoDeEquipos(license.devices);
+    return license.devices
+      .map((deviceId) => ({ deviceId, ultimoUso: visto[deviceId] ?? null }))
+      .sort((a, b) => (b.ultimoUso ?? 0) - (a.ultimoUso ?? 0));
+  }
+
+  /**
+   * `POST /licenses/:code/free-device` — saca un equipo, no todos.
+   *
+   * `free-devices` vacía la licencia entera y la devuelve a «nueva», que es
+   * mucho para «este señor cambió de teléfono». Esto quita uno y deja el resto
+   * como está.
+   */
+  async freeDevice(code: string, deviceId: string): Promise<License | undefined> {
+    const normalizado = normalizeLicenseCode(code);
+    const license = normalizado ? await this.store.findLicense(normalizado) : undefined;
+    if (!license || !deviceId || !license.devices.includes(deviceId)) return undefined;
+
+    const guardada = await this.store.saveLicense(liberarEquipo(license, deviceId));
+    await this.store.appendEvent({
+      kind: 'equipos-liberados',
+      message: `Licencia ${guardada.code}: un equipo liberado a mano (quedan ${guardada.devices.length})`,
+      code: guardada.code,
+      meta: { deviceId },
+    });
+    return guardada;
   }
 
   /** `POST /licenses/:code/resend` */

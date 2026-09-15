@@ -27,6 +27,8 @@ export class MemoryLicenseStore implements LicenseStore {
   private licenses = new Map<string, License>();
   private trials = new Map<string, TrialRecord>();
   private events: AdminEvent[] = [];
+  /** Cuándo abrió la app cada equipo. Es el criterio del reciclaje. */
+  private ultimoUso = new Map<string, number>();
   private sequence = 0;
 
   async getSettings(): Promise<AdminSettings> {
@@ -102,7 +104,18 @@ export class MemoryLicenseStore implements LicenseStore {
     return found ? { ...found } : undefined;
   }
 
+  async ultimoUsoDeEquipos(deviceIds: readonly string[]): Promise<Record<string, number>> {
+    const visto: Record<string, number> = {};
+    for (const id of deviceIds) {
+      const cuando = this.ultimoUso.get(id);
+      if (cuando !== undefined) visto[id] = cuando;
+    }
+    return visto;
+  }
+
   async startTrial(deviceId: string, startedAt: number): Promise<TrialRecord> {
+    // Cada arranque de la app pasa por aquí: es donde se marca el uso real.
+    this.ultimoUso.set(deviceId, startedAt);
     const existing = this.trials.get(deviceId);
     if (existing) return { ...existing };
     const trial: TrialRecord = { deviceId, startedAt, converted: false };

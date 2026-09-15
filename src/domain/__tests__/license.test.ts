@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTIVATION_MESSAGES,
+  activarEquipo,
   activateLicense,
   canActivate,
   DAY_MS,
+  equipoAReciclar,
+  liberarEquipo,
   demoMetrics,
   freeDevices,
   generateLicenseCode,
@@ -196,5 +199,113 @@ describe('telemetría de demos (KPI del panel)', () => {
   it('no divide entre cero sin demos concluidas', () => {
     expect(demoMetrics([{ deviceId: '1', startedAt: NOW }]).conversionPct).toBe(0);
     expect(demoMetrics([]).conversionPct).toBe(0);
+  });
+});
+
+describe('reciclaje de equipos', () => {
+  const licencia = (devices: string[]): License => ({
+    code: 'MRL-AAAA-BBBB',
+    status: 'activada',
+    devices,
+    email: 'ana@correo.com',
+    createdAt: 0,
+  });
+
+  // Tres equipos: eq-viejo no se abre desde hace un mes, eq-hoy se abrió hoy.
+  const USO = { 'eq-hoy': 300, 'eq-ayer': 200, 'eq-viejo': 100 };
+
+  it('sale el que lleva más tiempo sin abrirse', () => {
+    expect(equipoAReciclar(['eq-hoy', 'eq-ayer', 'eq-viejo'], USO)).toBe('eq-viejo');
+  });
+
+  it('un equipo sin registro de uso es el primero en salir', () => {
+    // Si no sabemos que se usó, es el que menos se va a extrañar.
+    expect(equipoAReciclar(['eq-hoy', 'eq-desconocido'], USO)).toBe('eq-desconocido');
+  });
+
+  it('con empate decide siempre igual, para que se pueda probar', () => {
+    expect(equipoAReciclar(['zeta', 'alfa'], { zeta: 10, alfa: 10 })).toBe('zeta');
+    expect(equipoAReciclar(['alfa', 'zeta'], { zeta: 10, alfa: 10 })).toBe('zeta');
+  });
+
+  it('sin equipos no recicla a nadie', () => {
+    expect(equipoAReciclar([], USO)).toBeUndefined();
+  });
+
+  it('con lugar libre entra sin sacar a nadie', () => {
+    const { license, reciclados } = activarEquipo(licencia(['eq-hoy']), 'eq-nuevo', 999, 3, USO);
+    expect(license.devices).toEqual(['eq-hoy', 'eq-nuevo']);
+    expect(reciclados).toEqual([]);
+  });
+
+  it('sin lugar entra igual: nunca se rechaza a quien pagó', () => {
+    const { license, reciclados } = activarEquipo(
+      licencia(['eq-hoy', 'eq-ayer', 'eq-viejo']),
+      'eq-nuevo',
+      999,
+      3,
+      USO,
+    );
+    expect(license.devices).toEqual(['eq-hoy', 'eq-ayer', 'eq-nuevo']);
+    expect(reciclados).toEqual(['eq-viejo']);
+    expect(license.devices).toHaveLength(3);
+  });
+
+  it('un equipo que ya estaba no gasta lugar ni saca a nadie', () => {
+    const { license, reciclados } = activarEquipo(
+      licencia(['eq-hoy', 'eq-ayer', 'eq-viejo']),
+      'eq-ayer',
+      999,
+      3,
+      USO,
+    );
+    expect(license.devices.sort()).toEqual(['eq-ayer', 'eq-hoy', 'eq-viejo']);
+    expect(reciclados).toEqual([]);
+  });
+
+  it('recorta por último uso, no por el orden en que entraron', () => {
+    /*
+      Los equipos viven en un arreglo y el orden de ese arreglo es el de
+      activación. Recortar por posición habría sacado al que entró primero
+      aunque sea el que la persona usa todos los días.
+    */
+    const alRevés = { 'eq-hoy': 100, 'eq-ayer': 200, 'eq-viejo': 300 };
+    const { license, reciclados } = activarEquipo(
+      licencia(['eq-hoy', 'eq-ayer', 'eq-viejo']),
+      'eq-nuevo',
+      999,
+      3,
+      alRevés,
+    );
+    expect(reciclados).toEqual(['eq-hoy']);
+    expect(license.devices).toEqual(['eq-viejo', 'eq-ayer', 'eq-nuevo']);
+  });
+
+  it('si el tope bajó, recorta todos los que sobran de una vez', () => {
+    const { license, reciclados } = activarEquipo(
+      licencia(['eq-hoy', 'eq-ayer', 'eq-viejo']),
+      'eq-nuevo',
+      999,
+      2,
+      USO,
+    );
+    expect(license.devices).toEqual(['eq-hoy', 'eq-nuevo']);
+    expect(reciclados).toEqual(['eq-ayer', 'eq-viejo']);
+  });
+
+  it('activa la licencia y conserva la fecha original de activación', () => {
+    const nueva = { ...licencia([]), status: 'nueva' as const };
+    expect(activarEquipo(nueva, 'eq-1', 555, 3, {}).license).toMatchObject({
+      status: 'activada',
+      activatedAt: 555,
+    });
+    const yaActivada = { ...licencia(['eq-1']), activatedAt: 111 };
+    expect(activarEquipo(yaActivada, 'eq-2', 999, 3, {}).license.activatedAt).toBe(111);
+  });
+
+  it('liberar un equipo deja el resto como estaba', () => {
+    const suelta = liberarEquipo(licencia(['eq-hoy', 'eq-ayer', 'eq-viejo']), 'eq-ayer');
+    expect(suelta.devices).toEqual(['eq-hoy', 'eq-viejo']);
+    expect(suelta.status).toBe('activada');
   });
 });

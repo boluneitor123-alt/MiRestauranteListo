@@ -32,6 +32,7 @@ export type AdminEventKind =
   | 'licencia-reactivada'
   | 'licencia-reembolsada'
   | 'equipos-liberados'
+  | 'equipo-reciclado'
   | 'codigo-reenviado'
   | 'ajustes-actualizados';
 
@@ -69,6 +70,15 @@ export interface LicenseStore {
   findLicense(code: string): Promise<License | undefined>;
   findLicenseByPaymentRef(ref: string): Promise<License | undefined>;
   findLicenseByDevice(deviceId: string): Promise<License | undefined>;
+  /**
+   * Cuándo se usó por última vez cada equipo, en milisegundos.
+   *
+   * Es el criterio del reciclaje: cuando el tope está lleno y llega un equipo
+   * nuevo, sale el que lleva más tiempo sin abrir la app. Un equipo que no
+   * aparece en el resultado no tiene registro de uso y se trata como el más
+   * viejo de todos.
+   */
+  ultimoUsoDeEquipos(deviceIds: readonly string[]): Promise<Record<string, number>>;
   /**
    * Licencia pagada, sin equipos y sin revocar, **de un dueño concreto**.
    *
