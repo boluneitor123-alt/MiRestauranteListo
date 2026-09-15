@@ -1,12 +1,13 @@
 'use client';
 
-import { ArrowRight, ChevronDown, ChevronRight, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, ChevronRight, Sparkles, Star } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { ETAPAS } from '@/content/route';
-import type { ModuleProgress, ProjectProgress, StageProgress, StageState } from '@/domain/progress';
+import type { ModuleProgress, ProjectProgress, StageProgress } from '@/domain/progress';
 import { stageProgress } from '@/domain/progress';
 import type { AccessLevel } from '@/domain/access';
 import { RADIUS } from '@/components/ui';
+import { PestanasDeEtapa } from './PestanasDeEtapa';
 
 /**
  * Mi Ruta, vista de etapas: los 10 módulos de la ruta agrupados en Define,
@@ -16,12 +17,6 @@ import { RADIUS } from '@/components/ui';
  * de verdad (entrega-v2 § "Mi Ruta").
  */
 
-/** Tinta del estado, relleno de la insignia y tinta de la insignia. */
-const COLOR: Record<StageState, [string, string, string]> = {
-  Completado: ['var(--color-accent-2-600)', 'var(--color-accent-2-100)', 'var(--color-accent-2-700)'],
-  'En progreso': ['var(--color-accent-600)', 'var(--color-accent-100)', 'var(--color-accent-800)'],
-  Pendiente: ['var(--color-text-2)', 'var(--color-neutral-200)', 'var(--color-text-2)'],
-};
 
 /** Los dos trazos del icono de cada mini curso. */
 const CURSO_ART: Record<string, [string, string]> = {
@@ -84,6 +79,16 @@ export function Etapas({
   onOpenNext: () => void;
 }) {
   const etapas = stageProgress(ETAPAS, progress.modules);
+  /*
+    La pestaña que abre por omisión es donde la persona va, no siempre la
+    primera: quien ya terminó DEFINE no quiere volver a verla cada vez que
+    entra. Se elige la que está en curso; si ninguna lo está, la primera sin
+    terminar; y si todo está hecho, la última.
+  */
+  const sugerida =
+    etapas.find((e) => e.state === 'En progreso') ??
+    etapas.find((e) => e.state !== 'Completado') ??
+    etapas.at(-1);
   const cursos = progress.modules.filter((m) => m.course);
   const lecciones = cursos.reduce((a, c) => a + c.total, 0);
 
@@ -119,15 +124,17 @@ export function Etapas({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {etapas.map((etapa) => (
-          <TarjetaEtapa
-            key={etapa.id}
-            etapa={etapa}
-            open={stageOpen === etapa.id}
-            onToggle={() => onToggleStage(stageOpen === etapa.id ? null : etapa.id)}
-            onSelectModule={onSelectModule}
-          />
-        ))}
+        {/*
+          Pestañas, no acordeón. Con las tres etapas plegadas la pantalla no
+          decía qué hacer, y con dos abiertas había que pasar de largo módulos
+          que todavía no tocan. Aquí siempre hay exactamente una etapa abierta.
+        */}
+        <PestanasDeEtapa
+          etapas={etapas}
+          activa={stageOpen ?? sugerida?.id ?? ''}
+          onCambiar={onToggleStage}
+          onSelectModule={onSelectModule}
+        />
       </div>
 
       <SiguienteAccion progress={progress} onOpen={onOpenNext} />
@@ -168,6 +175,21 @@ export function Etapas({
 
 /** La tarjeta de arriba: avance general y las tres etapas de un vistazo. */
 function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etapas: StageProgress[] }) {
+  /*
+    El avance de la ruta, no el del proyecto entero.
+
+    `progress.pct` cuenta las 90 tareas —las 43 de la ruta más las 47 de los
+    cuatro mini cursos—, y los mini cursos no son requisitos para abrir: son
+    extras. En esta pantalla, que es la ruta, el denominador son sus 43; si no,
+    alguien con la ruta terminada leería 48% y no entendería qué le falta.
+
+    Los conteos salen de las etapas, nunca tecleados.
+  */
+  const total = etapas.reduce((a, e) => a + e.total, 0);
+  const hechas = etapas.reduce((a, e) => a + e.done, 0);
+  const pct = total ? Math.round((hechas / total) * 100) : 0;
+  void progress;
+
   return (
     <div
       style={{
@@ -220,9 +242,14 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
 
       <div style={{ position: 'relative', marginTop: 14, maxWidth: '52%' }}>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 46, lineHeight: 1, letterSpacing: '-.035em' }}>
-          {progress.pct}%
+          {pct}%
         </div>
         <div style={{ fontSize: 15, color: 'var(--color-text-2)', marginTop: 2 }}>completado</div>
+        {/* La cuenta cruda debajo del porcentaje: «0%» sin denominador no dice
+            si faltan tres tareas o cuarenta y tres. */}
+        <div style={{ fontSize: 13, color: 'var(--color-text-2)', marginTop: 4 }}>
+          {hechas} de {total} tareas
+        </div>
       </div>
 
       <div
@@ -238,7 +265,7 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
         <span
           style={{
             display: 'block',
-            width: `${progress.pct}%`,
+            width: `${pct}%`,
             height: '100%',
             borderRadius: RADIUS.pill,
             background: 'var(--color-accent)',
@@ -246,241 +273,11 @@ function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etap
         />
       </div>
 
-      <div
-        style={{
-          position: 'relative',
-          marginTop: 18,
-          paddingTop: 18,
-          borderTop: '1px solid var(--color-border)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gap: 4,
-        }}
-      >
-        {etapas.map((etapa) => {
-          const col = COLOR[etapa.state];
-          return (
-            <div key={etapa.id} style={{ textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <span
-                  style={{
-                    display: 'grid',
-                    placeItems: 'center',
-                    width: 26,
-                    height: 26,
-                    flex: 'none',
-                    borderRadius: '50%',
-                    background: col[0],
-                    color: '#fff',
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 13,
-                  }}
-                >
-                  {etapa.n}
-                </span>
-                <span
-                  style={{
-                    display: 'grid',
-                    placeItems: 'center',
-                    width: 46,
-                    height: 46,
-                    flex: 'none',
-                    borderRadius: '50%',
-                    background: etapa.tint,
-                    color: etapa.ink,
-                  }}
-                >
-                  <Trazos size={22} d1={etapa.d1} d2={etapa.d2} />
-                </span>
-              </div>
-              <div style={{ display: 'block', marginTop: 9, fontSize: 11.5, fontWeight: 800, letterSpacing: '.05em', color: col[0] }}>
-                {etapa.name}
-              </div>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 19, marginTop: 3, letterSpacing: '-.02em' }}>
-                {etapa.done}/{etapa.total}
-              </div>
-              <div style={{ marginTop: 2, fontSize: 11.5, color: col[0] }}>{etapa.state}</div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
 
-/** Una etapa que se despliega para ver sus módulos. */
-function TarjetaEtapa({
-  etapa,
-  open,
-  onToggle,
-  onSelectModule,
-}: {
-  etapa: StageProgress;
-  open: boolean;
-  onToggle: () => void;
-  onSelectModule: (id: string) => void;
-}) {
-  const col = COLOR[etapa.state];
 
-  return (
-    <div
-      style={{
-        border: '1px solid var(--color-border)',
-        borderRadius: RADIUS.block,
-        background: 'var(--color-surface)',
-        overflow: 'hidden',
-      }}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'stretch',
-          border: 'none',
-          background: 'none',
-          padding: 0,
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)',
-          textAlign: 'left',
-          color: 'var(--color-text)',
-        }}
-      >
-        <span
-          style={{
-            position: 'relative',
-            display: 'grid',
-            placeItems: 'center',
-            width: 92,
-            flex: 'none',
-            background: etapa.tint,
-            color: etapa.ink,
-          }}
-        >
-          <Trazos size={34} width={1.6} d1={etapa.d1} d2={etapa.d2} />
-          {etapa.state === 'Completado' ? (
-            <span
-              style={{
-                position: 'absolute',
-                top: 9,
-                right: 9,
-                display: 'grid',
-                placeItems: 'center',
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                background: 'var(--color-accent-2-500)',
-                color: '#fff',
-              }}
-            >
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </span>
-          ) : null}
-        </span>
-
-        <span style={{ flex: 1, minWidth: 0, padding: '16px 14px' }}>
-          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 17, letterSpacing: '-.01em', color: col[0] }}>
-            {etapa.n}. {etapa.name}
-          </span>
-          <span style={{ display: 'block', marginTop: 6, fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-2)' }}>
-            {etapa.desc}
-          </span>
-        </span>
-
-        <span
-          style={{
-            flex: 'none',
-            padding: '16px 14px 16px 0',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            gap: 7,
-          }}
-        >
-          <span
-            style={{
-              padding: '5px 11px',
-              borderRadius: RADIUS.pill,
-              background: col[1],
-              color: col[2],
-              fontSize: 11.5,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {etapa.state}
-          </span>
-          <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, letterSpacing: '-.02em' }}>
-            {etapa.done}/{etapa.total}
-          </span>
-          <span
-            style={{
-              display: 'grid',
-              placeItems: 'center',
-              color: 'var(--color-text-2)',
-              transform: open ? 'rotate(180deg)' : 'none',
-              transition: 'transform .2s',
-            }}
-          >
-            <ChevronDown size={17} strokeWidth={2.6} />
-          </span>
-        </span>
-      </button>
-
-      {open ? (
-        // 8px es el mínimo entre dos blancos tocables: a 7 se tocaba el de al lado.
-        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {etapa.modules.map((mod) => (
-            <FilaModulo key={mod.id} mod={mod} onSelect={() => onSelectModule(mod.id)} />
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function FilaModulo({ mod, onSelect }: { mod: ModuleProgress; onSelect: () => void }) {
-  const punto = mod.skipped
-    ? 'var(--color-neutral-400)'
-    : mod.done === mod.total && mod.total > 0
-      ? 'var(--color-accent-2-500)'
-      : mod.done
-        ? 'var(--color-accent)'
-        : 'var(--color-neutral-400)';
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      style={{
-        width: '100%',
-        minHeight: 44,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '11px 12px',
-        border: '1px solid var(--color-border)',
-        borderRadius: RADIUS.small,
-        background: 'var(--color-neutral-200)',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-body)',
-        color: 'var(--color-text)',
-      }}
-    >
-      <span style={{ display: 'block', width: 10, height: 10, flex: 'none', borderRadius: '50%', background: punto }} />
-      <span style={{ flex: 1, minWidth: 0, textAlign: 'left', fontSize: 13.5, fontWeight: 700 }}>{mod.name}</span>
-      <span style={{ fontSize: 12, color: 'var(--color-text-2)', whiteSpace: 'nowrap' }}>
-        {mod.skipped ? 'Omitido' : `${mod.done}/${mod.total}`}
-      </span>
-      <ChevronRight size={15} strokeWidth={2.6} style={{ flex: 'none', color: 'var(--color-text-2)' }} />
-    </button>
-  );
-}
 
 /** "Tu siguiente acción": la primera tarea pendiente, con un botón que la abre. */
 function SiguienteAccion({ progress, onOpen }: { progress: ProjectProgress; onOpen: () => void }) {

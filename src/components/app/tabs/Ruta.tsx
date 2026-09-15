@@ -2,8 +2,14 @@
 
 import { useState } from 'react';
 import { ArrowLeft, Bike, Check, ChevronDown, ChevronRight, Lock, Megaphone, Star } from 'lucide-react';
-import { ROUTE_MODULES, SKIP_REASONS } from '@/content/route';
-import { projectProgress, progressWithoutModule, type ModuleProgress, type RouteTask } from '@/domain/progress';
+import { ETAPAS, ROUTE_MODULES, SKIP_REASONS } from '@/content/route';
+import {
+  projectProgress,
+  progressWithoutModule,
+  type ModuleProgress,
+  type ProjectProgress,
+  type RouteTask,
+} from '@/domain/progress';
 import {
   alcanceDeModulo,
   CANDADO_TEXTO,
@@ -117,7 +123,7 @@ export function Ruta({
         <div style={{ height: 20 }} />
         <Encabezado
           titulo="Mi ruta"
-          bajada="Tu plan paso a paso para abrir tu restaurante."
+          bajada={resumenDeLaRuta(progress)}
           proyecto={state.project.name}
           onOpenProject={onOpenProject}
         />
@@ -687,4 +693,18 @@ function SkipDialog({
       </div>
     </div>
   );
+}
+
+/**
+ * «43 tareas · 10 módulos · 3 etapas», calculado.
+ *
+ * Los mini cursos no entran: no son requisitos para abrir y tienen su propia
+ * cuenta en Aprende. Y ninguno de los tres números se teclea — la app ya dijo
+ * «14 módulos y 90 tareas» cuando la ruta eran 10 y 43, y nadie lo notó hasta
+ * que un cliente lo leyó.
+ */
+function resumenDeLaRuta(progress: ProjectProgress): string {
+  const deLaRuta = progress.modules.filter((m) => !m.course);
+  const tareas = deLaRuta.reduce((a, m) => a + m.total, 0);
+  return `${tareas} tareas · ${deLaRuta.length} módulos · ${ETAPAS.length} etapas`;
 }
