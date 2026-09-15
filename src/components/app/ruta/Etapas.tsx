@@ -176,19 +176,12 @@ export function Etapas({
 /** La tarjeta de arriba: avance general y las tres etapas de un vistazo. */
 function ProgresoGeneral({ progress, etapas }: { progress: ProjectProgress; etapas: StageProgress[] }) {
   /*
-    El avance de la ruta, no el del proyecto entero.
-
-    `progress.pct` cuenta las 90 tareas —las 43 de la ruta más las 47 de los
-    cuatro mini cursos—, y los mini cursos no son requisitos para abrir: son
-    extras. En esta pantalla, que es la ruta, el denominador son sus 43; si no,
-    alguien con la ruta terminada leería 48% y no entendería qué le falta.
-
-    Los conteos salen de las etapas, nunca tecleados.
+    `progress` ya cuenta sólo la ruta: los mini cursos van aparte, en
+    `progress.cursos`. Antes se calculaba aquí a mano y eso dejaba a Más y al
+    diagnóstico con otro porcentaje para el mismo avance.
   */
-  const total = etapas.reduce((a, e) => a + e.total, 0);
-  const hechas = etapas.reduce((a, e) => a + e.done, 0);
-  const pct = total ? Math.round((hechas / total) * 100) : 0;
-  void progress;
+  const { pct, done: hechas, total } = progress;
+  void etapas;
 
   return (
     <div

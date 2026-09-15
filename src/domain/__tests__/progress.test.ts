@@ -181,10 +181,55 @@ describe('avance del proyecto (README § 4 · "Avance del proyecto")', () => {
       });
     }
     const p = projectProgress({ modules: ROUTE_MODULES, done });
-    expect(p.total).toBe(90);
-    expect(p.done).toBe(50);
-    expect(p.pct).toBe(56);
-    expect(p.level).toBe('Casi listo');
+    expect(p.total).toBe(43);
+    expect(p.done).toBe(12);
+    expect(p.pct).toBe(28);
+    expect(p.level).toBe('En planeación');
+  });
+});
+
+describe('los mini cursos no entran en el avance para abrir', () => {
+  /*
+    Son extras —anuncios, Google Maps, delivery, contratar— y no son requisito
+    para abrir. Mezclados en el mismo porcentaje, la app se contradecía sola:
+    Mi Ruta contaba 43 tareas y Más decía un porcentaje sobre 90, para el mismo
+    avance. Y alguien con la ruta entera terminada leía 48%.
+  */
+  const todas = (marcar: (m: (typeof ROUTE_MODULES)[number]) => boolean) => {
+    const done: Record<string, boolean> = {};
+    for (const m of ROUTE_MODULES) {
+      if (marcar(m)) m.tasks.forEach((_t, i) => (done[taskKey(m.id, i)] = true));
+    }
+    return done;
+  };
+
+  it('terminar la ruta entera da 100%, aunque no se haya visto un solo curso', () => {
+    const p = projectProgress({ modules: ROUTE_MODULES, done: todas((m) => !m.course) });
+    expect(p.pct).toBe(100);
+    expect(p.level).toBe('Listo para abrir');
+    expect(p.cursos.done).toBe(0);
+  });
+
+  it('terminar todos los cursos no mueve ni un punto el avance para abrir', () => {
+    const p = projectProgress({ modules: ROUTE_MODULES, done: todas((m) => !!m.course) });
+    expect(p.pct).toBe(0);
+    expect(p.done).toBe(0);
+    expect(p.cursos.pct).toBe(100);
+  });
+
+  it('los dos conteos son disjuntos y juntos son el catálogo entero', () => {
+    const p = projectProgress({ modules: ROUTE_MODULES, done: {} });
+    const lecciones = ROUTE_MODULES.reduce((a, m) => a + m.tasks.length, 0);
+    expect(p.total).toBe(43);
+    expect(p.cursos.total).toBe(47);
+    expect(p.total + p.cursos.total).toBe(lecciones);
+  });
+
+  it('omitir un módulo de la ruta lo saca del denominador, como siempre', () => {
+    const p = projectProgress({ modules: ROUTE_MODULES, done: {}, skipped: { local: 'Ya tengo local' } });
+    const local = ROUTE_MODULES.find((m) => m.id === 'local')!;
+    expect(p.total).toBe(43 - local.tasks.length);
+    expect(p.cursos.total).toBe(47);
   });
 });
 
