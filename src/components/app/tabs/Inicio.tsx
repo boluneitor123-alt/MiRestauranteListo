@@ -18,10 +18,9 @@ import { Button, Card, H, Muted, ProgressBar, RADIUS, Row, text } from '@/compon
 import { Chrome } from '../inicio/Chrome';
 import { Encabezado } from '../inicio/Encabezado';
 import { SiguientePaso } from '../inicio/SiguientePaso';
-import { HerramientasRapidas } from '../inicio/HerramientasRapidas';
-import { TareasDeTuRuta } from '../inicio/TareasDeTuRuta';
-import { keyResults, ResultadosClave } from '../inicio/ResultadosClave';
-import { PuntosExtra } from '../inicio/PuntosExtra';
+import { FranjaDelTitular } from '../inicio/FranjaDelTitular';
+import { AlertaDelMentor } from '../inicio/AlertaDelMentor';
+import { TarjetaDePrueba } from '../inicio/TarjetaDePrueba';
 
 /** Los platillos de la plantilla, para reconocer que el ejemplo sigue puesto. */
 const DEMO_DISH_IDS = new Set(DEMO_DISHES.map((d) => d.id));
@@ -41,6 +40,7 @@ export function Inicio({
   trial,
   level,
   can,
+  precio,
   startedAt,
   hasAlerts,
   onGo,
@@ -62,6 +62,13 @@ export function Inicio({
   level: AccessLevel;
   /** El alcance vigente: decide si la cifra de inversión se enseña. */
   can: Capabilities;
+  /**
+   * El pago único, en pesos, o `null` mientras el entitlement no llega.
+   *
+   * Sale de los ajustes del panel —el mismo número con el que Stripe arma el
+   * cobro— y viaja por el entitlement. Nunca de una constante de pantalla.
+   */
+  precio: number | null;
   /** Cuándo empezó a usar la app. Alimenta la proyección de fecha de apertura. */
   startedAt: number | null;
   /** Hay una alerta que merece el punto naranja de la campana. */
@@ -143,20 +150,18 @@ export function Inicio({
         onOpenProject={onOpenProject}
       />
 
-      <AvisoDePrueba trial={trial} level={level} onOpenPaywall={onOpenPaywall} />
+      {/*
+        El orden es el mensaje. Primero qué hacer ahora, con la ilustración y
+        el tamaño de algo que importa; pegada abajo, en el mismo bloque cálido,
+        la cifra que dice si el negocio se sostiene; después lo que va a doler
+        si se deja; y al final cuánto cuesta abrirlo todo.
 
-      <ResultadosClave
-        titular={titular}
-        rows={keyResults({
-          ticket: state.ticket,
-          averageCost: costoPromedio,
-          pricedDishes: conPrecio.length,
-          margin: carta.suggestedMargin ?? 0,
-          inversion: inversion.total,
-          muestraInversion: can.muestraCifrasDeInversion,
-        })}
-      />
-
+        Lo que salió de aquí no se borró de la app, sólo de esta pantalla:
+        Herramientas rápidas y los seis entregables viven en Más, Tareas de tu
+        ruta y Progreso por módulo en Mi Ruta, los mini cursos en Más › Aprende
+        y los platillos recientes en el Costeador. Inicio dejó de ser un índice
+        de todo para volver a ser una respuesta a «¿qué hago ahora?».
+      */}
       <SiguientePaso
         titulo={diagnosis.nextStep.title}
         cuerpo={diagnosis.nextStep.body}
@@ -164,157 +169,15 @@ export function Inicio({
         etapa={stageLabel(ETAPAS, diagnosis.progress.nextTask)}
         pct={diagnosis.progress.pct}
         ritmo={pace}
+        pie={<FranjaDelTitular titular={titular} />}
         onContinue={() => onGo(diagnosis.nextStep.target)}
       />
 
-      <HerramientasRapidas onGo={onGo} />
+      <AlertaDelMentor recomendacion={diagnosis.recommendations[0]} onGo={onGo} />
 
-      <TareasDeTuRuta
-        progress={diagnosis.progress}
-        done={state.done}
-        onGo={onGo}
-        onOpenTask={(module, task) => onGo({ tab: 'ruta', module, task })}
-      />
-
-      <NoOlvides recomendaciones={diagnosis.recommendations.slice(0, 3)} onGo={onGo} />
-
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 2px 11px' }}>
-          <Sprout size={17} strokeWidth={2.6} style={{ flex: 'none', color: 'var(--color-accent-2-600)' }} />
-          <h4 style={{ margin: 0, fontSize: 19, flex: 1, letterSpacing: '-.01em', fontFamily: 'var(--font-heading)' }}>
-            Haz crecer tu restaurante
-          </h4>
-          <span style={{ fontSize: 12.5, color: 'var(--color-text-2)', whiteSpace: 'nowrap' }}>
-            {courses.reduce((a, c) => a + c.total, 0)} lecciones
-          </span>
-        </div>
-        <PuntosExtra courses={courses} licensed={licensed} onOpen={(module) => onGo({ tab: 'ruta', module })} />
-      </div>
+      <TarjetaDePrueba level={level} trial={trial} precio={precio} onOpenPaywall={onOpenPaywall} />
 
       {exampleOn ? <AvisoDeEjemplo onKeep={onKeepExample} onClear={onClearExample} /> : null}
-
-      {/* El documento que se lleva al banco. Con licencia abre; sin ella, al pago. */}
-      <button
-        type="button"
-        onClick={licensed ? onOpenDoc : onOpenPaywall}
-        style={{
-          width: '100%',
-          textAlign: 'left',
-          padding: '17px 19px',
-          borderRadius: RADIUS.card,
-          border: '1px solid var(--color-accent-300)',
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)',
-          background: 'var(--color-surface)',
-          color: 'var(--color-text)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 13,
-        }}
-      >
-        <span
-          style={{
-            width: 42,
-            height: 42,
-            flex: 'none',
-            borderRadius: 14,
-            background: 'var(--color-accent-100)',
-            color: 'var(--color-accent-800)',
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          <FileText size={21} strokeWidth={2.6} />
-        </span>
-        <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>
-            Plan de apertura
-          </span>
-          <span
-            className="mrl-prose"
-            style={{ display: 'block', fontSize: 12.3, lineHeight: 1.4, color: 'var(--color-text-2)', marginTop: 2 }}
-          >
-            {licensed
-              ? 'Tu documento para el banco, un socio o el arrendador · se actualiza con tus datos'
-              : 'Documento para el banco o un socio · se abre con el pago único'}
-          </span>
-        </span>
-        <ChevronRight size={18} strokeWidth={2.9} color="var(--color-accent-700)" style={{ flex: 'none' }} />
-      </button>
-
-      <div>
-        <H size={19} style={{ margin: '0 2px 11px' }}>
-          Progreso por módulo
-        </H>
-        <Card style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 11 }}>
-          {diagnosis.progress.modules.map((module) => (
-            <Row key={module.id} gap={10}>
-              <span style={{ flex: '0 1 104px', minWidth: 0, fontSize: 13.5 }}>{module.name}</span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <ProgressBar pct={module.skipped ? 0 : module.pct} />
-              </span>
-              <span
-                style={{
-                  width: 48,
-                  textAlign: 'right',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: module.skipped ? text(45) : 'var(--color-accent-700)',
-                }}
-              >
-                {module.skipped ? 'omitido' : `${module.pct}%`}
-              </span>
-            </Row>
-          ))}
-        </Card>
-      </div>
-
-      {recent.length > 0 ? (
-        <div>
-          <H size={19} style={{ margin: '0 2px 11px' }}>
-            Últimos platillos costeados
-          </H>
-          <div className="mrl-scroll" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-            {recent.map((dish) => {
-              const m = dishMetrics(dish, { subrecipes: state.subrecipes }, { targetFoodCost: state.fcTarget });
-              return (
-                <button
-                  key={dish.id}
-                  type="button"
-                  onClick={() => onNewDish(dish.id)}
-                  style={{
-                    flex: 'none',
-                    width: 150,
-                    textAlign: 'left',
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: RADIUS.block,
-                    padding: 14,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  <div style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.2 }}>{dish.name}</div>
-                  <Muted size={11.5} style={{ marginTop: 2 }}>
-                    Costo {money(m.costPerPortion)} · Precio {money(m.price)}
-                  </Muted>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11.5,
-                      fontWeight: 800,
-                      color: FOOD_COST_COLOR[semaphoreLevel(m.foodCostRounded)],
-                    }}
-                  >
-                    {m.hasPrice ? `Food cost ${pctLabel(m.foodCost)}` : 'Sin precio'}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

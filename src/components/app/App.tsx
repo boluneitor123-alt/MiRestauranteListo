@@ -485,6 +485,7 @@ export function App() {
             diagnosis={diagnosis}
             level={level}
             can={can}
+            precio={entitlement?.price ?? null}
             licensed={!!entitlement?.licensed}
             /* Sin filtrar: quien decide si hay aviso es `avisoDePrueba`, por
                nivel. Aquí sólo viaja el dato. */

@@ -102,10 +102,27 @@ export interface ModuleProgress {
   tasks: RouteTask[];
 }
 
-export interface ProjectProgress {
+/** Avance de un conjunto de módulos: tareas hechas sobre tareas que cuentan. */
+export interface Avance {
   total: number;
   done: number;
   pct: number;
+}
+
+export interface ProjectProgress {
+  /**
+   * El avance **de la ruta**: las tareas que hay que hacer para abrir.
+   *
+   * Los cuatro mini cursos quedan fuera a propósito. Son extras —marketing,
+   * Google Maps, delivery, contratar— y no son requisito para abrir: metidos
+   * en el mismo porcentaje, alguien con la ruta entera terminada leería 48% y
+   * no entendería qué le falta. Su avance va aparte, en `cursos`.
+   */
+  total: number;
+  done: number;
+  pct: number;
+  /** El avance de los mini cursos, contado aparte y nunca mezclado. */
+  cursos: Avance;
   /** Nivel mostrado en el diagnóstico. */
   level: string;
   modules: ModuleProgress[];
@@ -144,12 +161,26 @@ export function projectProgress(input: ProgressInput): ProjectProgress {
   });
 
   const counted = modules.filter((m) => !m.skipped);
-  const total = counted.reduce((a, m) => a + m.total, 0);
-  const done = counted.reduce((a, m) => a + m.done, 0);
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const deLaRuta = counted.filter((m) => !m.course);
+
+  const avance = (de: ModuleProgress[]): Avance => {
+    const total = de.reduce((a, m) => a + m.total, 0);
+    const done = de.reduce((a, m) => a + m.done, 0);
+    return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+  };
+
+  const ruta = avance(deLaRuta);
+  const cursos = avance(counted.filter((m) => m.course));
+
+  /*
+    La siguiente tarea sí recorre todo, ruta primero: los mini cursos van al
+    final del catálogo, así que sólo se propone una lección de curso cuando ya
+    no queda nada de la ruta pendiente. Quien terminó de abrir merece que la
+    app le siga diciendo qué sigue.
+  */
   const nextTask = counted.flatMap((m) => m.tasks).find((t) => !input.done[t.key]);
 
-  return { total, done, pct, level: progressLevel(pct), modules, nextTask };
+  return { ...ruta, cursos, level: progressLevel(ruta.pct), modules, nextTask };
 }
 
 /**

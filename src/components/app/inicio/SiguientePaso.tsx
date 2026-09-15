@@ -1,14 +1,19 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { ArrowRight, Clock, Menu, Sparkles } from 'lucide-react';
 import { RADIUS } from '@/components/ui';
 
 /**
  * "Tu siguiente paso": la tarjeta que abre Inicio.
  *
- * Dice qué toca, cuánto tarda y en qué etapa va, y su pie lleva la barra de
- * avance. El rótulo de la etapa sale de `stageLabel()`, el mismo que usa Mi
- * Ruta: las dos pantallas no pueden decir cosas distintas.
+ * Dice qué toca, cuánto tarda y en qué etapa va. El rótulo de la etapa sale de
+ * `stageLabel()`, el mismo que usa Mi Ruta: las dos pantallas no pueden decir
+ * cosas distintas.
+ *
+ * Al pie va lo que le pase quien la usa: en Inicio, la franja de «necesitas
+ * tantos clientes al día», integrada al mismo bloque cálido en vez de en una
+ * tarjeta blanca aparte. Sin `pie`, cae la barra de avance de siempre.
  */
 export function SiguientePaso({
   titulo,
@@ -17,6 +22,7 @@ export function SiguientePaso({
   etapa,
   pct,
   ritmo,
+  pie,
   onContinue,
 }: {
   titulo: string;
@@ -28,6 +34,8 @@ export function SiguientePaso({
   pct: number;
   /** Proyección de ritmo, o null mientras no haya de dónde sacarla. */
   ritmo: string | null;
+  /** Lo que va al pie del bloque. Sin esto, la barra de avance. */
+  pie?: ReactNode;
   onContinue: () => void;
 }) {
   return (
@@ -53,7 +61,9 @@ export function SiguientePaso({
           height={840}
           loading="lazy"
           decoding="async"
-          style={{ position: 'absolute', right: -14, top: 6, width: '52%', maxWidth: 210, height: 'auto', pointerEvents: 'none' }}
+          /* Arnold cede ancho al texto: con el título a dos renglones y la
+             columna al 58% se encimaban. Él ilustra, el título manda. */
+          style={{ position: 'absolute', right: -10, top: 18, width: '43%', maxWidth: 168, height: 'auto', pointerEvents: 'none' }}
         />
       </picture>
 
@@ -77,7 +87,7 @@ export function SiguientePaso({
           Tu siguiente paso
         </span>
 
-        <div style={{ maxWidth: '58%' }}>
+        <div style={{ maxWidth: '64%' }}>
           <div
             style={{
               fontFamily: 'var(--font-heading)',
@@ -107,12 +117,13 @@ export function SiguientePaso({
               flexWrap: 'wrap',
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {/* Cada dato con su ícono y sin separador suelto: al partirse en
+                dos renglones, el «·» quedaba colgando al final del primero. */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
               <Clock size={14} strokeWidth={2.4} style={{ flex: 'none' }} />
               {minutos}
             </span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               <Menu size={14} strokeWidth={2.4} style={{ flex: 'none' }} />
               {etapa}
             </span>
@@ -146,6 +157,9 @@ export function SiguientePaso({
         </button>
       </div>
 
+      {pie ? (
+        <div style={{ position: 'relative', marginTop: 16 }}>{pie}</div>
+      ) : (
       <div
         style={{
           position: 'relative',
@@ -180,8 +194,9 @@ export function SiguientePaso({
           {pct}% completado
         </span>
       </div>
+      )}
 
-      {ritmo ? (
+      {!pie && ritmo ? (
         <p
           className="mrl-prose"
           style={{
