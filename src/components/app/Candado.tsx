@@ -34,6 +34,14 @@ export function Candado({
 }) {
   const titulo = textoDeCandado(level, motivo);
 
+  /*
+    Con licencia no hay candado que poner. Se decide aquí y no en cada
+    pantalla: los llamadores ya condicionan por alcance —y con licencia todo
+    está abierto, así que hoy ninguno llega— pero si uno se equivoca, quien
+    pagó no puede acabar leyendo una oferta de pago.
+  */
+  if (!titulo) return null;
+
   return (
     <div
       style={{

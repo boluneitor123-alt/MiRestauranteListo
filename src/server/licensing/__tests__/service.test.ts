@@ -470,3 +470,51 @@ describe('red de seguridad: licencias sin dueño registrado', () => {
     expect(avisos[0]).toContain('eq-1');
   });
 });
+
+describe('a quien pagó nunca se le dice que su prueba terminó', () => {
+  /*
+    El defecto en producción: cuentas con licencia activa leyendo «Tu prueba
+    terminó». La prueba de 7 días vive en el equipo y sigue venciendo aunque
+    la persona compre el día dos — eso está bien. Lo que no puede salir de
+    aquí es la etiqueta de esa prueba vencida hacia una cuenta con licencia.
+  */
+  const comprarYEsperar = async () => {
+    const { service, advance } = setup();
+    // Abre la app: aquí arranca su prueba de 7 días.
+    await service.entitlement({ deviceId: 'equipo-de-ana' });
+    // Compra al segundo día, como cualquiera que se convence pronto.
+    advance(2 * DAY_MS);
+    const { code } = await service.issue({ email: 'ana@correo.com', name: 'Ana', amount: 2450 });
+    await service.activate({ code, deviceId: 'equipo-de-ana' });
+    // Y vuelve cuando esos 7 días ya pasaron hace rato.
+    advance(8 * DAY_MS);
+    return service.entitlement({ deviceId: 'equipo-de-ana', email: 'ana@correo.com' });
+  };
+
+  it('la etiqueta dice lo que compró, no cómo fue su prueba', async () => {
+    const ent = await comprarYEsperar();
+    expect(ent.level).toBe('licencia');
+    expect(ent.licensed).toBe(true);
+    expect(ent.trial.label).toBe('Acceso de por vida');
+    expect(ent.trial.label).not.toMatch(/prueba/i);
+  });
+
+  it('las fechas de la prueba siguen siendo ciertas: lo que cambia es el letrero', async () => {
+    // No se falsea el dato. El panel y el KPI de demos siguen viendo que esa
+    // prueba corrió y venció; lo que no se hace es decírselo a quien pagó.
+    const ent = await comprarYEsperar();
+    expect(ent.trial.expired).toBe(true);
+    expect(ent.trial.daysLeft).toBe(0);
+    expect(ent.trial.expiresAt).toBe(ent.trial.startedAt + 7 * DAY_MS);
+  });
+
+  it('sin licencia la etiqueta sí cuenta la verdad de la prueba', async () => {
+    const { service, advance } = setup();
+    await service.entitlement({ deviceId: 'equipo-sin-pago' });
+    advance(10 * DAY_MS);
+    const ent = await service.entitlement({ deviceId: 'equipo-sin-pago' });
+
+    expect(ent.level).toBe('bloqueado');
+    expect(ent.trial.label).toBe('Tu prueba terminó');
+  });
+});

@@ -23,7 +23,13 @@ import {
   type ActivationError,
   type License,
 } from '@/domain/license';
-import { capabilities, resolveAccess, type AccessLevel, type Capabilities } from '@/domain/access';
+import {
+  capabilities,
+  etiquetaDeAcceso,
+  resolveAccess,
+  type AccessLevel,
+  type Capabilities,
+} from '@/domain/access';
 import type { AdminSettings, LicenseStore, NewLicense } from './store';
 
 export interface ServiceDeps {
@@ -403,6 +409,17 @@ export class LicenseService {
     });
     const trial = trialState(sealed.startedAt, now, settings.trialDays);
 
+    /*
+      La prueba del equipo sigue corriendo y venciendo aunque la persona haya
+      pagado el día dos: son cosas distintas y las fechas no se tocan. Lo que
+      no puede salir de aquí es la **etiqueta** de una prueba vencida hacia una
+      cuenta con licencia — «Tu prueba terminó» a quien compró acceso de por
+      vida se lee como que perdió lo que pagó.
+
+      La pantalla ya no la pinta cruda (`etiquetaDeAcceso` y `avisoDePrueba`
+      deciden por nivel), pero esto se resuelve también aquí: son dos guardias
+      independientes y ninguna depende de que la otra exista.
+    */
     return {
       level: access.level,
       licensed: access.licensed,
@@ -413,7 +430,7 @@ export class LicenseService {
         expiresAt: trial.expiresAt,
         daysLeft: trial.daysLeft,
         expired: trial.expired,
-        label: trial.label,
+        label: etiquetaDeAcceso(access.level, trial.label),
       },
       capabilities: capabilities(access.level),
       devices: own ? { used: own.devices.length, max: settings.maxDevices } : undefined,

@@ -3,7 +3,7 @@
 import { ArrowRight, ChevronRight, FileText, Sprout, TriangleAlert } from 'lucide-react';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
 import { breakeven, fixedExpensesTotal, investment } from '@/domain/finance';
-import { resumenDeAlcance, type AccessLevel, type Capabilities } from '@/domain/access';
+import { avisoDePrueba, type AccessLevel, type Capabilities } from '@/domain/access';
 import { titularDeEquilibrio } from '@/domain/titular';
 import { dishMetrics } from '@/domain/costing';
 import { menuAggregates } from '@/domain/aggregates';
@@ -143,7 +143,7 @@ export function Inicio({
         onOpenProject={onOpenProject}
       />
 
-      {trial ? <AvisoDePrueba trial={trial} level={level} onOpenPaywall={onOpenPaywall} /> : null}
+      <AvisoDePrueba trial={trial} level={level} onOpenPaywall={onOpenPaywall} />
 
       <ResultadosClave
         titular={titular}
@@ -319,16 +319,26 @@ export function Inicio({
   );
 }
 
-/** El aviso de la prueba, que lleva al pago único. */
+/**
+ * El aviso de la prueba, que lleva al pago único.
+ *
+ * Decide él mismo si se pinta, con `avisoDePrueba`. El llamador tenía el `if`
+ * —«pásame la prueba sólo si no tiene licencia»— y eso hacía que la promesa
+ * viviera en App.tsx en vez de aquí: bastaba un llamador nuevo que se olvidara
+ * para enseñarle «Tu prueba terminó» a alguien que pagó.
+ */
 function AvisoDePrueba({
   trial,
   level,
   onOpenPaywall,
 }: {
-  trial: { daysLeft: number; expired: boolean };
+  trial: { daysLeft: number; expired: boolean } | null;
   level: AccessLevel;
   onOpenPaywall: () => void;
 }) {
+  const aviso = avisoDePrueba(level, trial);
+  if (!aviso) return null;
+
   return (
     <button
       type="button"
@@ -349,17 +359,13 @@ function AvisoDePrueba({
     >
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5, color: 'var(--color-accent-900)' }}>
-          {trial.expired ? 'Tu prueba terminó' : 'Versión de prueba'}
+          {aviso.titulo}
         </span>
         <span
           className="mrl-prose"
           style={{ display: 'block', fontSize: 12, lineHeight: 1.45, color: 'var(--color-accent-800)', marginTop: 1 }}
         >
-          {trial.expired
-            ? resumenDeAlcance(level)
-            : `${
-                trial.daysLeft === 1 ? 'Te queda 1 día' : `Te quedan ${trial.daysLeft} días`
-              }. ${resumenDeAlcance(level)}`}
+          {aviso.detalle}
         </span>
       </span>
       <ChevronRight size={17} strokeWidth={2.75} color="var(--color-accent-800)" style={{ flex: 'none' }} />

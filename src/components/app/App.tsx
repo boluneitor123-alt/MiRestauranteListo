@@ -486,10 +486,10 @@ export function App() {
             level={level}
             can={can}
             licensed={!!entitlement?.licensed}
+            /* Sin filtrar: quien decide si hay aviso es `avisoDePrueba`, por
+               nivel. Aquí sólo viaja el dato. */
             trial={
-              entitlement && !entitlement.licensed
-                ? { daysLeft: entitlement.trial.daysLeft, expired: entitlement.trial.expired }
-                : null
+              entitlement ? { daysLeft: entitlement.trial.daysLeft, expired: entitlement.trial.expired } : null
             }
             startedAt={entitlement?.trial.startedAt ?? null}
             hasAlerts={hasAlerts}
