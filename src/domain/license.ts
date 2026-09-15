@@ -137,6 +137,102 @@ export function canActivate(
   return { ok: true };
 }
 
+/* ──────────────────  Reciclaje de equipos  ─────────────────────────────────
+
+   El tope de 3 equipos existe contra la reventa, no contra quien pagó. Pero
+   se consumía con el `deviceId`, que vive en el `localStorage` del navegador y
+   muere cuando alguien borra sus datos. Nadie entiende que limpiar su
+   navegador le quema un lugar de su propia licencia: tres limpiezas y el
+   cliente se quedaba fuera de lo que compró, leyendo «Tu prueba terminó».
+
+   Ahora el tope no rechaza: recicla. Llega un equipo nuevo, sale el que lleva
+   más tiempo sin usarse, y la persona entra sin enterarse. Quien comparte su
+   licencia con medio pueblo se saca a sí mismo una y otra vez —y el reciclaje
+   queda en la bitácora—, que es justo el caso que el tope quería estorbar.  */
+
+/**
+ * Cuál de los equipos sale, cuando hay que hacer lugar.
+ *
+ * El que lleva más tiempo sin abrir la app. Un equipo sin fecha conocida se
+ * trata como el más viejo de todos: si no tenemos registro de que se haya
+ * usado, es el que menos se va a extrañar. Con empate gana el orden
+ * alfabético del id, para que la decisión sea siempre la misma y se pueda
+ * probar.
+ */
+export function equipoAReciclar(
+  devices: readonly string[],
+  ultimoUso: Readonly<Record<string, number>>,
+): string | undefined {
+  return delMasVistoAlMasOlvidado(devices, ultimoUso).at(-1);
+}
+
+/** Los equipos ordenados del que se usó hace menos al que se usó hace más. */
+function delMasVistoAlMasOlvidado(
+  devices: readonly string[],
+  ultimoUso: Readonly<Record<string, number>>,
+): string[] {
+  return [...devices].sort((a, b) => (ultimoUso[b] ?? 0) - (ultimoUso[a] ?? 0) || (a < b ? -1 : 1));
+}
+
+export interface ActivacionConReciclaje {
+  license: License;
+  /**
+   * Los equipos que salieron para dejar entrar al nuevo. Vacío si había lugar.
+   *
+   * Normalmente es uno. Son varios sólo si el tope se bajó desde el panel y la
+   * licencia traía más equipos de los que el tope nuevo admite.
+   */
+  reciclados: string[];
+}
+
+/**
+ * Registra el equipo, reciclando el más viejo si el tope está lleno.
+ *
+ * No falla nunca por falta de lugar: eso es lo que dejaba fuera a quien pagó.
+ * Los estados que sí cierran la puerta —revocada, reembolsada— los sigue
+ * revisando `canActivate` antes de llegar aquí; esta función es sólo la del
+ * cupo. Es pura: quién se recicla sale de `ultimoUso`, que lo trae quien la
+ * llama.
+ */
+export function activarEquipo(
+  license: License,
+  deviceId: string,
+  now: number,
+  maxDevices: number = LICENSE_DEFAULTS.maxDevices,
+  ultimoUso: Readonly<Record<string, number>> = {},
+): ActivacionConReciclaje {
+  const activada = (devices: string[]): License => ({
+    ...license,
+    status: 'activada',
+    devices,
+    activatedAt: license.activatedAt ?? now,
+  });
+
+  // Un equipo que ya está dentro no gasta lugar ni recicla a nadie.
+  if (license.devices.includes(deviceId)) return { license: activada([...license.devices]), reciclados: [] };
+
+  const cupo = Math.max(1, maxDevices);
+  if (license.devices.length < cupo) {
+    return { license: activada([...license.devices, deviceId]), reciclados: [] };
+  }
+
+  /*
+    Hay que hacer lugar. Se quedan los `cupo - 1` que se usaron más
+    recientemente y el resto sale — siempre por último uso, nunca por el orden
+    en que entraron. Salen varios sólo si el tope bajó desde el panel.
+  */
+  const porFrescura = delMasVistoAlMasOlvidado(license.devices, ultimoUso);
+  return {
+    license: activada([...porFrescura.slice(0, cupo - 1), deviceId]),
+    reciclados: porFrescura.slice(cupo - 1),
+  };
+}
+
+/** Saca un equipo de la licencia. Lo usa el panel para liberar uno a mano. */
+export function liberarEquipo(license: License, deviceId: string): License {
+  return { ...license, devices: license.devices.filter((d) => d !== deviceId) };
+}
+
 /** Registra el equipo y marca la licencia como activada. Función pura. */
 export function activateLicense(
   license: License,

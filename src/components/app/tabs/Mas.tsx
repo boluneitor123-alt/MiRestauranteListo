@@ -14,7 +14,8 @@ import { projectProgress } from '@/domain/progress';
 import { menuAggregates } from '@/domain/aggregates';
 import { money, pct } from '@/domain/format';
 import { LICENSE_STATUS_LABELS } from '@/domain/license';
-import type { Capabilities } from '@/domain/access';
+import { etiquetaDeAcceso, type Capabilities } from '@/domain/access';
+import { nivelDeAcceso } from '@/domain/entitlement';
 import { platillosDeGiro } from '@/domain/sembrar';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
 import type { PlatformInfo } from '@/lib/device';
@@ -284,7 +285,7 @@ export function Mas({
               fontWeight: 800,
             }}
           >
-            {entitlement?.licensed ? 'Acceso de por vida' : (entitlement?.trial.label ?? 'Prueba')}
+            {etiquetaDeAcceso(nivelDeAcceso(entitlement), entitlement?.trial.label)}
           </span>
         </Row>
       </Card>
@@ -644,9 +645,7 @@ function SubScreenView(props: {
             <Row style={{ justifyContent: 'space-between' }}>
               <Muted size={13}>Estado</Muted>
               <span style={{ fontSize: 13, fontWeight: 700 }}>
-                {props.entitlement?.licensed
-                  ? 'Acceso de por vida'
-                  : (props.entitlement?.trial.label ?? 'Prueba en curso')}
+                {etiquetaDeAcceso(nivelDeAcceso(props.entitlement), props.entitlement?.trial.label)}
               </span>
             </Row>
             {props.entitlement?.code ? (

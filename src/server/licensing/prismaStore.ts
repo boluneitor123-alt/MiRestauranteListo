@@ -122,6 +122,15 @@ export class PrismaLicenseStore implements LicenseStore {
     return row ? toDomain(row) : undefined;
   }
 
+  async ultimoUsoDeEquipos(deviceIds: readonly string[]): Promise<Record<string, number>> {
+    if (!deviceIds.length) return {};
+    const rows = await this.db.device.findMany({
+      where: { deviceId: { in: [...deviceIds] } },
+      select: { deviceId: true, lastSeenAt: true },
+    });
+    return Object.fromEntries(rows.map((r) => [r.deviceId, r.lastSeenAt.getTime()]));
+  }
+
   async findAccountByEmail(email: string): Promise<{ id: string; name?: string } | undefined> {
     const correo = email.trim().toLowerCase();
     if (!correo) return undefined;
@@ -195,11 +204,14 @@ export class PrismaLicenseStore implements LicenseStore {
         where: { licenseCode: license.code, deviceId: { notIn: license.devices } },
       });
       for (const deviceId of license.devices) {
-        await tx.device.upsert({
-          where: { deviceId },
-          update: { lastSeenAt: new Date() },
-          create: { deviceId },
-        });
+        /*
+          Sin `lastSeenAt` aquí, a propósito. Guardar la licencia ponía a todos
+          sus equipos como recién vistos —activar uno refrescaba los otros dos—
+          y con eso el reciclaje se quedaba sin criterio: todos empatados en la
+          misma fecha. Quien marca el uso real es `startTrial`, que corre en
+          cada arranque de la app.
+        */
+        await tx.device.upsert({ where: { deviceId }, update: {}, create: { deviceId } });
         await tx.licenseDevice.upsert({
           where: { licenseCode_deviceId: { licenseCode: license.code, deviceId } },
           update: {},

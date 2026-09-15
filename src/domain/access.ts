@@ -259,10 +259,70 @@ export const CANDADO_VENCIDO = 'Tu prueba terminó. Desbloquea con el pago únic
 /** La cifra de inversión, mientras no se abre. */
 export const INVESTMENT_HIDDEN_LABEL = 'Con el pago único';
 
-/** El texto que toca según el nivel y lo que se esté bloqueando. */
-export function textoDeCandado(level: AccessLevel, motivo: 'contenido' | 'edicion'): string {
+/**
+ * El texto que toca según el nivel y lo que se esté bloqueando.
+ *
+ * `null` con licencia: a quien pagó no se le ofrece pagar. Es la misma regla
+ * de precedencia que en `avisoDePrueba` — primero el nivel, después todo lo
+ * demás— y aquí devuelve nada en vez de un texto para que una pantalla que se
+ * olvide de preguntar pinte un hueco y no una venta.
+ */
+export function textoDeCandado(level: AccessLevel, motivo: 'contenido' | 'edicion'): string | null {
+  if (level === 'licencia') return null;
   if (level === 'bloqueado') return CANDADO_VENCIDO;
   return motivo === 'edicion' ? CANDADO_EDICION : CANDADO_TEXTO;
+}
+
+/* ──────────────────────  El aviso de la prueba  ─────────────────────────── */
+
+/** Lo que se le dice a alguien sobre su prueba, o `null` si no hay nada que decir. */
+export interface AvisoDePrueba {
+  titulo: string;
+  detalle: string;
+  /** Los 7 días ya pasaron. Sólo para el tono; la decisión ya está tomada. */
+  vencida: boolean;
+}
+
+/**
+ * El aviso de prueba que le toca a este nivel.
+ *
+ * **El nivel manda; la fecha sólo decide el tono.** `licencia` devuelve `null`
+ * en la primera línea, sin mirar el calendario: la prueba de 7 días del equipo
+ * sigue corriendo y venciendo en la base aunque la persona haya pagado el día
+ * dos, y una pantalla que leyera `trial.expired` por su cuenta le diría «Tu
+ * prueba terminó» a alguien que compró acceso de por vida. No es un letrero
+ * feo: es decirle que perdió lo que pagó.
+ *
+ * Ésta es la única función que decide si se muestra un aviso de prueba. Si
+ * hace falta uno nuevo, sale de aquí; ninguna pantalla vuelve a mirar la fecha.
+ */
+export function avisoDePrueba(
+  level: AccessLevel,
+  trial: { daysLeft: number; expired: boolean } | null,
+): AvisoDePrueba | null {
+  if (level === 'licencia' || !trial) return null;
+
+  if (trial.expired) {
+    return { titulo: 'Tu prueba terminó', detalle: resumenDeAlcance(level), vencida: true };
+  }
+  const dias = trial.daysLeft === 1 ? 'Te queda 1 día' : `Te quedan ${trial.daysLeft} días`;
+  return { titulo: 'Versión de prueba', detalle: `${dias}. ${resumenDeAlcance(level)}`, vencida: false };
+}
+
+/** Acceso de por vida. Lo que ve en su estado quien ya pagó. */
+export const ETIQUETA_DE_POR_VIDA = 'Acceso de por vida';
+
+/**
+ * La etiqueta de estado que va en las píldoras de Más, del paywall y del
+ * perfil. Con licencia dice lo que compró; sin ella, cómo va su prueba.
+ *
+ * Existe porque `trialState().label` se arma sólo con fechas —no sabe de
+ * licencias— y estaba pintándose crudo en cuatro lugares, cada uno con su
+ * propio `if` a mano. Uno de los cuatro no lo tenía.
+ */
+export function etiquetaDeAcceso(level: AccessLevel, etiquetaDePrueba: string | undefined): string {
+  if (level === 'licencia') return ETIQUETA_DE_POR_VIDA;
+  return etiquetaDePrueba ?? 'Prueba en curso';
 }
 
 /**

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Check, Clock, WifiOff } from 'lucide-react';
 import { money } from '@/domain/format';
+import { etiquetaDeAcceso } from '@/domain/access';
+import { nivelDeAcceso } from '@/domain/entitlement';
 import { LICENSE_DEFAULTS } from '@/domain/license';
 import type { Entitlement } from '@/state/store';
 import { Button, Card, H, Muted, RADIUS, Row, text } from '@/components/ui';
@@ -52,7 +54,7 @@ export function Paywall({
             fontWeight: 800,
           }}
         >
-          {entitlement?.trial.label ?? 'Prueba en curso'}
+          {etiquetaDeAcceso(nivelDeAcceso(entitlement), entitlement?.trial.label)}
         </span>
         <button
           type="button"
@@ -123,7 +125,7 @@ export function Paywall({
       </Card>
 
       <Muted size={12} style={{ textAlign: 'center' }}>
-        Estado: {entitlement?.licensed ? 'acceso activado' : (entitlement?.trial.label ?? 'prueba')}
+        Estado: {entitlement?.licensed ? 'acceso activado' : etiquetaDeAcceso(nivelDeAcceso(entitlement), entitlement?.trial.label)}
       </Muted>
 
       <button

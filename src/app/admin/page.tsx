@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { money } from '@/domain/format';
 import { LICENSE_STATUS_LABELS, type License, type LicenseStatus } from '@/domain/license';
 import { PERIODS, PERIOD_LABELS, type PeriodId } from '@/domain/period';
@@ -59,6 +59,9 @@ export default function AdminPage() {
   const [estadoFilter, setEstadoFilter] = useState<EstadoCuenta | 'todas'>('todas');
   const [soloAbandonadas, setSoloAbandonadas] = useState(false);
   const [huerfanas, setHuerfanas] = useState<LicenciaHuerfana[]>([]);
+  /** La licencia cuyos equipos están abiertos, con lo que se leyó de ellos. */
+  const [equiposAbiertos, setEquiposAbiertos] = useState<string | null>(null);
+  const [equipos, setEquipos] = useState<EquipoDeLicencia[]>([]);
   const [duenos, setDuenos] = useState<ResumenDeDuenos | null>(null);
 
   /**
@@ -254,6 +257,34 @@ export default function AdminPage() {
   const act = async (code: string, action: string) => {
     await call(`/api/licenses/${code}/${action}`, { method: 'POST' });
     setMessage(`Licencia ${code}: ${action}`);
+    await load();
+  };
+
+  /** Abre —o cierra— la lista de equipos de una licencia. */
+  const verEquipos = async (code: string) => {
+    if (equiposAbiertos === code) {
+      setEquiposAbiertos(null);
+      setEquipos([]);
+      return;
+    }
+    setEquiposAbiertos(code);
+    setEquipos([]);
+    const data = await call(`/api/licenses/${code}/devices`);
+    setEquipos((data?.equipos as EquipoDeLicencia[]) ?? []);
+  };
+
+  /**
+   * Saca un equipo de la licencia. No es lo mismo que «Liberar», que los quita
+   * todos: esto es para «cambié de teléfono y ya no uso el viejo».
+   */
+  const liberarUnEquipo = async (code: string, deviceId: string) => {
+    if (!window.confirm(`¿Sacar este equipo de ${code}? La persona entra de nuevo la próxima vez que abra la app.`)) {
+      return;
+    }
+    await call(`/api/licenses/${code}/free-device`, { method: 'POST', body: JSON.stringify({ deviceId }) });
+    setMessage(`Licencia ${code}: un equipo liberado`);
+    const data = await call(`/api/licenses/${code}/devices`);
+    setEquipos((data?.equipos as EquipoDeLicencia[]) ?? []);
     await load();
   };
 
@@ -549,7 +580,8 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {licenses.map((license) => (
-                    <tr key={license.code} style={{ borderTop: '1px solid var(--color-divider)' }}>
+                    <Fragment key={license.code}>
+                    <tr style={{ borderTop: '1px solid var(--color-divider)' }}>
                       <td style={cell}>{license.code}</td>
                       <td style={cell}>
                         <span style={{ ...tag, background: `${STATUS_COLOR[license.status]}22`, color: STATUS_COLOR[license.status] }}>
@@ -563,7 +595,15 @@ export default function AdminPage() {
                       <td style={cell}>{license.source}</td>
                       <td style={cell}>{money(license.amount ?? 0)}</td>
                       <td style={cell}>
-                        {license.devices.length} de {settings?.maxDevices ?? 3}
+                        <button
+                          type="button"
+                          style={{ ...miniButton, minWidth: 74 }}
+                          onClick={() => verEquipos(license.code)}
+                          aria-expanded={equiposAbiertos === license.code}
+                        >
+                          {license.devices.length} de {settings?.maxDevices ?? 3}
+                          {equiposAbiertos === license.code ? ' ▴' : ' ▾'}
+                        </button>
                       </td>
                       <td style={cell}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -589,6 +629,17 @@ export default function AdminPage() {
                         </div>
                       </td>
                     </tr>
+                    {equiposAbiertos === license.code ? (
+                      <tr style={{ background: 'var(--color-neutral-100)' }}>
+                        <td colSpan={7} style={{ padding: '10px 14px 14px' }}>
+                          <Equipos
+                            equipos={equipos}
+                            onLiberar={(deviceId) => liberarUnEquipo(license.code, deviceId)}
+                          />
+                        </td>
+                      </tr>
+                    ) : null}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
@@ -1307,5 +1358,63 @@ function SinDueno({
         </div>
       </div>
     </section>
+  );
+}
+
+
+/** Un equipo registrado en una licencia, como lo devuelve el servidor. */
+interface EquipoDeLicencia {
+  deviceId: string;
+  ultimoUso: number | null;
+}
+
+/**
+ * Los equipos de una licencia, del más reciente al más olvidado.
+ *
+ * Sirve para dos cosas. Ver si alguien está compartiendo su licencia —tres
+ * equipos abiertos el mismo día son tres personas, no una— y sacar uno a mano
+ * cuando llaman porque cambiaron de teléfono. El tope ya no rechaza a nadie:
+ * cuando llega un equipo nuevo y no hay lugar, sale solo el más olvidado.
+ */
+function Equipos({ equipos, onLiberar }: { equipos: EquipoDeLicencia[]; onLiberar: (deviceId: string) => void }) {
+  if (!equipos.length) {
+    return <div style={{ fontSize: 12.5, color: 'var(--color-neutral-600)' }}>Sin equipos registrados.</div>;
+  }
+
+  const hace = (cuando: number | null): string => {
+    if (!cuando) return 'sin registro de uso';
+    const dias = Math.floor((Date.now() - cuando) / 86_400_000);
+    if (dias <= 0) return 'hoy';
+    return dias === 1 ? 'ayer' : `hace ${dias} días`;
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 6 }}>
+      {equipos.map((equipo) => (
+        <div
+          key={equipo.deviceId}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '8px 10px',
+            borderRadius: 8,
+            background: 'var(--color-surface)',
+            fontSize: 12.5,
+          }}
+        >
+          <code style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 12 }}>{equipo.deviceId}</code>
+          <span style={{ color: 'var(--color-neutral-600)' }}>última vez: {hace(equipo.ultimoUso)}</span>
+          <button
+            type="button"
+            style={{ ...miniButton, marginLeft: 'auto' }}
+            onClick={() => onLiberar(equipo.deviceId)}
+          >
+            Sacar este
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }

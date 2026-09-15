@@ -31,7 +31,12 @@ export function SoloLectura({
   onOpenPaywall: () => void;
   children: ReactNode;
 }) {
-  if (!activo) return <>{children}</>;
+  /*
+    Con licencia nada es de sólo lectura, y el aviso de arriba sería un
+    «desbloquea con el pago único» a alguien que ya pagó. El nivel manda sobre
+    `activo`, venga de donde venga.
+  */
+  if (!activo || level === 'licencia') return <>{children}</>;
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
