@@ -15,6 +15,7 @@ import { menuAggregates } from '@/domain/aggregates';
 import { money, pct } from '@/domain/format';
 import { LICENSE_STATUS_LABELS } from '@/domain/license';
 import type { Capabilities } from '@/domain/access';
+import { platillosDeGiro } from '@/domain/sembrar';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
 import type { PlatformInfo } from '@/lib/device';
 import type { Entitlement } from '@/state/store';
@@ -492,8 +493,21 @@ function SubScreenView(props: {
           </Button>
           <Button
             onClick={() => {
-              onPatch({ dishes: structuredClone(DEMO_DISHES) as never, subrecipes: structuredClone(DEMO_SUBRECIPES) as never });
-              onFlash('Plantilla cargada');
+              /*
+                Antes cargaba siempre `DEMO_DISHES`, el mismo juego para los
+                diez giros, mientras el encabezado prometía «datos de arranque
+                para {giro}». Ahora carga los de su giro; si ese giro todavía
+                no tiene platillos en la tabla, se queda con los de ejemplo y
+                se dice, en vez de fingir.
+              */
+              const suyos = platillosDeGiro(state.project.giro);
+              if (suyos.length) {
+                onPatch({ dishes: suyos as never, subrecipes: [] });
+                onFlash(`Plantilla de ${state.project.giro} cargada`);
+              } else {
+                onPatch({ dishes: structuredClone(DEMO_DISHES) as never, subrecipes: structuredClone(DEMO_SUBRECIPES) as never });
+                onFlash('Ese giro todavía no tiene plantilla: cargamos la de ejemplo');
+              }
               onBack();
             }}
           >

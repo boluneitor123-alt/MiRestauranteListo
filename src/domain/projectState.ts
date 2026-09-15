@@ -143,6 +143,15 @@ export interface ProjectState {
   ignoredActions: Record<string, boolean>;
   fcTarget: number;
   layout: string;
+  /**
+   * Rutas de los valores que todavía son una estimación del diagnóstico.
+   *
+   * Vacío quiere decir «todo esto lo dio la persona». En cuanto ella corrige
+   * un valor, su ruta sale de aquí y no vuelve: la app no pisa un dato suyo.
+   */
+  estimados: string[];
+  /** De dónde salió la estimación, para poder decirlo en pantalla. */
+  selloEstimado?: string;
   settings: AppSettings;
 }
 
@@ -256,6 +265,7 @@ export function emptyProjectState(overrides: Partial<ProjectState> = {}): Projec
     ignoredActions: {},
     fcTarget: DEFAULT_FOOD_COST_TARGET,
     layout: DEFAULT_LAYOUT_ID,
+    estimados: [],
     settings: { ...DEFAULT_SETTINGS },
     ...overrides,
   };
@@ -509,6 +519,10 @@ export function importBackup(input: unknown): ProjectState {
       Object.entries(asRecord(raw.ignoredActions)).filter(([, v]) => v === true).map(([k]) => [k, true]),
     ),
     fcTarget: asNumber(raw.fcTarget, base.fcTarget),
+    estimados: asArray(raw.estimados).filter((v): v is string => typeof v === 'string'),
+    ...(typeof raw.selloEstimado === 'string' && raw.selloEstimado
+      ? { selloEstimado: raw.selloEstimado }
+      : {}),
     layout: asString(raw.layout, base.layout),
     settings: {
       alerts: asBoolean(settings.alerts, DEFAULT_SETTINGS.alerts),

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { matchesSemaphoreFilter, semaphoreLevel, semaphoreNeedlePct, semaphoreVerdict } from '../semaphore';
+import {
+  ANCHOR_MAX,
+  matchesSemaphoreFilter,
+  SEMAPHORE_LEGEND,
+  semaphoreLevel,
+  semaphoreNeedlePct,
+  semaphoreVerdict,
+} from '../semaphore';
 import { dishMetrics } from '../costing';
 import type { Dish } from '../types';
 
@@ -49,10 +56,39 @@ describe('semáforo de rentabilidad (README § 4)', () => {
   });
 
   it('da un veredicto distinto por nivel', () => {
-    const verdicts = [10, 34, 50].map(semaphoreVerdict);
+    const verdicts = [26, 34, 50].map(semaphoreVerdict);
     expect(new Set(verdicts).size).toBe(3);
     expect(verdicts[0]).toContain('Saludable');
     expect(verdicts[1]).toContain('Revisa');
     expect(verdicts[2]).toContain('Peligroso');
+  });
+
+  it('un food cost muy bajo no recibe el mismo consejo que uno apenas sano', () => {
+    /*
+      Era el defecto: el taco de pastor al 24% y un platillo al 29% leían
+      exactamente lo mismo, "manténlo en la carta y empújalo". Un margen así
+      es para decidir qué hacer con él, no para dejarlo quieto.
+    */
+    expect(semaphoreVerdict(15)).not.toBe(semaphoreVerdict(29));
+    expect(semaphoreVerdict(15)).toContain('bajo');
+    expect(semaphoreVerdict(29)).toContain('Saludable');
+  });
+
+  it('el veredicto del ancla dice el número que la persona está viendo', () => {
+    expect(semaphoreVerdict(24)).toContain('24%');
+    expect(semaphoreVerdict(12)).toContain('12%');
+  });
+
+  it('la frontera del ancla es 20%: incluido abajo, excluido arriba', () => {
+    expect(semaphoreVerdict(ANCHOR_MAX)).toContain('bajo');
+    expect(semaphoreVerdict(ANCHOR_MAX + 1)).toContain('Saludable');
+  });
+
+  it('el cuarto veredicto no agrega un cuarto color', () => {
+    // El semáforo sigue en tres tramos: 15% se pinta verde, como 29%.
+    expect(semaphoreLevel(15)).toBe('saludable');
+    expect(semaphoreLevel(0)).toBe('saludable');
+    expect(matchesSemaphoreFilter(15, 'saludable')).toBe(true);
+    expect(SEMAPHORE_LEGEND).toHaveLength(3);
   });
 });

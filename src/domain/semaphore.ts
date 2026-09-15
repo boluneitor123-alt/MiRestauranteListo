@@ -8,12 +8,28 @@
  *   ≤ 30 %  saludable (verde)
  *   31–38 % revisar   (ámbar)
  *   > 38 %  peligroso (rojo)
+ *
+ * El semáforo se queda en tres tramos: son los que la persona ve pintados y
+ * los que filtran la lista. El **veredicto** sí distingue un cuarto caso —el
+ * food cost muy bajo— porque un 15% y un 29% son ambos verdes pero piden
+ * decisiones distintas, y decirles lo mismo desperdicia el consejo.
  */
 
 export type SemaphoreLevel = 'saludable' | 'revisar' | 'peligroso' | 'sin-precio';
 
 export const HEALTHY_MAX = 30;
 export const REVIEW_MAX = 38;
+
+/**
+ * Debajo de esto el platillo no es sólo sano: es un ancla. Da tanto margen
+ * que se puede usar para traer gente, y eso es una decisión de carta, no un
+ * número que celebrar. No es un tramo del semáforo — sigue pintado verde.
+ *
+ * Por qué 25 y no 20: el taco de pastor, que es el caso que motivó todo esto,
+ * sale en 24%. Con la frontera en 20 el consejo nunca se leía en el platillo
+ * que lo pedía. Arriba de 25 ya no hay holgura para bajar el precio.
+ */
+export const ANCHOR_MAX = 25;
 
 export const SEMAPHORE_LEGEND = [
   'Saludable hasta 30%',
@@ -35,6 +51,14 @@ export function semaphoreVerdict(foodCostRounded: number | null): string {
     case 'sin-precio':
       return 'Define tu precio de venta para ver tu food cost y tu margen.';
     case 'saludable':
+      if (foodCostRounded !== null && foodCostRounded <= ANCHOR_MAX) {
+        return (
+          `Tu food cost está bajo: ${foodCostRounded}%. Tienes espacio para dos cosas, y son ` +
+          'distintas. Bajarle el precio para traer más gente —es lo que hace una taquería con ' +
+          'su taco de pastor—, o dejarlo así y ganar más por cada venta. Lo que no conviene es ' +
+          'dejarlo sin decidir.'
+        );
+      }
       return 'Saludable: este platillo deja buen margen. Manténlo en la carta y empújalo.';
     case 'revisar':
       return 'Revisa: el margen es justo. Ajusta porción, negocia el insumo más caro o sube un poco el precio.';

@@ -124,6 +124,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hydrated = useRef(false);
   const loadedFromServer = useRef(false);
+  /** El estado viene del servidor tal cual: no hay que devolvérselo. */
+  const recienAdoptado = useRef(false);
   // Última versión del estado, para consultarla dentro de callbacks sin
   // volver a crearlos en cada tecla.
   const latestState = useRef(state);
@@ -200,6 +202,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     if (!user) return;
+    if (recienAdoptado.current) {
+      recienAdoptado.current = false;
+      return;
+    }
+
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
@@ -217,9 +224,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           de fingir que guardó: quien capturó algo tiene derecho a saber que no
           quedó.
         */
-        const datos = (await respuesta.json().catch(() => null)) as { recortado?: string[] } | null;
+        const datos = (await respuesta.json().catch(() => null)) as
+          | { recortado?: string[]; state?: unknown }
+          | null;
         const recortado = datos?.recortado ?? [];
         if (recortado.length) setRecortado(recortado);
+        /*
+          El servidor siembra las estimaciones del diagnóstico la primera vez y
+          devuelve el estado ya lleno. Se adopta aquí para que la pantalla pase
+          de ceros a sus números sin recargar.
+        */
+        if (datos?.state) {
+          /*
+            Lo que acaba de llegar ES lo guardado, así que el siguiente
+            autoguardado no tiene nada que decir. Se salta uno: sin eso, el
+            guardado que dispare esta misma adopción viajaría con el estado
+            anterior y borraría los platillos recién sembrados, que son los
+            únicos que el nivel de prueba sí deja escribir.
+          */
+          recienAdoptado.current = true;
+          dispatch({ type: 'replace', state: importBackup(datos.state) });
+        }
       } catch {
         setOnline(false);
       } finally {
