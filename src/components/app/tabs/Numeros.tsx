@@ -12,6 +12,7 @@ import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
 import { Aguante } from '../numeros/Aguante';
+import { Afinacion } from '../numeros/Afinacion';
 import { survival, type SurvivalResult } from '@/domain/survival';
 import { BUDGET_CONCEPTS } from '@/content/catalog';
 import { BENCH } from '@/content/giros';
@@ -317,6 +318,14 @@ export function Numeros({
           </span>
         </span>
       </button>
+
+      {/*
+        La afinación va aquí, entre la revisión de realidad y los módulos: se
+        lee justo antes de las cifras que va a mover, y es la razón para volver
+        a abrir la app un día después del diagnóstico. Se esconde sola cuando
+        ya está contestada o cuando no queda nada estimado que afinar.
+      */}
+      <Afinacion state={state} onPatch={onPatch} onFlash={onFlash} />
 
       {/*
         "Lo que este negocio te va a dar": la cifra grande es el sueldo real
