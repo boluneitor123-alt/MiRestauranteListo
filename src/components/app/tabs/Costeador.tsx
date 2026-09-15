@@ -1,28 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { CircleHelp, Lock, Plus, Search } from 'lucide-react';
-import { dishMetrics } from '@/domain/costing';
+import { CircleHelp, Lightbulb, Lock, Plus, Search } from 'lucide-react';
+import { dishMetrics, type DishMetrics } from '@/domain/costing';
 import { menuAggregates } from '@/domain/aggregates';
 import { subrecipeUnitCost, subrecipeBatchCost } from '@/domain/costing';
-import { matchesSemaphoreFilter, semaphoreLevel, type SemaphoreFilter } from '@/domain/semaphore';
+import {
+  ANCHOR_MAX,
+  matchesSemaphoreFilter,
+  semaphoreVerdict,
+  type SemaphoreFilter,
+} from '@/domain/semaphore';
 import { money, money2, pct } from '@/domain/format';
 import { alcanceDe, avisoDeTope, sePuedeGuardarOtro, type AccessLevel } from '@/domain/access';
 import type { Capabilities } from '@/domain/access';
 import type { ProjectState } from '@/domain/projectState';
+import type { Dish } from '@/domain/types';
+import { FilaDePlatillo } from '@/components/app/costeador/FilaDePlatillo';
 import { Button, Card, EmptyState, H, Muted, Pill, RADIUS, Row, text } from '@/components/ui';
 import { PlanDeAccion, PlanTeaser } from '@/components/app/costeador/PlanDeAccion';
 import { Chrome } from '@/components/app/inicio/Chrome';
 import { Encabezado } from '@/components/app/inicio/Encabezado';
 
 export type CostView = 'platillos' | 'menu' | 'subrecetas';
-
-const SEMAPHORE_COLOR = {
-  saludable: 'var(--color-accent-2-700)',
-  revisar: 'var(--color-warn)',
-  peligroso: 'var(--color-accent-800)',
-  'sin-precio': 'var(--color-neutral-600)',
-} as const;
 
 /** Costeador de Platillos: vistas Platillos · Mi Menú · Sub-recetas (README § 1.7). */
 export function Costeador({
@@ -310,57 +310,9 @@ export function Costeador({
           ) : rows.length ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
               {rows.map(({ dish, metrics }) => (
-                <button
-                  key={dish.id}
-                  type="button"
-                  onClick={() => onOpenDish(dish.id)}
-                  style={{
-                    textAlign: 'left',
-                    border: 'none',
-                    background: 'var(--color-surface)',
-                    borderRadius: RADIUS.block,
-                    boxShadow: 'var(--shadow-sm)',
-                    padding: 14,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  <Row gap={12}>
-                    <span
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: RADIUS.pill,
-                        background: 'var(--color-neutral-200)',
-                        display: 'grid',
-                        placeItems: 'center',
-                        fontWeight: 800,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {dish.name.slice(0, 1).toUpperCase()}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 700 }}>{dish.name}</div>
-                      <Muted size={12}>
-                        Costo {money2(metrics.costPerPortion)} · Precio {money(metrics.price)} · Utilidad{' '}
-                        {metrics.grossProfit === null ? '—' : money(metrics.grossProfit)}
-                      </Muted>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 11.5,
-                        fontWeight: 800,
-                        color: SEMAPHORE_COLOR[semaphoreLevel(metrics.foodCostRounded)],
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {metrics.hasPrice ? pct(metrics.foodCost) : 'sin precio'}
-                    </span>
-                  </Row>
-                </button>
+                <FilaDePlatillo key={dish.id} dish={dish} metrics={metrics} onOpen={() => onOpenDish(dish.id)} />
               ))}
+              <TipDelAncla rows={rows} />
             </div>
           ) : query ? (
             <EmptyState
@@ -532,5 +484,41 @@ function LockedView({
         </Button>
       </div>
     </Card>
+  );
+}
+
+
+/**
+ * El consejo del food cost bajo, al pie de la lista.
+ *
+ * Reúsa `semaphoreVerdict`, el mismo texto que la ficha del platillo: el
+ * veredicto del ancla se escribió una vez y se lee igual en los dos lados.
+ * Sale sólo cuando hay un platillo debajo de `ANCHOR_MAX` —el margen alto no
+ * es un problema, es una decisión sin tomar— y habla del más bajo de todos.
+ */
+function TipDelAncla({ rows }: { rows: Array<{ dish: Dish; metrics: DishMetrics }> }) {
+  const anclas = rows
+    .filter((r) => r.metrics.foodCostRounded !== null && r.metrics.foodCostRounded <= ANCHOR_MAX)
+    .sort((a, b) => (a.metrics.foodCostRounded ?? 0) - (b.metrics.foodCostRounded ?? 0));
+  const ancla = anclas[0];
+  if (!ancla) return null;
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        padding: '13px 14px',
+        borderRadius: RADIUS.block,
+        background: 'var(--cat-permisos)',
+        color: 'var(--cat-permisos-ink)',
+      }}
+    >
+      <Lightbulb size={17} strokeWidth={2.5} style={{ flex: 'none', marginTop: 1 }} />
+      <p className="mrl-prose" style={{ margin: 0, fontSize: 12.8, lineHeight: 1.5 }}>
+        <strong>{ancla.dish.name}:</strong> {semaphoreVerdict(ancla.metrics.foodCostRounded)}
+      </p>
+    </div>
   );
 }
