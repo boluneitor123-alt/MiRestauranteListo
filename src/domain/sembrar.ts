@@ -52,7 +52,11 @@ export function sembrarEstimacion(state: ProjectState, topes: Topes): ProjectSta
   */
   if (Object.keys(state.answers).length < ONBOARDING_QUESTIONS.length) return state;
 
-  const est = estimarProyecto(state.answers, { presupuesto: BUDGET_CONCEPTS, fijos: FIXED_CONCEPTS });
+  const est = estimarProyecto(
+    state.answers,
+    { presupuesto: BUDGET_CONCEPTS, fijos: FIXED_CONCEPTS },
+    { ciudadDelPerfil: state.profile.city },
+  );
 
   /*
     Los platillos se recortan aquí, no en el estimador: el tope es del nivel de

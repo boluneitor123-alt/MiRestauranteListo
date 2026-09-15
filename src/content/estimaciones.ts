@@ -744,3 +744,87 @@ export const ESTIMACIONES: Record<string, EstimacionDeGiro> = {
     platillos: [],
   },
 };
+
+/* ────────────────────────  La afinación  ──────────────────────────────────
+
+   Los bloques de arriba están calibrados para un local de tamaño normal en
+   una ciudad grande. Dos negocios idénticos no pagan la misma renta en la
+   Ciudad de México que en un pueblo, ni en un puesto que en un local de 60
+   lugares — y la renta es el gasto que decide si el negocio aguanta.
+
+   El diagnóstico no pregunta eso: son doce preguntas y agregar dos más antes
+   de que la persona vea nada sería cobrarle más caro el primer minuto. Se
+   pregunta después, en la tarjeta de Números, cuando ya tiene sus números
+   enfrente y entiende para qué sirve contestar.
+
+   Estos multiplicadores son mi derivación, no un dato de mercado: corrígelos
+   como corregiste los márgenes de marisquería.
+
+   Ojo con una cosa: cuando la persona contesta ciudad y tamaño, estos dos
+   factores **sustituyen** al del presupuesto en los conceptos de espacio, no
+   se multiplican con él. El presupuesto era un proxy de "qué tan grande y
+   dónde"; contestada la pregunta directa, el proxy sobra. Multiplicarlos
+   daba rentas de $58,000 para una taquería.                                */
+
+/** Lo que mueve la ciudad. Las opciones se leen tal cual en la tarjeta. */
+export const CIUDADES: Array<{ opcion: string; factor: number; comoSeLee: string }> = [
+  { opcion: 'Ciudad de México y área metropolitana', factor: 1.45, comoSeLee: 'en la Ciudad de México' },
+  { opcion: 'Guadalajara o Monterrey', factor: 1.2, comoSeLee: 'en Guadalajara o Monterrey' },
+  { opcion: 'Otra capital o ciudad grande', factor: 1, comoSeLee: 'en una ciudad grande' },
+  { opcion: 'Ciudad mediana o pueblo', factor: 0.7, comoSeLee: 'en una ciudad mediana' },
+];
+
+/**
+ * Lo que mueve el tamaño del local.
+ *
+ * La escala no es pareja a propósito. Un puesto paga menos de la mitad que un
+ * local establecido —no hay obra, no hay baños, no hay metros de comedor— y un
+ * local grande en zona comercial se dispara: ahí es donde la gente se
+ * equivoca y truena, calculando la renta de un local de 60 lugares como si
+ * fuera uno de 40 con unas mesas más.
+ */
+export const TAMANOS: Array<{ opcion: string; factor: number; comoSeLee: string }> = [
+  { opcion: 'Puesto, changarro o cocina sin comensales', factor: 0.45, comoSeLee: 'en puesto' },
+  { opcion: 'Local chico, hasta 20 lugares', factor: 0.75, comoSeLee: 'en local chico' },
+  { opcion: 'Local mediano, hasta 40 lugares', factor: 1, comoSeLee: 'en local mediano' },
+  { opcion: 'Local grande, más de 40 lugares', factor: 1.6, comoSeLee: 'en local grande' },
+];
+
+/**
+ * Qué conceptos dependen del espacio: son los únicos que la afinación toca.
+ *
+ * El equipo de cocina cuesta lo mismo en Oaxaca que en Polanco, y el
+ * inventario inicial también. Lo que cambia con la ciudad y el tamaño es lo
+ * que se paga por metro cuadrado y por llenarlo.
+ */
+export const CONCEPTOS_DE_ESPACIO = {
+  presupuesto: ['renta', 'obra', 'mob', 'uten'],
+  fijos: ['renta'],
+} as const;
+
+/**
+ * Las ciudades que se reconocen de `profile.city` para no volver a preguntar.
+ *
+ * Se compara sin acentos y sin mayúsculas, por coincidencia de texto. Lo que
+ * no esté aquí no se adivina: se pregunta, que es más honesto que suponer.
+ */
+export const CIUDADES_CONOCIDAS: Array<{ busca: string[]; opcion: string }> = [
+  {
+    busca: ['ciudad de mexico', 'cdmx', 'df', 'distrito federal', 'naucalpan', 'ecatepec', 'nezahualcoyotl',
+      'tlalnepantla', 'coacalco', 'chalco', 'texcoco', 'huixquilucan', 'atizapan', 'cuautitlan', 'tultitlan'],
+    opcion: 'Ciudad de México y área metropolitana',
+  },
+  {
+    busca: ['guadalajara', 'zapopan', 'tlaquepaque', 'tonala', 'tlajomulco', 'monterrey', 'san pedro garza',
+      'san nicolas de los garza', 'guadalupe nuevo leon', 'apodaca', 'santa catarina', 'escobedo'],
+    opcion: 'Guadalajara o Monterrey',
+  },
+  {
+    busca: ['puebla', 'tijuana', 'leon', 'queretaro', 'merida', 'cancun', 'san luis potosi', 'aguascalientes',
+      'chihuahua', 'saltillo', 'hermosillo', 'culiacan', 'morelia', 'toluca', 'veracruz', 'mexicali',
+      'ciudad juarez', 'juarez', 'torreon', 'acapulco', 'villahermosa', 'oaxaca', 'tuxtla', 'durango',
+      'mazatlan', 'playa del carmen', 'puerto vallarta', 'cuernavaca', 'xalapa', 'pachuca', 'tepic',
+      'campeche', 'colima', 'la paz', 'tampico', 'celaya', 'irapuato', 'reynosa', 'matamoros', 'nuevo laredo'],
+    opcion: 'Otra capital o ciudad grande',
+  },
+];

@@ -5,6 +5,7 @@ import { importBackup } from '@/domain/projectState';
 import { aplicarAlcance } from '@/domain/alcance';
 import { alDia } from '@/domain/desestimar';
 import { sembrarEstimacion } from '@/domain/sembrar';
+import { afinarEstimacion } from '@/domain/afinar';
 import { topesDe } from '@/domain/access';
 import { json, readJson, str } from '@/server/http';
 
@@ -88,11 +89,29 @@ export async function PUT(request: Request) {
     de la persona— y eso, en el guardado de la siembra, borraba las marcas
     recién puestas: el proyecto ya existía con la lista vacía.
   */
-  await repo.save(user.id, sembro ? sembrado : alDia(guardado, sembrado));
+  const conMarcasAlDia = sembro ? sembrado : alDia(guardado, sembrado);
 
   /*
-    Cuando la siembra entra, el navegador todavía tiene la pantalla en ceros:
-    se le devuelve el estado para que lo adopte y vea sus números sin recargar.
+    La afinación va **después** de `alDia`, y el orden no es negociable. Si
+    fuera antes, los montos que ella misma acaba de reescribir se verían como
+    una edición de la persona y perderían su marca de estimado: la app se
+    habría "corregido" a sí misma y no volvería a tocar esos campos nunca.
+    Aquí, con las marcas ya resueltas, sólo reescribe lo que sigue estimado.
+
+    Y la hace el servidor por la misma razón que la siembra: en prueba Números
+    está en sólo lectura, así que el navegador no podría guardar estos montos
+    aunque los calculara. Contestar la tarjeta no es editar una cifra — es
+    contestar una pregunta, y eso la prueba sí lo abre.
   */
-  return json({ ok: true, level, recortado, ...(sembrado !== state ? { state: sembrado } : {}) });
+  const afinado = afinarEstimacion(conMarcasAlDia);
+  const afino = afinado !== conMarcasAlDia;
+
+  await repo.save(user.id, afinado);
+
+  /*
+    Cuando la siembra o la afinación entran, el navegador todavía tiene los
+    montos viejos: se le devuelve el estado para que lo adopte y vea sus
+    números cambiar sin recargar.
+  */
+  return json({ ok: true, level, recortado, ...(sembro || afino ? { state: afinado } : {}) });
 }
