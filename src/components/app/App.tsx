@@ -486,13 +486,11 @@ export function App() {
             level={level}
             can={can}
             precio={entitlement?.price ?? null}
-            licensed={!!entitlement?.licensed}
             /* Sin filtrar: quien decide si hay aviso es `avisoDePrueba`, por
                nivel. Aquí sólo viaja el dato. */
             trial={
               entitlement ? { daysLeft: entitlement.trial.daysLeft, expired: entitlement.trial.expired } : null
             }
-            startedAt={entitlement?.trial.startedAt ?? null}
             hasAlerts={hasAlerts}
             onGo={go}
             onOpenProject={() => {
@@ -508,7 +506,6 @@ export function App() {
               setSubScreen('alertas');
             }}
             onOpenPaywall={() => setScreen('paywall')}
-            onOpenDoc={() => window.open('/print/plan-de-apertura', '_blank', 'noopener')}
             onNewDish={openDish}
             onKeepExample={() => {
               patch({ settings: { ...state.settings, exampleHidden: true } });

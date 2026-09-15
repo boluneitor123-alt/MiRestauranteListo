@@ -1,62 +1,47 @@
 'use client';
 
-import { ArrowRight, ChevronRight, FileText, Sprout, TriangleAlert } from 'lucide-react';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
-import { breakeven, fixedExpensesTotal, investment } from '@/domain/finance';
-import { avisoDePrueba, type AccessLevel, type Capabilities } from '@/domain/access';
+import { fixedExpensesTotal, investment } from '@/domain/finance';
+import type { AccessLevel, Capabilities } from '@/domain/access';
 import { titularDeEquilibrio } from '@/domain/titular';
-import { dishMetrics } from '@/domain/costing';
-import { menuAggregates } from '@/domain/aggregates';
-import { money, pct as pctLabel } from '@/domain/format';
-import { semaphoreLevel } from '@/domain/semaphore';
-import { paceProjection, stageLabel } from '@/domain/progress';
+import { stageLabel } from '@/domain/progress';
 import { minutosDeLeccion } from '@/content/leccionesMeta';
 import { DEMO_DISHES } from '@/content/demo';
 import { ETAPAS } from '@/content/route';
 import type { ProjectState } from '@/domain/projectState';
-import { Button, Card, H, Muted, ProgressBar, RADIUS, Row, text } from '@/components/ui';
+import { Button, RADIUS } from '@/components/ui';
 import { Chrome } from '../inicio/Chrome';
 import { Encabezado } from '../inicio/Encabezado';
+import { TitularGrande } from '../inicio/TitularGrande';
+import { CifrasDelProyecto } from '../inicio/CifrasDelProyecto';
 import { SiguientePaso } from '../inicio/SiguientePaso';
-import { FranjaDelTitular } from '../inicio/FranjaDelTitular';
 import { AlertaDelMentor } from '../inicio/AlertaDelMentor';
+import { TusPlatillos } from '../inicio/TusPlatillos';
 import { TarjetaDePrueba } from '../inicio/TarjetaDePrueba';
 
 /** Los platillos de la plantilla, para reconocer que el ejemplo sigue puesto. */
 const DEMO_DISH_IDS = new Set(DEMO_DISHES.map((d) => d.id));
 
-const FOOD_COST_COLOR = {
-  saludable: 'var(--color-accent-2-700)',
-  revisar: 'var(--color-warn-700)',
-  peligroso: 'var(--color-danger-700)',
-  'sin-precio': 'var(--color-neutral-600)',
-} as const;
-
 /** Tablero de Inicio (README § 1.5, entrega-v2 § "Inicio"). */
 export function Inicio({
   state,
   diagnosis,
-  licensed,
   trial,
   level,
   can,
   precio,
-  startedAt,
   hasAlerts,
   onGo,
   onOpenProfile,
   onOpenAlerts,
   onOpenProject,
   onOpenPaywall,
-  onOpenDoc,
   onNewDish,
   onKeepExample,
   onClearExample,
 }: {
   state: ProjectState;
   diagnosis: Diagnosis;
-  /** Pagó. Decide el documento y el texto del botón de los cursos. */
-  licensed: boolean;
   /** Días que le quedan de prueba. `null` con licencia: el aviso desaparece. */
   trial: { daysLeft: number; expired: boolean } | null;
   level: AccessLevel;
@@ -69,8 +54,6 @@ export function Inicio({
    * cobro— y viaja por el entitlement. Nunca de una constante de pantalla.
    */
   precio: number | null;
-  /** Cuándo empezó a usar la app. Alimenta la proyección de fecha de apertura. */
-  startedAt: number | null;
   /** Hay una alerta que merece el punto naranja de la campana. */
   hasAlerts: boolean;
   onGo: (target: Target) => void;
@@ -79,30 +62,13 @@ export function Inicio({
   /** Abre los datos del proyecto desde el rótulo del encabezado. */
   onOpenProject: () => void;
   onOpenPaywall: () => void;
-  /** Abre el Plan de apertura imprimible. */
-  onOpenDoc: () => void;
+  /** Sin id abre un platillo nuevo; con id, ese platillo. */
   onNewDish: (id?: string) => void;
   onKeepExample: () => void;
   onClearExample: () => void;
 }) {
   const name = (state.profile.name || 'Tu proyecto').split(' ')[0];
   const fixed = fixedExpensesTotal(state.fixed);
-  const be = breakeven({
-    fixedExpenses: fixed,
-    grossMargin: state.margin,
-    ticket: state.ticket,
-    ownerGoal: state.ownerGoal,
-    hours: state.hours,
-    closedOneDay: state.closedOneDay,
-  });
-  // Costo y margen promedio de la carta: sólo cuentan los platillos con precio.
-  const conPrecio = state.dishes
-    .map((d) => dishMetrics(d, { subrecipes: state.subrecipes }))
-    .filter((m) => m.hasPrice);
-  const costoPromedio = conPrecio.length
-    ? conPrecio.reduce((a, m) => a + m.costPerPortion, 0) / conPrecio.length
-    : 0;
-  const carta = menuAggregates(state.dishes, { subrecipes: state.subrecipes });
   const inversion = investment({
     concepts: state.budget,
     subconcepts: state.budgetSub,
@@ -116,25 +82,14 @@ export function Inicio({
     hours: state.hours,
     closedOneDay: state.closedOneDay,
   });
-  const recent = state.dishes.slice(-6).reverse();
-  const courses = diagnosis.progress.modules.filter((m) => m.course);
   const minutosDelSiguiente = minutosDeLeccion(diagnosis.nextStep.title);
   // El ejemplo de la plantilla sigue cargado y todavía no decide qué hacer con él.
   const exampleOn = !state.settings.exampleHidden && state.dishes.some((d) => DEMO_DISH_IDS.has(d.id));
-  // La proyección la ve todo el mundo, haya pagado o no.
-  const pace = startedAt
-    ? paceProjection({
-        pending: diagnosis.progress.total - diagnosis.progress.done,
-        done: diagnosis.progress.done,
-        startedAt,
-        now: Date.now(),
-      })
-    : null;
 
   return (
     <div
       className="mrl-measure"
-      style={{ padding: '18px 20px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 22 }}
+      style={{ padding: '18px 20px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}
     >
       <Chrome
         initial={name.slice(0, 1).toUpperCase()}
@@ -144,177 +99,65 @@ export function Inicio({
       />
 
       <Encabezado
-        titulo={<>¡Hola, {name}! 👋</>}
+        /* Espacio duro antes del saludo: con uno normal, la mano se iba sola
+           al segundo renglón en cuanto el nombre pasaba de seis letras. */
+        titulo={<>¡Hola, {name}!{'\u00A0'}👋</>}
         bajada="Sigamos construyendo tu restaurante."
         proyecto={state.project.name}
         onOpenProject={onOpenProject}
       />
 
       {/*
-        El orden es el mensaje. Primero qué hacer ahora, con la ilustración y
-        el tamaño de algo que importa; pegada abajo, en el mismo bloque cálido,
-        la cifra que dice si el negocio se sostiene; después lo que va a doler
-        si se deja; y al final cuánto cuesta abrirlo todo.
+        El orden es el mensaje, y se invirtió a propósito.
+        Primero lo que la app ya sabe del negocio de esta persona —la cifra que
+        dice si se sostiene, y las tres del diagnóstico—; después la tarea que
+        sigue; después lo que va a doler si se deja; y al final su carta.
 
-        Lo que salió de aquí no se borró de la app, sólo de esta pantalla:
-        Herramientas rápidas y los seis entregables viven en Más, Tareas de tu
-        ruta y Progreso por módulo en Mi Ruta, los mini cursos en Más › Aprende
-        y los platillos recientes en el Costeador. Inicio dejó de ser un índice
-        de todo para volver a ser una respuesta a «¿qué hago ahora?».
+        Antes abría con la tarea pendiente y la cifra iba de pie de página:
+        alguien que acababa de contestar doce preguntas entraba a que le
+        pidieran más trabajo, sin ver nada suyo. Inicio tiene que hacer pensar
+        «esta app ya sabe cosas de mi negocio», no «tengo tarea».
+
+        Lo que salió de aquí no se borró de la app: Herramientas rápidas y los
+        entregables viven en Más, Tareas de tu ruta y Progreso por módulo en Mi
+        Ruta, y los mini cursos en Más › Aprende.
       */}
+      <TitularGrande titular={titular} onCapturarFijos={() => onGo({ tab: 'numeros', view: 'fijos' })} />
+
+      <CifrasDelProyecto
+        inversion={inversion.total}
+        gastosFijos={fixed}
+        ticket={state.ticket}
+        muestraInversion={can.muestraCifrasDeInversion}
+        sello={state.selloEstimado ?? ''}
+        onAbrirPresupuesto={() =>
+          can.muestraCifrasDeInversion ? onGo({ tab: 'numeros', view: 'presupuesto' }) : onOpenPaywall()
+        }
+        onAbrirFijos={() => onGo({ tab: 'numeros', view: 'fijos' })}
+        onAbrirTicket={() => onGo({ tab: 'numeros', view: 'equilibrio' })}
+      />
+
       <SiguientePaso
         titulo={diagnosis.nextStep.title}
         cuerpo={diagnosis.nextStep.body}
         minutos={`${minutosDelSiguiente} min`}
         etapa={stageLabel(ETAPAS, diagnosis.progress.nextTask)}
-        pct={diagnosis.progress.pct}
-        ritmo={pace}
-        pie={<FranjaDelTitular titular={titular} />}
         onContinue={() => onGo(diagnosis.nextStep.target)}
       />
 
       <AlertaDelMentor recomendacion={diagnosis.recommendations[0]} onGo={onGo} />
 
+      <TusPlatillos
+        dishes={state.dishes}
+        subrecipes={state.subrecipes}
+        onAbrir={(id) => onNewDish(id)}
+        onVerTodos={() => onGo({ tab: 'costeador' })}
+        onCostearPrimero={() => onNewDish()}
+      />
+
       <TarjetaDePrueba level={level} trial={trial} precio={precio} onOpenPaywall={onOpenPaywall} />
 
       {exampleOn ? <AvisoDeEjemplo onKeep={onKeepExample} onClear={onClearExample} /> : null}
-    </div>
-  );
-}
-
-/**
- * El aviso de la prueba, que lleva al pago único.
- *
- * Decide él mismo si se pinta, con `avisoDePrueba`. El llamador tenía el `if`
- * —«pásame la prueba sólo si no tiene licencia»— y eso hacía que la promesa
- * viviera en App.tsx en vez de aquí: bastaba un llamador nuevo que se olvidara
- * para enseñarle «Tu prueba terminó» a alguien que pagó.
- */
-function AvisoDePrueba({
-  trial,
-  level,
-  onOpenPaywall,
-}: {
-  trial: { daysLeft: number; expired: boolean } | null;
-  level: AccessLevel;
-  onOpenPaywall: () => void;
-}) {
-  const aviso = avisoDePrueba(level, trial);
-  if (!aviso) return null;
-
-  return (
-    <button
-      type="button"
-      onClick={onOpenPaywall}
-      style={{
-        width: '100%',
-        border: 'none',
-        textAlign: 'left',
-        background: 'var(--color-accent-100)',
-        borderRadius: RADIUS.inner,
-        padding: '14px 16px',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-body)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-      }}
-    >
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5, color: 'var(--color-accent-900)' }}>
-          {aviso.titulo}
-        </span>
-        <span
-          className="mrl-prose"
-          style={{ display: 'block', fontSize: 12, lineHeight: 1.45, color: 'var(--color-accent-800)', marginTop: 1 }}
-        >
-          {aviso.detalle}
-        </span>
-      </span>
-      <ChevronRight size={17} strokeWidth={2.75} color="var(--color-accent-800)" style={{ flex: 'none' }} />
-    </button>
-  );
-}
-
-/** "No olvides esto": las alertas del mentor, con su acción a la derecha. */
-function NoOlvides({
-  recomendaciones,
-  onGo,
-}: {
-  recomendaciones: Diagnosis['recommendations'];
-  onGo: (target: Target) => void;
-}) {
-  if (!recomendaciones.length) return null;
-
-  return (
-    <div>
-      <H size={19} style={{ margin: '0 2px 11px' }}>
-        No olvides esto
-      </H>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {recomendaciones.map((rec) => (
-          <div
-            key={rec.id}
-            style={{
-              padding: '14px 15px',
-              border: '1px solid var(--color-border)',
-              borderRadius: RADIUS.block,
-              background: 'var(--color-surface)',
-            }}
-          >
-            {/*
-              Se envuelve a propósito: nuestras llamadas a la acción son más
-              largas que las del prototipo ("Costear mi primer platillo" contra
-              "Ver el cálculo") y en línea le comen el ancho al título.
-            */}
-            <div style={{ display: 'flex', gap: 11, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  width: 34,
-                  height: 34,
-                  flex: 'none',
-                  borderRadius: 11,
-                  background: rec.severity === 'alta' ? 'var(--color-accent-100)' : 'var(--color-neutral-200)',
-                  color: rec.severity === 'alta' ? 'var(--color-accent-800)' : 'var(--color-text-2)',
-                }}
-              >
-                <TriangleAlert size={17} strokeWidth={2.75} />
-              </span>
-              <div style={{ flex: 1, minWidth: 150 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{rec.title}</div>
-                <div style={{ fontSize: 12.5, marginTop: 3, lineHeight: 1.4, color: 'var(--color-text-2)' }}>
-                  {rec.body}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onGo(rec.target)}
-                className="mrl-hit"
-                style={{
-                  flex: 'none',
-                  marginLeft: 45,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  border: 'none',
-                  background: 'none',
-                  padding: '10px 0',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: 'var(--color-accent-800)',
-                }}
-              >
-                {rec.cta}
-                <ArrowRight size={13} strokeWidth={3} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

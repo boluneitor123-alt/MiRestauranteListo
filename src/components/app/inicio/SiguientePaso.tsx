@@ -1,6 +1,5 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { ArrowRight, Clock, Menu, Sparkles } from 'lucide-react';
 import { RADIUS } from '@/components/ui';
 
@@ -11,18 +10,16 @@ import { RADIUS } from '@/components/ui';
  * `stageLabel()`, el mismo que usa Mi Ruta: las dos pantallas no pueden decir
  * cosas distintas.
  *
- * Al pie va lo que le pase quien la usa: en Inicio, la franja de «necesitas
- * tantos clientes al día», integrada al mismo bloque cálido en vez de en una
- * tarjeta blanca aparte. Sin `pie`, cae la barra de avance de siempre.
+ * No lleva pie. Tuvo dos —la barra de avance y la franja de «necesitas tantos
+ * clientes al día»— y los dos salieron: el avance se lee completo en Mi Ruta y
+ * la cifra se fue al bloque naranja de arriba, que es donde pesa. La tarjeta
+ * cierra con su botón, que es lo que viene a pedir.
  */
 export function SiguientePaso({
   titulo,
   cuerpo,
   minutos,
   etapa,
-  pct,
-  ritmo,
-  pie,
   onContinue,
 }: {
   titulo: string;
@@ -31,11 +28,6 @@ export function SiguientePaso({
   minutos: string;
   /** "Define · etapa 1 de 3". */
   etapa: string;
-  pct: number;
-  /** Proyección de ritmo, o null mientras no haya de dónde sacarla. */
-  ritmo: string | null;
-  /** Lo que va al pie del bloque. Sin esto, la barra de avance. */
-  pie?: ReactNode;
   onContinue: () => void;
 }) {
   return (
@@ -67,7 +59,7 @@ export function SiguientePaso({
         />
       </picture>
 
-      <div style={{ position: 'relative', padding: '18px 18px 0' }}>
+      <div style={{ position: 'relative', padding: '18px 18px 20px' }}>
         <span
           style={{
             display: 'inline-flex',
@@ -157,60 +149,6 @@ export function SiguientePaso({
         </button>
       </div>
 
-      {pie ? (
-        <div style={{ position: 'relative', marginTop: 16 }}>{pie}</div>
-      ) : (
-      <div
-        style={{
-          position: 'relative',
-          marginTop: 16,
-          padding: '14px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          borderTop: '1px solid var(--color-accent-200)',
-        }}
-      >
-        <span
-          style={{
-            flex: 1,
-            height: 9,
-            borderRadius: RADIUS.pill,
-            background: 'var(--color-neutral-100)',
-            overflow: 'hidden',
-          }}
-        >
-          <span
-            style={{
-              display: 'block',
-              width: `${pct}%`,
-              height: '100%',
-              borderRadius: RADIUS.pill,
-              background: 'var(--color-accent)',
-            }}
-          />
-        </span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
-          {pct}% completado
-        </span>
-      </div>
-      )}
-
-      {!pie && ritmo ? (
-        <p
-          className="mrl-prose"
-          style={{
-            position: 'relative',
-            margin: 0,
-            padding: '0 18px 14px',
-            fontSize: 12,
-            lineHeight: 1.45,
-            color: 'var(--color-text-2)',
-          }}
-        >
-          {ritmo}
-        </p>
-      ) : null}
     </div>
   );
 }
