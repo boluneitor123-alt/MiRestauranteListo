@@ -774,12 +774,20 @@ export const CIUDADES: Array<{ opcion: string; factor: number; comoSeLee: string
   { opcion: 'Ciudad mediana o pueblo', factor: 0.7, comoSeLee: 'en una ciudad mediana' },
 ];
 
-/** Lo que mueve el tamaño del local. */
+/**
+ * Lo que mueve el tamaño del local.
+ *
+ * La escala no es pareja a propósito. Un puesto paga menos de la mitad que un
+ * local establecido —no hay obra, no hay baños, no hay metros de comedor— y un
+ * local grande en zona comercial se dispara: ahí es donde la gente se
+ * equivoca y truena, calculando la renta de un local de 60 lugares como si
+ * fuera uno de 40 con unas mesas más.
+ */
 export const TAMANOS: Array<{ opcion: string; factor: number; comoSeLee: string }> = [
-  { opcion: 'Puesto, changarro o cocina sin comensales', factor: 0.5, comoSeLee: 'en puesto' },
-  { opcion: 'Local chico, hasta 20 lugares', factor: 0.8, comoSeLee: 'en local chico' },
+  { opcion: 'Puesto, changarro o cocina sin comensales', factor: 0.45, comoSeLee: 'en puesto' },
+  { opcion: 'Local chico, hasta 20 lugares', factor: 0.75, comoSeLee: 'en local chico' },
   { opcion: 'Local mediano, hasta 40 lugares', factor: 1, comoSeLee: 'en local mediano' },
-  { opcion: 'Local grande, más de 40 lugares', factor: 1.45, comoSeLee: 'en local grande' },
+  { opcion: 'Local grande, más de 40 lugares', factor: 1.6, comoSeLee: 'en local grande' },
 ];
 
 /**
