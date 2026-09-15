@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Download, Lock } from 'lucide-react';
 import { FAQ_ITEMS as FAQ, GIROS, TUTORIAL } from '@/content/catalog';
-import { ROUTE_MODULES } from '@/content/route';
+import { ROUTE_MODULES, RUTA_CATS } from '@/content/route';
 import { fixedExpensesTotal } from '@/domain/finance';
 import { DeliveryCalculator } from '../tools/DeliveryCalculator';
 import { AdDoctor } from '../tools/AdDoctor';
@@ -15,6 +15,7 @@ import { menuAggregates } from '@/domain/aggregates';
 import { money, pct } from '@/domain/format';
 import { LICENSE_STATUS_LABELS } from '@/domain/license';
 import { etiquetaDeAcceso, type Capabilities } from '@/domain/access';
+import { SeccionesDeMas } from '../mas/Secciones';
 import { nivelDeAcceso } from '@/domain/entitlement';
 import { platillosDeGiro } from '@/domain/sembrar';
 import type { Diagnosis, Target } from '@/domain/diagnosis';
@@ -157,8 +158,18 @@ const GROUPS: Array<{ title: string; items: Array<{ id: SubScreen; label: string
 ];
 
 
+/*
+  La ruta se cuenta, no se teclea. Este renglón decía «90 tareas en 14
+  módulos» —los números de antes de separar los mini cursos— mientras Mi Ruta,
+  Más y el diagnóstico ya contaban 43 en 10.
+*/
+const TAREAS_DE_RUTA = RUTA_CATS.reduce((a, c) => a + c.tasks.length, 0);
+
 const CHANGELOG = [
-  ['v1.0 · Hoy', 'Ruta de 90 tareas en 14 módulos, costeador con sub-recetas, presupuesto con subconceptos y punto de equilibrio.'],
+  [
+    'v1.0 · Hoy',
+    `Ruta de ${TAREAS_DE_RUTA} tareas en ${RUTA_CATS.length} módulos, costeador con sub-recetas, presupuesto con subconceptos y punto de equilibrio.`,
+  ],
   ['Próximo', 'Exportar tu carta a PDF con el diseño ya acomodado.'],
   ['Próximo', 'Comparador de proveedores dentro de la app.'],
   ['Próximo', 'Control de inventario inicial y mermas del mes.'],
@@ -296,6 +307,23 @@ export function Mas({
           {platform.installHint}
         </Muted>
       </Card>
+
+      {/*
+        Aprende, Permisos y Recursos, y debajo los mini cursos. Van arriba de
+        los grupos de texto: son las tres cosas por las que se entra a Más, y
+        buscarlas en una lista de veintitantos renglones es lo que la maqueta
+        venía a arreglar.
+
+        Los grupos de abajo se quedan completos. La maqueta es guía visual, no
+        inventario de lo que debe existir.
+      */}
+      <SeccionesDeMas
+        cursos={diagnosis.progress.modules.filter((m) => m.course)}
+        recursos={RESOURCES.length}
+        level={nivelDeAcceso(entitlement)}
+        onAbrirModulo={(module) => onGo({ tab: 'ruta', module })}
+        onAbrirRecursos={() => onOpenSub('recursos')}
+      />
 
       <Deliverables
         licensed={!!entitlement?.licensed}
@@ -683,7 +711,7 @@ function SubScreenView(props: {
       return <Faq onBack={onBack} />;
 
     case 'recursos':
-      return wrap('Recursos descargables', '6 archivos listos para usar', (
+      return wrap('Recursos descargables', `${RESOURCES.length} archivos listos para usar`, (
         <>
           {RESOURCES.map(([label, file]) => (
             <Card key={file} radius={RADIUS.block} style={{ padding: 14 }}>
