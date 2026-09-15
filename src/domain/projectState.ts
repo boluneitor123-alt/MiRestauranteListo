@@ -11,13 +11,46 @@ import { ROUTE_MODULES } from '@/content/route';
 import { taskKey, type ExtraTask } from './progress';
 import type { Concept, Subconcept } from './finance';
 import type { Dish, Ingredient, Subrecipe } from './types';
-import { SURVIVAL_DEFAULTS } from './survival';
 import { DELIVERY_DEFAULTS, type DeliveryInput } from './delivery';
-import { CAPACITY_DEFAULTS, type CapacityInput } from './reality';
 import { DEFAULT_FOOD_COST_TARGET } from './costing';
 import { BREAKEVEN_DEFAULTS } from './finance';
 import { DEFAULT_LAYOUT_ID } from './menu';
 import { isUnitCode, type UnitCode } from './units';
+
+/**
+ * Los valores de arranque de la operación.
+ *
+ * Vivían en `domain/survival.ts`, con la Prueba de estrés que se quitó de
+ * Números. `dailyMix` lo sigue usando Mi Menú para proyectar la carta, y los
+ * otros dos son dato capturado: no se borran porque su pantalla se haya ido.
+ */
+export const SURVIVAL_DEFAULTS = {
+  /** Horas que trabaja el dueño a la semana. */
+  weeklyHours: 70,
+  /** Minutos que tarda el platillo promedio. */
+  prepMinutes: 6,
+  /** Platillos que salen al día en total. */
+  dailyMix: 100,
+};
+
+/**
+ * La capacidad del local, tal como la capturó la persona.
+ *
+ * Vivía en `domain/reality.ts`, con la Revisión de realidad que se quitó de
+ * Números. El módulo se fue; **el dato no**. Lo que alguien capturó no se
+ * borra aunque la pantalla que lo pedía deje de existir: si mañana vuelve una
+ * vista que use la capacidad, sus números siguen aquí.
+ */
+export interface CapacityInput {
+  /** Órdenes que la cocina saca por hora. */
+  ordersPerHour: number;
+  /** Horas de venta pico al día. */
+  peakHours: number;
+  /** Lugares sentados del local. */
+  seats: number;
+}
+
+export const CAPACITY_DEFAULTS: CapacityInput = { ordersPerHour: 20, peakHours: 3, seats: 20 };
 
 export interface Profile {
   name: string;

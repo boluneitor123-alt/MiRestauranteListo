@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import { Lock } from 'lucide-react';
-import { money, money2, pct } from '@/domain/format';
+import { money, pct } from '@/domain/format';
 import { INVESTMENT_HIDDEN_LABEL } from '@/domain/access';
 import type { Titular } from '@/domain/titular';
 import { RADIUS } from '@/components/ui';
@@ -35,10 +35,8 @@ export interface KeyResult {
 export function keyResults(input: {
   /** Ticket promedio capturado. */
   ticket: number;
-  /** Costo promedio por porción de los platillos con precio. */
-  averageCost: number;
-  /** Cuántos platillos entraron en ese promedio. */
-  pricedDishes: number;
+  /** Venta mensual de equilibrio: lo que hay que vender para no perder. */
+  equilibrio: number;
   /** Margen bruto promedio de la carta, en porcentaje. */
   margin: number;
   /** Lo que cuesta abrir, sumado del presupuesto. */
@@ -61,12 +59,17 @@ export function keyResults(input: {
       d2: 'M8 7v10M16 7v10',
     },
     {
-      label: 'Costo de platillo',
-      value: input.averageCost ? money2(input.averageCost) : '—',
-      foot: input.pricedDishes ? `Promedio de ${input.pricedDishes}` : 'Costea tu primer platillo',
+      /*
+        Punto de equilibrio y no costo de platillo: el costo promedio ya se lee
+        en cada fila del Costeador, y aquí compite con el titular por decir lo
+        mismo. La venta mínima, en cambio, no está en ninguna otra parte.
+      */
+      label: 'Punto de equilibrio',
+      value: input.equilibrio ? money(input.equilibrio) : '—',
+      foot: input.equilibrio ? 'Venta mínima al mes' : 'Captura tus gastos fijos',
       cat: 'permisos',
-      d1: 'M4 11h16a8 8 0 0 0-16 0Z',
-      d2: 'M4.5 14.5h15M6 18h12',
+      d1: 'M12 3v18M4 8h16',
+      d2: 'M4 8 2 15h4ZM20 8l-2 7h4ZM8 21h8',
     },
     {
       label: 'Margen estimado',

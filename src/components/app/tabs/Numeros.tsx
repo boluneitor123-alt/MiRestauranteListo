@@ -11,13 +11,12 @@ import { AvisoDeEstimado } from '@/components/app/EtiquetaEstimado';
 import type { ProjectState } from '@/domain/projectState';
 import { Button, Card, Field, H, Muted, ProgressBar, RADIUS, Row, ScreenHeader, Switch, text } from '@/components/ui';
 import { NumberField } from '../costeador/DishEditor';
-import { Aguante } from '../numeros/Aguante';
 import { Afinacion } from '../numeros/Afinacion';
-import { survival, type SurvivalResult } from '@/domain/survival';
 import { BUDGET_CONCEPTS } from '@/content/catalog';
-import { BENCH } from '@/content/giros';
-import { realityCheck } from '@/domain/reality';
-import { Realidad } from '../numeros/Realidad';
+import { titularDeEquilibrio } from '@/domain/titular';
+import { keyResults, type KeyResult } from '@/components/app/inicio/ResultadosClave';
+import { FraseDeNumeros } from '../numeros/FraseDeNumeros';
+import { PestanasDeNumeros } from '../numeros/PestanasDeNumeros';
 import { Chrome } from '../inicio/Chrome';
 import { Encabezado } from '../inicio/Encabezado';
 
@@ -28,50 +27,17 @@ import { Encabezado } from '../inicio/Encabezado';
 const EXAMPLE_BUDGET = BUDGET_CONCEPTS;
 const EXAMPLE_BUDGET_CAP = 250000;
 
+
 /**
- * Arma la entrada de "Lo que este negocio te va a dar" con lo que el usuario
- * ya capturó. La venta que se proyecta es la de su meta; si no tiene meta, la
- * de equilibrio.
+ * Las cuatro vistas de Números.
+ *
+ * Se fueron «Prueba de estrés» y «Revisión de realidad»: dos módulos que
+ * pedían capturar más para decir algo, en una pantalla cuyo trabajo es
+ * contestar «¿esto me va a dar de comer?». Lo que la persona capturó ahí
+ * —lugares, pedidos por hora, horas semanales— sigue guardado; sólo dejó de
+ * tener pantalla.
  */
-function survivalOf(state: ProjectState): SurvivalResult {
-  const fixed = fixedExpensesTotal(state.fixed);
-  const be = breakeven({
-    fixedExpenses: fixed,
-    grossMargin: state.margin,
-    ticket: state.ticket,
-    ownerGoal: state.ownerGoal,
-    hours: state.hours,
-    closedOneDay: state.closedOneDay,
-  });
-  const invest = investment({
-    concepts: state.budget,
-    subconcepts: state.budgetSub,
-    budgetCap: state.project.budgetCap,
-  });
-
-  return survival({
-    monthlySales: be.goalMonthlySales || be.monthlySales,
-    fixedExpenses: fixed,
-    // Sólo la renta se mueve en la prueba de estrés.
-    rent: state.fixed.find((c) => c.key === 'renta')?.amount ?? 0,
-    days: be.days,
-    marginPct: state.margin,
-    ticket: state.ticket,
-    goalTicketsPerDay: be.goalTicketsPerDay,
-    ownerGoal: state.ownerGoal,
-    investment: invest.total,
-    budgetCap: state.project.budgetCap,
-    hoursPerDay: state.hours,
-    weeklyHours: state.weeklyHours,
-    prepMinutes: state.prepMinutes,
-    dailyMix: state.dailyMix,
-    dishes: state.dishes,
-    costing: { subrecipes: state.subrecipes },
-    stress: state.stress,
-  });
-}
-
-export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio' | 'aguante' | 'realidad';
+export type NumbersView = 'home' | 'presupuesto' | 'fijos' | 'equilibrio';
 
 /** Números: inversión, gastos fijos y punto de equilibrio (README § 1.8). */
 export function Numeros({
@@ -111,12 +77,25 @@ export function Numeros({
   const estimadosDe = (grupo: string) => state.estimados.filter((r) => r.startsWith(`${grupo}:`)).length;
   const sello = state.selloEstimado ?? '';
 
+  /*
+    Las pestañas viven en las cuatro vistas, no sólo en el Resumen. Si sólo
+    salieran ahí serían una fila de accesos directos: entras a Presupuesto,
+    desaparecen, y para ver Gastos fijos hay que volver atrás. Son pestañas
+    porque se quedan.
+  */
+  const pestanas = (
+    <div style={{ padding: '0 20px 4px' }}>
+      <PestanasDeNumeros activa={view} onCambiar={onChangeView} />
+    </div>
+  );
+
   if (view === 'presupuesto') {
     // Durante la prueba el presupuesto NO lleva candado: se ve completo, con
     // los 13 conceptos de un caso real, y sólo no se puede editar. Es el
     // bloqueo que mejor convierte y por eso se muestra en vez de esconderse.
     return (
       <>
+      {pestanas}
       <div style={{ padding: '0 20px' }}>
         <AvisoDeEstimado sello={sello} cuantos={estimadosDe('presupuesto')} />
       </div>
@@ -135,6 +114,14 @@ export function Numeros({
 
   if (view === 'fijos') {
     return (
+      <>
+      {/*
+        Las pestañas van FUERA del bloque de sólo lectura. Dentro caían en el
+        subárbol `inert`, que quita clics y foco de teclado: en prueba, entrar
+        a Gastos fijos dejaba a la persona sin poder volver a las otras vistas
+        más que con el botón de atrás.
+      */}
+      {pestanas}
       <SoloLectura
         activo={alcanceDe(level, 'numeros:fijos') !== 'abierto'}
         level={level}
@@ -147,11 +134,14 @@ export function Numeros({
           <FixedExpenses state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
         </>
       </SoloLectura>
+      </>
     );
   }
 
   if (view === 'equilibrio') {
     return (
+      <>
+      {pestanas}
       <SoloLectura
         activo={alcanceDe(level, 'numeros:equilibrio') !== 'abierto'}
         level={level}
@@ -159,39 +149,7 @@ export function Numeros({
       >
         <Breakeven state={state} onBack={() => onChangeView('home')} onPatch={onPatch} />
       </SoloLectura>
-    );
-  }
-
-  if (view === 'aguante') {
-    const result = survivalOf(state);
-    return (
-      <SoloLectura
-        activo={alcanceDe(level, 'numeros:aguante') !== 'abierto'}
-        level={level}
-        onOpenPaywall={onOpenPaywall}
-      >
-      <Aguante
-        result={result}
-        ownerSalary={result.ownerSalary}
-        weeklyHours={state.weeklyHours}
-        prepMinutes={state.prepMinutes}
-        stress={state.stress}
-        goalTicketsPerDay={
-          breakeven({
-            fixedExpenses: fixedExpensesTotal(state.fixed),
-            grossMargin: state.margin,
-            ticket: state.ticket,
-            ownerGoal: state.ownerGoal,
-            hours: state.hours,
-            closedOneDay: state.closedOneDay,
-          }).goalTicketsPerDay
-        }
-        onBack={() => onChangeView('home')}
-        onChangeWeeklyHours={(weeklyHours) => onPatch({ weeklyHours })}
-        onChangePrepMinutes={(prepMinutes) => onPatch({ prepMinutes })}
-        onChangeStress={(stress) => onPatch({ stress })}
-      />
-      </SoloLectura>
+      </>
     );
   }
 
@@ -209,35 +167,19 @@ export function Numeros({
     subconcepts: state.budgetSub,
     budgetCap: state.project.budgetCap,
   });
-  const aguante = survivalOf(state);
-  const realidad = realityCheck({
-    capacity: state.capacity,
-    ticketsNeeded: be.goalTicketsPerDay || be.ticketsPerDay,
-    monthlySales: be.goalMonthlySales || be.monthlySales,
-    rent: state.fixed.find((c) => c.key === 'renta')?.amount ?? 0,
-    payroll: state.fixed.find((c) => c.key === 'nomina')?.amount ?? 0,
-    investment: invest.total,
-    budgetCap: state.project.budgetCap,
-    giro: state.project.giro,
-    bench: BENCH[state.project.giro] ?? BENCH['Otro'],
-  });
 
-  if (view === 'realidad') {
-    return (
-      <SoloLectura
-        activo={alcanceDe(level, 'numeros:realidad') !== 'abierto'}
-        level={level}
-        onOpenPaywall={onOpenPaywall}
-      >
-        <Realidad
-          result={realidad}
-          capacity={state.capacity}
-          onBack={() => onChangeView('home')}
-          onChangeCapacity={(capacity) => onPatch({ capacity })}
-        />
-      </SoloLectura>
-    );
-  }
+  /*
+    La misma entrada con la que Inicio arma su franja: las dos pantallas leen
+    la frase del mismo cálculo y no pueden decir cifras distintas.
+  */
+  const entradaDelTitular = {
+    fixedExpenses: fixed,
+    grossMargin: state.margin,
+    ticket: state.ticket,
+    ownerGoal: state.ownerGoal,
+    hours: state.hours,
+    closedOneDay: state.closedOneDay,
+  };
 
   return (
     <div className="mrl-measure" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
@@ -255,105 +197,38 @@ export function Numeros({
         onOpenProject={onOpenProject}
       />
 
-      {/* La revisión de realidad abre la pestaña: es lo que cruza todo lo demás. */}
-      <button
-        type="button"
-        onClick={() => onChangeView('realidad')}
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          width: '100%',
-          textAlign: 'left',
-          padding: '20px 18px',
-          border: '1px solid var(--color-accent-200)',
-          borderRadius: RADIUS.card,
-          background: 'var(--color-accent-100)',
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)',
-          color: 'var(--color-text)',
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <picture style={{ display: 'contents' }}>
-          <source type="image/avif" srcSet="/img/arnold-numeros-480w.avif 480w, /img/arnold-numeros.avif 800w" sizes="186px" />
-          <img
-            src="/img/arnold-numeros.webp"
-            srcSet="/img/arnold-numeros-480w.webp 480w, /img/arnold-numeros.webp 800w"
-            sizes="186px"
-            alt=""
-            aria-hidden
-            width={800}
-            height={671}
-            loading="lazy"
-            decoding="async"
-            style={{ position: 'absolute', right: -14, top: -6, width: '48%', maxWidth: 186, height: 'auto', pointerEvents: 'none' }}
-          />
-        </picture>
-        <span style={{ position: 'relative', display: 'block', maxWidth: '60%' }}>
-          <span style={{ display: 'block', fontSize: 11, letterSpacing: '.1em', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent-800)' }}>
-            Revisión de realidad
-          </span>
-          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 22, lineHeight: 1.14, marginTop: 8, letterSpacing: '-.02em' }}>
-            {realidad.head}
-          </span>
-          <span className="mrl-prose" style={{ display: 'block', marginTop: 8, fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-2)' }}>
-            {realidad.sub}
-          </span>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              marginTop: 14,
-              padding: '11px 16px',
-              border: '1px solid var(--color-border)',
-              borderRadius: 13,
-              background: 'var(--color-surface)',
-              fontWeight: 700,
-              fontSize: 13.5,
-            }}
-          >
-            Ver los {realidad.rows.length} cruces
-            <ArrowRight size={15} strokeWidth={2.8} />
-          </span>
-        </span>
-      </button>
+      {/* La frase primero, antes de las pestañas: es la pieza central. */}
+      <FraseDeNumeros titular={titularDeEquilibrio(entradaDelTitular)} />
+
+      <PestanasDeNumeros activa={view} onCambiar={onChangeView} />
 
       {/*
-        La afinación va aquí, entre la revisión de realidad y los módulos: se
-        lee justo antes de las cifras que va a mover, y es la razón para volver
-        a abrir la app un día después del diagnóstico. Se esconde sola cuando
-        ya está contestada o cuando no queda nada estimado que afinar.
+        Las cuatro métricas. La inversión va bajo candado y sin cifra en
+        prueba: se ve que existe y qué la abre, que convierte mejor que
+        esconderla.
       */}
-      <Afinacion state={state} onPatch={onPatch} onFlash={onFlash} />
-
-      {/*
-        "Lo que este negocio te va a dar": la cifra grande es el sueldo real
-        del dueño, que es la pregunta con la que llega. Las otras siete viven
-        dentro.
-      */}
-      <FilaModulo
-        kicker="Empieza aquí"
-        title="Lo que este negocio te va a dar"
-        hint={
-          aguante.paybackMonths
-            ? `Tu sueldo real · la inversión vuelve en el mes ${aguante.paybackMonths}`
-            : 'Tu colchón, tu sueldo y cuándo vuelve tu inversión'
-        }
-        tono="accent"
-        d1="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
-        d2="M12 7.8a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4"
-        onClick={() => onChangeView('aguante')}
-      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+        {keyResults({
+          ticket: state.ticket,
+          equilibrio: be.monthlySales,
+          margin: menuAggregates(state.dishes, { subrecipes: state.subrecipes }).suggestedMargin ?? 0,
+          inversion: invest.total,
+          muestraInversion: can.muestraCifrasDeInversion,
+        }).map((row) => (
+          <TarjetaDeMetrica key={row.label} row={row} />
+        ))}
+      </div>
 
       <H size={19} style={{ margin: '12px 2px 0' }}>
-        Tus módulos financieros
+        Calculadoras
       </H>
 
       {/*
         En prueba el presupuesto no lleva candado ni manda al pago: entra a la
         vista de ejemplo, que se lee completa. Ese bloqueo convierte mejor
-        justo porque deja ver lo que hay dentro.
+        justo porque deja ver lo que hay dentro. Tiene además su propia
+        pestaña: «cuánto necesito para abrir» es la primera pregunta de quien
+        descarga esto, y aquí abajo se leía como un accesorio.
       */}
       <FilaModulo
         kicker="Módulo 1"
@@ -1018,6 +893,78 @@ function Breakeven({
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * Una de las cuatro métricas de la portada: icono de color, cifra y pie.
+ *
+ * La inversión llega con `bajoCandado` en prueba: se ve la tarjeta, se ve su
+ * rótulo y en lugar de la cifra dice qué la abre. Esconderla entera convertía
+ * peor que enseñar que existe.
+ */
+function TarjetaDeMetrica({ row }: { row: KeyResult }) {
+  return (
+    <div
+      style={{
+        padding: '13px 14px',
+        border: '1px solid var(--color-border)',
+        borderRadius: RADIUS.block,
+        background: 'var(--color-surface)',
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        gap: 7,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span
+          style={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 26,
+            height: 26,
+            flex: 'none',
+            borderRadius: 8,
+            background: `var(--cat-${row.cat})`,
+            color: `var(--cat-${row.cat}-ink)`,
+          }}
+        >
+          <svg
+            width={15}
+            height={15}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d={row.d1} />
+            <path d={row.d2} />
+          </svg>
+        </span>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-2)', minWidth: 0 }}>{row.label}</span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        {row.bajoCandado ? <Lock size={14} strokeWidth={2.6} style={{ flex: 'none', color: 'var(--color-text-2)' }} /> : null}
+        <span
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: row.bajoCandado ? 15 : 21,
+            lineHeight: 1.1,
+            letterSpacing: '-.02em',
+            minWidth: 0,
+          }}
+        >
+          {row.value}
+        </span>
+      </div>
+
+      <span style={{ fontSize: 11.5, lineHeight: 1.35, color: 'var(--color-text-2)' }}>{row.foot}</span>
     </div>
   );
 }
